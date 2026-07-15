@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary-50: #fdf8f2;
+  --color-primary-100: #faebd7;
+  --color-primary-200: #f5d5b0;
+  --color-primary-300: #efa85c;
+  --color-primary-400: #e78726;
+  --color-primary-500: #d97706; /* Gold Orange */
+  --color-primary-600: #b45309;
+  --color-primary-700: #92400e;
+  --color-primary-800: #78350f;
+  --color-primary-900: #451a03;
+
+  --color-secondary-50: #f5f7fa;
+  --color-secondary-100: #eaeef5;
+  --color-secondary-200: #d0daeb;
+  --color-secondary-300: #a7bbdb;
+  --color-secondary-400: #7899c7;
+  --color-secondary-500: #5d80b2; /* Calming Periwinkle Slate Blue */
+  --color-secondary-600: #4b6694;
+  --color-secondary-700: #3d5178;
+
+  --color-accent-50: #fefaf6;
+  --color-accent-100: #fbf0e3;
+  --color-accent-200: #f5dcbe;
+  --color-accent-300: #edc292;
+  --color-accent-400: #e3a364;
+  --color-accent-500: #d6873b; /* Warm Peach/Sand Amber */
+
+  --color-neutral-50: #faf9f6;  /* Soft Warm White */
+  --color-neutral-100: #f4f2eb; /* Warm Sand tint */
+  --color-neutral-200: #e7e4d8;
+  --color-neutral-300: #d4cfbe;
+  --color-neutral-400: #bbb49e;
+  --color-neutral-500: #9f977f;
+  --color-neutral-600: #817963;
+  --color-neutral-700: #655f4d;
+  --color-neutral-800: #3d3b32; /* Soft charcoal */
+  --color-neutral-900: #24231e;
+
+  --shadow-peaceful: 0 10px 30px -10px rgba(92, 143, 122, 0.08), 0 1px 3px -1px rgba(0, 0, 0, 0.01);
+  --shadow-peaceful-lg: 0 20px 40px -15px rgba(92, 143, 122, 0.12), 0 1px 5px -1px rgba(0, 0, 0, 0.02);
+
+  --font-sans: var(--font-poppins), 'Poppins', sans-serif;
+  --font-serif: var(--font-poppins), 'Poppins', sans-serif;
+  --font-mono: var(--font-poppins), 'Poppins', sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #fbfbf9;
+  --foreground: #2d312e;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Force Poppins on all text elements and MUI components */
+body, 
+button, 
+input, 
+optgroup, 
+select, 
+textarea,
+.MuiTypography-root,
+.MuiButtonBase-root,
+.MuiInputBase-root,
+.MuiFormLabel-root,
+.MuiMenuItem-root,
+.MuiTableCell-root,
+.MuiTab-root {
+  font-family: var(--font-poppins), 'Poppins', sans-serif !important;
+}
+
+/* Custom Scrollbars to keep UI clean and peaceful */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e3ece7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c9dbd1;
+}
+
+/* Glassmorphism overlays for light theme */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-peaceful);
+  border-radius: 4px;
+}
+
+/* Animated elements */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-peaceful-lg);
+}
+
+/* Custom prints layout for PDF / Invoice */
+@media print {
+  body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Animations for Custom Toast and Confirmation modals */
+@keyframes slideInRight {
+  from {
+    transform: translateX(120%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.92) translateY(5px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

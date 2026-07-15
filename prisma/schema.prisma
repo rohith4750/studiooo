@@ -1,0 +1,265 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // ADMIN, MANAGER, PHOTOGRAPHER, EDITOR, ACCOUNTANT, RECEPTIONIST
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  auditLogs AuditLog[]
+}
+
+model Client {
+  id             String    @id @default(uuid())
+  name           String
+  phone          String
+  alternatePhone String?
+  whatsappNumber String?
+  email          String?
+  address        String?
+  city           String?
+  state          String?
+  pincode        String?
+  anniversary    String?   // YYYY-MM-DD
+  birthday       String?   // YYYY-MM-DD
+  gstNumber      String?
+  panNumber      String?
+  notes          String?
+  bookings       Booking[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Lead {
+  id         String   @id @default(uuid())
+  name       String
+  phone      String
+  email      String?
+  event      String
+  eventDate  String   // YYYY-MM-DD
+  budget     Float?
+  source     String   // INSTAGRAM, FACEBOOK, WHATSAPP, WEBSITE, WALK_IN, REFERRAL, GOOGLE_ADS
+  status     String   // NEW, CONTACTED, INTERESTED, FOLLOW_UP, CONVERTED, LOST
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model EventMaster {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  defaultPrice Float
+  description  String?
+  duration     String?
+  category     String?
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  bookingEvents BookingEvent[]
+}
+
+model Package {
+  id             String    @id @default(uuid())
+  name           String    @unique
+  description    String?
+  price          Float
+  includedEvents String    // JSON string containing names of default events
+  photographers  Int       @default(1)
+  cinematographers Int     @default(0)
+  drone          Boolean   @default(false)
+  album          Boolean   @default(false)
+  led            Boolean   @default(false)
+  liveStreaming  Boolean   @default(false)
+  complimentaryShoot String?
+  active         Boolean   @default(true)
+  bookings       Booking[]
+}
+
+model Booking {
+  id            String         @id @default(uuid())
+  bookingNumber String         @unique
+  clientId      String
+  client        Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  packageId     String?
+  package       Package?       @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  venue         String?
+  notes         String?
+  status        String         // QUOTATION, PENDING, CONFIRMED, IN_PROGRESS, EDITING, ALBUM_DESIGNING, PRINTING, READY_FOR_DELIVERY, COMPLETED, CANCELLED
+  subtotal      Float
+  discount      Float          @default(0)
+  gstAmount     Float
+  grandTotal    Float
+  paidAmount    Float          @default(0)
+  balance       Float
+  bookingEvents BookingEvent[]
+  payments      Payment[]
+  quotations    Quotation[]
+  invoices      Invoice[]
+  albums        Album[]
+  deliveries    Delivery[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model BookingEvent {
+  id          String       @id @default(uuid())
+  bookingId   String
+  booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       EventMaster  @relation(fields: [eventId], references: [id])
+  eventDate   String       // YYYY-MM-DD
+  eventTime   String?
+  venue       String?
+  price       Float
+  status      String       // ASSIGNED, STARTED, COMPLETED
+  assignments Assignment[]
+}
+
+model Assignment {
+  id             String       @id @default(uuid())
+  bookingEventId String
+  bookingEvent   BookingEvent @relation(fields: [bookingEventId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee     @relation(fields: [employeeId], references: [id])
+  role           String       // LEAD_PHOTOGRAPHER, CINEMATOGRAPHER, DRONE_OPERATOR, ASSISTANT
+  travelAllowance Float       @default(0)
+  attendance     String       // PENDING, PRESENT, ABSENT
+  inventoryLogs  InventoryLog[]
+}
+
+model Employee {
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  phone       String
+  role        String       // PHOTOGRAPHER, EDITOR, MANAGER, ACCOUNTANT, RECEPTIONIST
+  status      String       // ACTIVE, INACTIVE
+  salary      Float
+  joinedAt    DateTime     @default(now())
+  assignments Assignment[]
+  albumEditor Album[]      @relation("AlbumEditor")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  receiptNumber String   @unique
+  amount        Float
+  paymentMode   String   // CASH, UPI, BANK_TRANSFER, CARD, CHEQUE
+  paymentDate   String   // YYYY-MM-DD
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model Quotation {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  version       Int      @default(1)
+  terms         String?
+  qrCodeUrl     String?
+  digitalSig    String?
+  status        String   // DRAFT, SENT, APPROVED, REJECTED
+  createdAt     DateTime @default(now())
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  invoiceNumber String   @unique
+  hsnCode       String   @default("998381") // Photography services HSN
+  gstRate       Float    @default(18.0)
+  gstAmount     Float
+  totalAmount   Float
+  grandTotal    Float
+  paidAmount    Float
+  balance       Float
+  status        String   // UNPAID, PARTIALLY_PAID, PAID, CANCELLED
+  createdAt     DateTime @default(now())
+}
+
+model Album {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type          String   // PREMIUM, ACRYLIC, MAGAZINE, HD
+  status        String   // PENDING, IN_EDITING, CLIENT_REVIEW, REVISIONS, COMPLETED
+  designStatus  String   // DESIGNING, APPROVED, PRINTING, DELIVERED
+  editorId      String?
+  editor        Employee? @relation("AlbumEditor", fields: [editorId], references: [id], onDelete: SetNull)
+  notes         String?
+  rawLink       String?
+  editedLink    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Delivery {
+  id             String    @id @default(uuid())
+  bookingId      String
+  booking        Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  deliverableType String    // ALBUM, PENDRIVE, DRIVE_LINK, QR_GALLERY, CLOUD_GALLERY
+  link           String?
+  status         String    // PENDING, READY, DELIVERED
+  deliveredAt    String?   // YYYY-MM-DD
+}
+
+model Inventory {
+  id           String         @id @default(uuid())
+  name         String
+  category     String         // CAMERA, LENS, DRONE, GIMBAL, LIGHT, BATTERY, MEMORY_CARD, TRIPOD
+  serialNumber String         @unique
+  status       String         // AVAILABLE, ASSIGNED, MAINTENANCE, LOST
+  notes        String?
+  logs         InventoryLog[]
+}
+
+model InventoryLog {
+  id           String      @id @default(uuid())
+  inventoryId  String
+  inventory    Inventory   @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  action       String      // ASSIGNED, RETURNED, SENT_TO_MAINTENANCE, MARKED_LOST
+  logDate      DateTime    @default(now())
+  notes        String?
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  category    String   // FUEL, SALARY, PRINTING, EQUIPMENT, MARKETING, FOOD, MISCELLANEOUS
+  amount      Float
+  description String
+  date        String   // YYYY-MM-DD
+  receiptUrl  String?
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  recipient String   // Phone or Email
+  type      String   // SMS, WHATSAPP, EMAIL, PUSH
+  message   String
+  status    String   // PENDING, SENT, FAILED
+  sentAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  details   String
+  timestamp DateTime @default(now())
+}
