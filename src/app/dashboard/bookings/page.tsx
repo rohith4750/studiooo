@@ -78,6 +78,7 @@ function BookingsContent() {
   const [formVenue, setFormVenue] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formStatus, setFormStatus] = useState('PENDING');
+  const [formName, setFormName] = useState('');
   const [formGrandTotal, setFormGrandTotal] = useState('0');
 
   // Multi-event selections under booking
@@ -121,6 +122,7 @@ function BookingsContent() {
   const handleOpenAdd = () => {
     setEditingBooking(null);
     setFormClientId('');
+    setFormName('');
     setFormPackageId('');
     setFormVenue('');
     setFormNotes('');
@@ -133,6 +135,7 @@ function BookingsContent() {
   const handleOpenEdit = (booking: any) => {
     setEditingBooking(booking);
     setFormClientId(booking.clientId);
+    setFormName(booking.name || '');
     setFormPackageId(booking.packageId || '');
     setFormVenue(booking.venue || '');
     setFormNotes(booking.notes || '');
@@ -229,6 +232,7 @@ function BookingsContent() {
 
     const payload = {
       bookingNumber: bookingNum,
+      name: formName || null,
       clientId: formClientId,
       packageId: formPackageId || null,
       venue: formVenue || null,
@@ -531,8 +535,13 @@ function BookingsContent() {
                   >
                     <TableCell>
                       <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
-                        {b.bookingNumber}
+                        #{b.bookingNumber}
                       </Typography>
+                      {b.name && (
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.8rem', mt: 0.25, color: 'text.primary' }}>
+                          {b.name}
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
@@ -866,6 +875,17 @@ function BookingsContent() {
                     ))}
                   </Select>
                 </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Booking Name (e.g. Rahul Weds Simran)"
+                  fullWidth
+                  required
+                  size="small"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>

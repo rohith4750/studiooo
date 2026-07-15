@@ -56,6 +56,52 @@ export default function BillingPage() {
     setPreviewType(type);
   };
 
+  const handleDownloadPDF = async (docObj: any = previewDoc, typeStr: string = previewType) => {
+    if (!docObj) {
+      alert('No document selected.');
+      return;
+    }
+
+    const generatePdf = async () => {
+      const element = document.getElementById('pdf-document');
+      if (!element) return;
+      try {
+        const { toPng } = await import('html-to-image');
+        const { jsPDF } = await import('jspdf');
+
+        // Capture DOM as high-quality PNG
+        const dataUrl = await toPng(element, { quality: 1, pixelRatio: 2 });
+        
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: 'a4'
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+        
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${typeStr === 'INVOICE' ? 'Invoice' : 'Quotation'}_${docObj.booking?.bookingNumber || 'R2R'}.pdf`);
+      } catch (err) {
+        console.error('Failed to generate PDF', err);
+        alert('Failed to generate PDF. Check console.');
+      }
+    };
+    
+    // Ensure the document is set so the layout renders
+    if (previewDoc?.id !== docObj.id) {
+      openPreview(docObj, typeStr as 'INVOICE' | 'QUOTATION');
+      setTimeout(generatePdf, 500);
+    } else {
+      generatePdf();
+    }
+  };
+
+  const handleDirectDownload = (doc: any, type: 'INVOICE' | 'QUOTATION') => {
+    handleDownloadPDF(doc, type);
+  };
+
   return (
     <div className="space-y-4">
       {/* Printable Area Wrapper (Only shown when printing) */}
@@ -152,11 +198,11 @@ export default function BillingPage() {
             <div className="text-right space-y-1.5 text-[11px]">
               <div className="flex justify-between text-neutral-600">
                 <span>Subtotal</span>
-                <span>₹{(previewDoc.booking?.subtotal - (previewDoc.booking?.discount || 0)).toLocaleString()}</span>
+                <span>₹{((previewDoc.booking?.subtotal || 0) - (previewDoc.booking?.discount || 0)).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-neutral-800 font-extrabold text-xs border-t border-neutral-200 pt-1.5">
                 <span>Grand Total</span>
-                <span>₹{previewDoc.grandTotal.toLocaleString('en-IN')}</span>
+                <span>₹{(previewDoc.grandTotal || previewDoc.amount || 0).toLocaleString('en-IN')}</span>
               </div>
 
               {/* QR and Signature */}
@@ -252,13 +298,22 @@ export default function BillingPage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => openPreview(inv, 'INVOICE')}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded hover:bg-neutral-100 text-neutral-600 font-semibold cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            <span>Preview</span>
-                          </button>
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => handleDirectDownload(inv, 'INVOICE')}
+                              title="Download PDF"
+                              className="p-1.5 bg-primary-50 text-primary-600 hover:bg-primary-100 rounded cursor-pointer transition"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => openPreview(inv, 'INVOICE')}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded hover:bg-neutral-100 text-neutral-600 font-semibold cursor-pointer"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Preview</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -327,6 +382,13 @@ export default function BillingPage() {
                               </>
                             )}
                             <button
+                              onClick={() => handleDirectDownload(q, 'QUOTATION')}
+                              title="Download PDF"
+                              className="p-1.5 bg-primary-50 text-primary-600 hover:bg-primary-100 rounded cursor-pointer transition"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                            <button
                               onClick={() => openPreview(q, 'QUOTATION')}
                               className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-neutral-50 border border-neutral-200 rounded hover:bg-neutral-100 text-neutral-600 font-semibold cursor-pointer"
                             >
@@ -358,15 +420,22 @@ export default function BillingPage() {
               </h3>
               <div className="flex items-center space-x-2">
                 <button
+                  onClick={() => handleDownloadPDF()}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold cursor-pointer shadow-sm transition"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download PDF</span>
+                </button>
+                <button
                   onClick={handlePrint}
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded text-xs font-semibold cursor-pointer"
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-800 hover:bg-neutral-900 text-white rounded text-xs font-semibold cursor-pointer shadow-sm transition"
                 >
                   <Printer className="h-4 w-4" />
-                  <span>Print / Save PDF</span>
+                  <span>Print</span>
                 </button>
                 <button
                   onClick={() => setPreviewDoc(null)}
-                  className="p-1.5 hover:bg-neutral-100 rounded text-neutral-400"
+                  className="p-1.5 hover:bg-neutral-100 rounded text-neutral-400 ml-2"
                 >
                   <X className="h-4.5 w-4.5" />
                 </button>
@@ -375,7 +444,7 @@ export default function BillingPage() {
 
             {/* Document sheet wrapper */}
             <div className="flex-1 overflow-y-auto p-8 bg-neutral-100/50 flex justify-center">
-              <div className="bg-white p-8 w-full max-w-2xl shadow-xs border border-neutral-200/50 space-y-4 text-xs text-neutral-700 leading-relaxed font-sans min-h-[842px]">
+              <div id="pdf-document" className="bg-white p-10 w-full max-w-[700px] shadow-sm border border-neutral-200/50 space-y-5 text-xs text-neutral-700 leading-relaxed font-sans min-h-[842px]">
                 
                 {/* Header branding */}
                 <div className="flex justify-between items-start border-b-2 border-primary-500 pb-4">
@@ -417,25 +486,37 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                {/* Event rows table */}
-                <table className="w-full text-left border-collapse text-[10px] mt-4">
-                  <thead>
-                    <tr className="bg-neutral-50 text-neutral-600 font-bold border-b border-neutral-200">
-                      <th className="py-2 px-2">Shoot Event</th>
-                      <th className="py-2 px-2">Date & Time</th>
-                      <th className="py-2 px-2">Location</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-100">
+                {/* Event Deliverables & Schedule (Bulleted Points) */}
+                <div className="mt-8 mb-6 bg-neutral-50/50 p-4 rounded border border-neutral-100">
+                  <h4 className="font-extrabold text-neutral-800 border-b border-neutral-200 pb-2 mb-4 text-[11px] uppercase tracking-wider flex items-center space-x-2">
+                    <Sparkles className="h-4 w-4 text-primary-500" />
+                    <span>Shoot Deliverables & Schedule</span>
+                  </h4>
+                  <ul className="space-y-3.5 pl-1">
                     {previewDoc.booking?.bookingEvents?.map((be: any) => (
-                      <tr key={be.id}>
-                        <td className="py-2.5 px-2 font-bold text-neutral-800">{be.event?.name}</td>
-                        <td className="py-2.5 px-2">{be.eventDate} ({be.eventTime || 'TBA'})</td>
-                        <td className="py-2.5 px-2 truncate max-w-[150px]">{be.venue || previewDoc.booking?.venue || 'Studio'}</td>
-                      </tr>
+                      <li key={be.id} className="flex items-start">
+                        <span className="text-primary-500 font-bold mr-2.5 mt-0.5 text-sm">•</span>
+                        <div>
+                          <p className="font-extrabold text-neutral-800 text-[12px]">{be.event?.name}</p>
+                          <p className="text-neutral-500 text-[10px] mt-0.5">
+                            <span className="font-semibold text-neutral-600">Schedule:</span> {be.eventDate} ({be.eventTime || 'TBA'}) &nbsp;|&nbsp; 
+                            <span className="font-semibold text-neutral-600 ml-1">Location:</span> {be.venue || previewDoc.booking?.venue || 'Studio'}
+                          </p>
+                        </div>
+                      </li>
                     ))}
-                  </tbody>
-                </table>
+                    {/* Standard included deliverable point */}
+                    <li className="flex items-start">
+                      <span className="text-primary-500 font-bold mr-2.5 mt-0.5 text-sm">•</span>
+                      <div>
+                        <p className="font-extrabold text-neutral-800 text-[12px]">High-Resolution Digital Assets</p>
+                        <p className="text-neutral-500 text-[10px] mt-0.5">
+                          Professional color-graded photos and cinematic highlights delivered via secure cloud link.
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
 
                 {/* Financial breakdown */}
                 <div className="grid grid-cols-2 gap-5 pt-4 border-t border-neutral-200">
@@ -459,11 +540,22 @@ export default function BillingPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-[10px] text-neutral-400 italic">
-                        <p className="font-bold text-neutral-600 not-italic uppercase tracking-wide text-[8px] mb-1">Terms & Conditions</p>
-                        <p>1. 50% advance to confirm booking contract.</p>
-                        <p>2. RAW pictures shared within 5 days.</p>
-                        <p>3. Balance collected prior to printing delivery.</p>
+                      <div className="text-[10px] text-neutral-600 mt-2">
+                        <h4 className="font-bold text-neutral-800 uppercase tracking-wide text-[9px] mb-2">Terms & Conditions</h4>
+                        <ul className="space-y-1.5 list-none pl-1 text-[9px]">
+                          <li className="flex items-start">
+                            <span className="text-primary-400 mr-2 font-bold">•</span>
+                            <span>50% advance to confirm booking contract.</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary-400 mr-2 font-bold">•</span>
+                            <span>RAW pictures shared within 5 days of shoot.</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary-400 mr-2 font-bold">•</span>
+                            <span>Balance collected prior to final print/album delivery.</span>
+                          </li>
+                        </ul>
                       </div>
                     )}
                   </div>
@@ -471,11 +563,11 @@ export default function BillingPage() {
                   <div className="text-right space-y-1.5 text-[10px]">
                     <div className="flex justify-between text-neutral-500">
                       <span>Subtotal</span>
-                      <span>₹{(previewDoc.booking?.subtotal - (previewDoc.booking?.discount || 0)).toLocaleString()}</span>
+                      <span>₹{((previewDoc.booking?.subtotal || 0) - (previewDoc.booking?.discount || 0)).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-neutral-800 font-extrabold text-xs border-t border-neutral-200 pt-1.5">
                       <span>Grand Total</span>
-                      <span>₹{previewDoc.grandTotal.toLocaleString('en-IN')}</span>
+                      <span>₹{(previewDoc.grandTotal || previewDoc.amount || 0).toLocaleString('en-IN')}</span>
                     </div>
 
                     {/* QR Code and digital signatures */}
