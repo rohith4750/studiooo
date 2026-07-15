@@ -52,6 +52,14 @@ const MENU_GROUPS = [
     ]
   },
   {
+    title: 'Team & Directory',
+    items: [
+      { name: 'Photographers', path: '/dashboard/photographers', icon: Camera, roles: ['ADMIN', 'MANAGER'] },
+      { name: 'All Staff', path: '/dashboard/employees', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+      { name: 'System Users', path: '/dashboard/users', icon: ShieldAlert, roles: ['ADMIN'] },
+    ]
+  },
+  {
     title: 'System',
     items: [
       { name: 'Settings', path: '/dashboard/settings', icon: Settings, roles: ['ADMIN'] },
