@@ -45,32 +45,33 @@ export default function ExpensesPage() {
   const chartData = Object.keys(categorySumMap).map(key => ({ name: key, Amount: categorySumMap[key] }));
 
   return (
-    <div className="space-y-4 animate-fadeIn">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 animate-fadeIn font-sans text-xs text-neutral-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-neutral-800">Operational Expenses</h2>
-          <p className="text-xs text-neutral-500 mt-0.5">Record studio bills, employee salaries, and printing press expenses.</p>
+          <h1 className="text-lg font-bold tracking-tight text-neutral-800">Operational Expenses</h1>
+          <p className="text-[11px] text-neutral-500 mt-0.5 font-normal">Record studio bills, employee salaries, and printing press expenses.</p>
         </div>
-        <button onClick={() => router.push('/dashboard/expenses/create')} className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded cursor-pointer shadow-xs transition duration-150">
-          <Plus className="h-4 w-4" /><span>Record Expense Bill</span>
+        <button onClick={() => router.push('/dashboard/expenses/create')} className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-black text-white text-xs font-medium rounded-lg cursor-pointer shadow-xs transition duration-150 self-start sm:self-auto">
+          <Plus className="h-3.5 w-3.5" /><span>Record Expense Bill</span>
         </button>
       </div>
 
       {/* Financial Counters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-card p-4 rounded flex items-center space-x-3.5">
-          <div className="p-3 bg-red-50 text-red-600 rounded"><Clock className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Spent Today</span><p className="text-xl font-extrabold text-neutral-700">₹{dailyExpenses.toLocaleString()}</p></div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
+          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Clock className="h-5 w-5" /></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Spent Today</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{dailyExpenses.toLocaleString('en-IN')}</p></div>
         </div>
-        <div className="glass-card p-4 rounded flex items-center space-x-3.5">
-          <div className="p-3 bg-red-50 text-red-600 rounded"><Calendar className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Spent This Month</span><p className="text-xl font-extrabold text-neutral-700">₹{monthlyExpenses.toLocaleString()}</p></div>
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
+          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Calendar className="h-5 w-5" /></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Spent This Month</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{monthlyExpenses.toLocaleString('en-IN')}</p></div>
         </div>
-        <div className="glass-card p-4 rounded flex items-center space-x-3.5">
-          <div className="p-3 bg-red-50 text-red-600 rounded"><Banknote className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Total Accumulation</span><p className="text-xl font-extrabold text-neutral-700">₹{totalExpenses.toLocaleString()}</p></div>
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
+          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Banknote className="h-5 w-5" /></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Total Accumulation</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{totalExpenses.toLocaleString('en-IN')}</p></div>
         </div>
       </div>
+
 
       {/* Grid: Charts + Ledger */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:p-5">

@@ -10,14 +10,14 @@ import {
 } from '@mui/material';
 import { Sparkles, ArrowLeft, CheckCircle2, RefreshCw } from 'lucide-react';
 
-const ROLES = ['PHOTOGRAPHER', 'EDITOR', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST'];
+const ROLES = ['PHOTOGRAPHER', 'EDITOR', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST', 'HR'];
 const STATUSES = ['ACTIVE', 'INACTIVE'];
 
 function EmployeeCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('employeeId');
-  const { employees, fetchData, createRecord, updateRecord } = useStore();
+  const { employees, users, fetchData, createRecord, updateRecord } = useStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -28,11 +28,17 @@ function EmployeeCreateContent() {
   const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState('PHOTOGRAPHER');
   const [formStatus, setFormStatus] = useState('ACTIVE');
+  const [formPassword, setFormPassword] = useState('');
   const [formSalary, setFormSalary] = useState('');
+  const [formManagerId, setFormManagerId] = useState('');
+  const [formLeaveBalance, setFormLeaveBalance] = useState('0');
 
   useEffect(() => {
     setLoading(true);
-    fetchData('employees').finally(() => setLoading(false));
+    Promise.all([
+      fetchData('employees'),
+      fetchData('users')
+    ]).finally(() => setLoading(false));
   }, [fetchData]);
 
   const employee = employees.find((e) => e.id === employeeId);
@@ -45,23 +51,39 @@ function EmployeeCreateContent() {
       setFormRole(employee.role);
       setFormStatus(employee.status);
       setFormSalary(employee.salary.toString());
+      setFormManagerId(employee.managerId || '');
+      setFormLeaveBalance((employee.leaveBalance || 0).toString());
     }
   }, [employee]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const payload = {
-      name: formName, email: formEmail.toLowerCase(), phone: formPhone,
-      role: formRole, status: formStatus, salary: parseFloat(formSalary) || 0,
-    };
+    
     try {
+      if (!employee && formPassword) {
+        // Create User account first for portal login
+        await createRecord('users', {
+          name: formName,
+          email: formEmail.toLowerCase(),
+          password: formPassword,
+          role: formRole
+        });
+      }
+
+      const payload = {
+        name: formName, email: formEmail.toLowerCase(), phone: formPhone,
+        role: formRole, status: formStatus, salary: parseFloat(formSalary) || 0,
+        managerId: formManagerId || null,
+        leaveBalance: parseFloat(formLeaveBalance) || 0,
+      };
+
       if (employee) {
         await updateRecord('employees', { id: employee.id, ...payload });
         toast('Staff profile updated!', 'success');
       } else {
         await createRecord('employees', payload);
-        toast('Staff member registered!', 'success');
+        toast('Staff member & User account registered!', 'success');
       }
       router.push('/dashboard/employees');
     } catch (err) {
@@ -110,6 +132,11 @@ function EmployeeCreateContent() {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Corporate Email *" required fullWidth size="small" type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="ramesh@r2r.com" />
               </Grid>
+              {!employeeId && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField label="Portal Login Password *" required fullWidth size="small" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="••••••••" />
+                </Grid>
+              )}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Phone Number *" required fullWidth size="small" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+91 99008 87766" />
               </Grid>
@@ -131,6 +158,18 @@ function EmployeeCreateContent() {
                     {STATUSES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                   </Select>
                 </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Assign Manager</InputLabel>
+                  <Select value={formManagerId} label="Assign Manager" onChange={(e) => setFormManagerId(e.target.value)}>
+                    <MenuItem value=""><em>-- None --</em></MenuItem>
+                    {users.filter(u => u.role === 'MANAGER' || u.role === 'ADMIN').map(u => <MenuItem key={u.id} value={u.id}>{u.name} ({u.role})</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField label="Available Leave Balance" type="number" fullWidth size="small" value={formLeaveBalance} onChange={(e) => setFormLeaveBalance(e.target.value)} placeholder="e.g. 5" />
               </Grid>
             </Grid>
             <Divider />

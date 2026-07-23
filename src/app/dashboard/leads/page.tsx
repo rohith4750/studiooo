@@ -69,23 +69,23 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 animate-fadeIn font-sans text-xs text-neutral-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-neutral-800">Lead Pipeline</h2>
-          <p className="text-xs text-neutral-500 mt-0.5">Track and convert studio inquiries into bookings.</p>
+          <h1 className="text-lg font-bold tracking-tight text-neutral-800">Inquiries & Lead Pipeline</h1>
+          <p className="text-[11px] text-neutral-500 mt-0.5 font-normal">Track studio lead inquiries and convert prospects directly into bookings.</p>
         </div>
         <button
           onClick={() => router.push('/dashboard/leads/create')}
-          className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded transition duration-150 cursor-pointer shadow-xs"
+          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-black text-white text-xs font-medium rounded-lg shadow-xs transition cursor-pointer self-start sm:self-auto"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           <span>Add New Lead</span>
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="glass-card p-4 rounded flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <TextField 
             fullWidth
@@ -103,10 +103,10 @@ export default function LeadsPage() {
                 )
               }
             }}
-            sx={{ '& .MuiInputBase-root': { height: 36, fontSize: '0.75rem' } }}
+            sx={{ '& .MuiInputBase-root': { height: 36, fontSize: '0.75rem', borderRadius: '8px' } }}
           />
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1.5">
             <Filter className="h-3.5 w-3.5 text-neutral-400" />
             <span className="text-xs text-neutral-500 font-medium">Source:</span>
@@ -115,7 +115,7 @@ export default function LeadsPage() {
                 value={filterSource}
                 onChange={(e) => setFilterSource(e.target.value as string)}
                 displayEmpty
-                sx={{ minWidth: 120, height: 36, fontSize: '0.75rem' }}
+                sx={{ minWidth: 120, height: 34, fontSize: '0.75rem', borderRadius: '8px' }}
               >
                 <MenuItem value="ALL">All Sources</MenuItem>
                 {SOURCES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
@@ -129,7 +129,7 @@ export default function LeadsPage() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as string)}
                 displayEmpty
-                sx={{ minWidth: 120, height: 36, fontSize: '0.75rem' }}
+                sx={{ minWidth: 120, height: 34, fontSize: '0.75rem', borderRadius: '8px' }}
               >
                 <MenuItem value="ALL">All Statuses</MenuItem>
                 {STATUSES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
@@ -140,7 +140,8 @@ export default function LeadsPage() {
       </div>
 
       {/* Leads Table Card */}
-      <div className="glass-card rounded overflow-hidden border border-neutral-200/50">
+      <div className="bg-white rounded-xl border border-neutral-200/80 shadow-2xs overflow-hidden">
+
         {loading ? (
           <div className="p-12 text-center text-xs font-semibold text-neutral-400">Loading leads database...</div>
         ) : filteredLeads.length === 0 ? (

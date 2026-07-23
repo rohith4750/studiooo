@@ -16,6 +16,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   auditLogs AuditLog[]
+  managedEmployees Employee[] @relation("ManagerToEmployee")
 }
 
 model Client {
@@ -146,8 +147,14 @@ model Employee {
   status      String       // ACTIVE, INACTIVE
   salary      Float
   joinedAt    DateTime     @default(now())
+  
+  managerId   String?
+  manager     User?        @relation("ManagerToEmployee", fields: [managerId], references: [id], onDelete: SetNull)
+  leaveBalance Float       @default(0)
+
   assignments Assignment[]
   albumEditor Album[]      @relation("AlbumEditor")
+  attendances Attendance[]
 }
 
 model Payment {
@@ -263,4 +270,17 @@ model AuditLog {
   action    String
   details   String
   timestamp DateTime @default(now())
+}
+
+model Attendance {
+  id              String   @id @default(uuid())
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date            String   // YYYY-MM-DD
+  status          String   // PRESENT, ABSENT, HALF_DAY, LEAVE
+  workDescription String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([employeeId, date])
 }

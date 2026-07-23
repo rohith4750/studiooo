@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 
 // Map URL parameter names to Prisma model names
-const MODEL_MAPPING: Record<string, keyof typeof prisma> = {
+const MODEL_MAPPING: Record<string, any> = {
   users: 'user',
   clients: 'client',
   leads: 'lead',
@@ -23,6 +23,7 @@ const MODEL_MAPPING: Record<string, keyof typeof prisma> = {
   expenses: 'expense',
   notifications: 'notification',
   auditlogs: 'auditLog',
+  attendances: 'attendance' as any,
 };
 
 // Role-Based Access Control configuration
@@ -89,6 +90,14 @@ export async function GET(
     }
   }
 
+  // Row-level security for Managers
+  if (user.role === 'MANAGER' && (modelName === 'employee' || modelName === 'attendance')) {
+    queryOptions.where = {
+      ...queryOptions.where,
+      ...(modelName === 'employee' ? { managerId: user.id } : { employee: { managerId: user.id } })
+    };
+  }
+
   try {
     const delegate = prisma[modelName] as any;
     const items = await delegate.findMany(queryOptions);
@@ -126,18 +135,23 @@ export async function POST(
     const delegate = prisma[modelName] as any;
     const created = await delegate.create({ data: body });
 
-    // Log the audit record
+    // Format human-readable audit summary
+    const itemLabel = created.invoiceNumber || created.quotationNumber || created.bookingNumber || created.name || created.title || created.email || `ID: ${created.id}`;
     await prisma.auditLog.create({
       data: {
         userId: user.id,
         action: 'CREATE',
-        details: `Created record in ${String(modelName)}: ${JSON.stringify(created).substring(0, 200)}`,
+        details: `Created ${String(modelName)} (${itemLabel})`,
       },
     });
 
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {
     console.error(`Error creating ${String(modelName)}:`, error);
+    if (error.code === 'P2002') {
+      const target = error.meta?.target ? ` (${(error.meta.target as string[]).join(', ')})` : '';
+      return NextResponse.json({ error: `A record with this unique value${target} already exists.` }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -178,21 +192,27 @@ export async function PUT(
       data,
     });
 
-    // Log the audit record
+    // Format human-readable audit summary
+    const itemLabel = updated.invoiceNumber || updated.quotationNumber || updated.bookingNumber || updated.name || updated.title || updated.email || `ID: ${id}`;
     await prisma.auditLog.create({
       data: {
         userId: user.id,
         action: 'UPDATE',
-        details: `Updated record in ${String(modelName)} (ID: ${id}): ${JSON.stringify(data).substring(0, 200)}`,
+        details: `Updated ${String(modelName)} (${itemLabel})`,
       },
     });
 
     return NextResponse.json(updated);
   } catch (error: any) {
     console.error(`Error updating ${String(modelName)}:`, error);
+    if (error.code === 'P2002') {
+      const target = error.meta?.target ? ` (${(error.meta.target as string[]).join(', ')})` : '';
+      return NextResponse.json({ error: `A record with this unique value${target} already exists.` }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
 
 export async function DELETE(
   req: NextRequest,
@@ -233,9 +253,10 @@ export async function DELETE(
       data: {
         userId: user.id,
         action: 'DELETE',
-        details: `Deleted record in ${String(modelName)} (ID: ${id})`,
+        details: `Deleted ${String(modelName)} (ID: ${id})`,
       },
     });
+
 
     return NextResponse.json(deleted);
   } catch (error: any) {

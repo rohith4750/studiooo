@@ -413,22 +413,22 @@ export default function BillingPage() {
           <div className="bg-white rounded max-w-3xl w-full shadow-lg border border-primary-100 flex flex-col h-[90vh] animate-scaleIn">
             
             {/* Modal Header Actions */}
-            <div className="p-4 border-b border-primary-100/50 flex items-center justify-between">
+            <div className="p-4 border-b border-primary-100/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h3 className="font-bold text-neutral-800 flex items-center space-x-1.5 text-xs sm:text-sm">
                 <Sparkles className="h-4.5 w-4.5 text-primary-500" />
                 <span>Document PDF print Preview</span>
               </h3>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => handleDownloadPDF()}
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold cursor-pointer shadow-sm transition"
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold cursor-pointer shadow-xs transition"
                 >
                   <Download className="h-4 w-4" />
                   <span>Download PDF</span>
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-800 hover:bg-neutral-900 text-white rounded text-xs font-semibold cursor-pointer shadow-sm transition"
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-neutral-800 hover:bg-neutral-900 text-white rounded text-xs font-semibold cursor-pointer shadow-xs transition"
                 >
                   <Printer className="h-4 w-4" />
                   <span>Print</span>
@@ -441,6 +441,7 @@ export default function BillingPage() {
                 </button>
               </div>
             </div>
+
 
             {/* Document sheet wrapper */}
             <div className="flex-1 overflow-y-auto p-8 bg-neutral-100/50 flex justify-center">

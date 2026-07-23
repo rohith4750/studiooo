@@ -41,6 +41,33 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
+    // Auto-mark Attendance for Employee on Login
+    const localDateStr = new Date().toLocaleDateString('en-CA');
+    const localTimeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const employee = await prisma.employee.findUnique({
+      where: { email: user.email.toLowerCase() },
+    });
+
+    if (employee) {
+      // Check if attendance already exists for today
+      const existingAttendance = await (prisma as any).attendance.findFirst({
+        where: { employeeId: employee.id, date: localDateStr },
+      });
+
+      if (!existingAttendance) {
+        await (prisma as any).attendance.create({
+          data: {
+            employeeId: employee.id,
+            date: localDateStr,
+            status: 'PRESENT',
+            workDescription: `Auto-Logged at Studio Portal Login (${localTimeStr})`,
+          },
+        });
+      }
+    }
+
+
     // Create Audit Log
     await prisma.auditLog.create({
       data: {

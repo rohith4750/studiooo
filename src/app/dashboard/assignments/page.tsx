@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { 
   Calendar, Users, AlertTriangle, CheckCircle, Info, Plus, 
-  Trash2, X, ClipboardCheck, Sparkles, MapPin, Clock 
+  Trash2, X, ClipboardCheck, Sparkles, MapPin, Clock, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Select, MenuItem, FormControl } from '@mui/material';
 import Link from 'next/link';
@@ -20,6 +20,10 @@ export default function AssignmentsPage() {
 
   const [loading, setLoading] = useState(true);
   const [filterClientId, setFilterClientId] = useState('');
+
+  // Calendar State
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
   useEffect(() => {
     setLoading(true);
@@ -52,13 +56,21 @@ export default function AssignmentsPage() {
     }
   };
 
-  // Prepping Calendar Matrix for July 2026 (matching local year context)
-  const daysInJuly = 31;
-  const julyDays = Array.from({ length: daysInJuly }, (_, i) => i + 1);
+  // Prepping Calendar Matrix
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-11
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // 0 (Sun) - 6 (Sat)
+  const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
 
-  // Group events by day of July 2026
+  const nextMonth = () => setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
+  const prevMonth = () => setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
+  const goToToday = () => setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+
+  // Group events by day of the current month
   const getShootsForDay = (day: number) => {
-    const dateStr = `2026-07-${day.toString().padStart(2, '0')}`;
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return bookingEvents.filter(be => 
       be.eventDate === dateStr && 
       (!filterClientId || be.booking?.clientId === filterClientId)
@@ -109,14 +121,19 @@ export default function AssignmentsPage() {
       {/* Main Container */}
       <div className="space-y-6 sm:p-2">
         
-        {/* July 2026 Calendar view */}
+        {/* Dynamic Calendar view */}
         <div className="glass-card p-5 rounded border border-neutral-200/50">
-          <div className="flex items-center justify-between mb-4 border-b border-neutral-100 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b border-neutral-100 pb-3 gap-3">
             <h3 className="font-bold text-xs uppercase text-neutral-500 tracking-wider flex items-center space-x-1.5">
               <Calendar className="h-4.5 w-4.5 text-primary-500" />
-              <span>July 2026 Schedule</span>
+              <span>{monthName} {currentYear} Schedule</span>
             </h3>
-            <span className="text-[10px] bg-primary-50 text-primary-700 font-bold px-2 py-0.5 rounded">Color-Coded Events</span>
+            <div className="flex items-center space-x-2">
+              <button onClick={prevMonth} className="p-1 hover:bg-neutral-100 rounded text-neutral-500 cursor-pointer"><ChevronLeft className="h-4 w-4" /></button>
+              <button onClick={goToToday} className="px-2 py-1 text-[10px] font-bold bg-neutral-100 hover:bg-neutral-200 text-neutral-600 rounded cursor-pointer">Today</button>
+              <button onClick={nextMonth} className="p-1 hover:bg-neutral-100 rounded text-neutral-500 cursor-pointer"><ChevronRight className="h-4 w-4" /></button>
+              <span className="text-[10px] bg-primary-50 text-primary-700 font-bold px-2 py-0.5 rounded ml-2 hidden sm:inline-block">Color-Coded Events</span>
+            </div>
           </div>
 
           {/* Calendar Grid 7 columns */}
@@ -125,13 +142,12 @@ export default function AssignmentsPage() {
           </div>
 
           {/* Calendar Days matrix */}
-          {/* Note: July 1, 2026 is a Wednesday, so we prepend 3 empty slots for Sun, Mon, Tue */}
           <div className="grid grid-cols-7 gap-2 min-h-[300px]">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
               <div key={`empty-${idx}`} className="bg-neutral-50/30 rounded border border-neutral-100/30"></div>
             ))}
 
-            {julyDays.map((day) => {
+            {monthDays.map((day) => {
               const dayShoots = getShootsForDay(day);
               return (
                 <div key={day} className="p-1.5 bg-white border border-neutral-200/60 rounded flex flex-col items-start min-h-[70px] hover:border-primary-300 transition shadow-xs">

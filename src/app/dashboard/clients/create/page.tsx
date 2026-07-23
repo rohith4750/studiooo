@@ -4,11 +4,11 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
-import { 
-  Box, Grid, Card, CardContent, Button, TextField, Typography, 
+import {
+  Box, Grid, Card, CardContent, Button, TextField, Typography,
   Stack, Divider, Paper
 } from '@mui/material';
-import { 
+import {
   Sparkles, ArrowLeft, CheckCircle2, RefreshCw
 } from 'lucide-react';
 
@@ -119,9 +119,9 @@ function ClientCreateContent() {
             Create or modify client directories, billing details, and event milestones.
           </Typography>
         </div>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowLeft className="h-4 w-4" />} 
+        <Button
+          variant="outlined"
+          startIcon={<ArrowLeft className="h-4 w-4" />}
           onClick={() => router.push('/dashboard/clients')}
           sx={{ py: 1, px: 2 }}
         >Back</Button>
@@ -246,16 +246,16 @@ function ClientCreateContent() {
             <Divider />
 
             <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 color="secondary"
                 onClick={() => router.push('/dashboard/clients')}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                variant="contained" 
+              <Button
+                type="submit"
+                variant="contained"
                 color="primary"
                 disabled={saving}
                 startIcon={<CheckCircle2 className="h-4.5 w-4.5" />}

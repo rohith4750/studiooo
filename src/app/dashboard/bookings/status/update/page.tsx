@@ -5,24 +5,21 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
 import { 
-  Box, Grid, Card, CardContent, Button, TextField, Typography, 
-  Chip, Stack, Paper, Divider
-} from '@mui/material';
-import { 
-  CheckCircle2, ArrowLeft, MapPin, CalendarDays, Kanban, ArrowRight, RefreshCw
+  CheckCircle2, ArrowLeft, MapPin, CalendarDays, ArrowRight, RefreshCw,
+  Sparkles, FileText, Check, Clock, ChevronRight, Zap, PlayCircle, AlertCircle
 } from 'lucide-react';
+import { TextField } from '@mui/material';
 
-const STATUS_FLOW = [
-  { key: 'QUOTATION', label: 'Quotation', desc: 'Draft proposal sent to client', color: 'info' },
-  { key: 'PENDING', label: 'Pending', desc: 'Awaiting client approval / advance payment', color: 'warning' },
-  { key: 'CONFIRMED', label: 'Confirmed', desc: 'Booking locked and deposit cleared', color: 'primary' },
-  { key: 'IN_PROGRESS', label: 'In Progress', desc: 'Event shoot actively underway', color: 'secondary' },
-  { key: 'EDITING', label: 'Editing', desc: 'Raw media in post-production queue', color: 'warning' },
-  { key: 'ALBUM_DESIGNING', label: 'Designing', desc: 'Album mockup drafting and review', color: 'secondary' },
-  { key: 'PRINTING', label: 'Printing', desc: 'Approved album sent to print press', color: 'info' },
-  { key: 'READY_FOR_DELIVERY', label: 'Ready', desc: 'Deliverables ready for packaging', color: 'info' },
-  { key: 'COMPLETED', label: 'Completed', desc: 'All deliverables sent and balance paid', color: 'success' },
-  { key: 'CANCELLED', label: 'Cancelled', desc: 'Contract voided or cancelled', color: 'error' }
+const CHAIN_STAGES = [
+  { step: 1, key: 'QUOTATION', label: 'Quotation', desc: 'Draft proposal sent to client' },
+  { step: 2, key: 'PENDING', label: 'Pending', desc: 'Awaiting client approval or advance deposit' },
+  { step: 3, key: 'CONFIRMED', label: 'Confirmed', desc: 'Booking locked and deposit cleared' },
+  { step: 4, key: 'IN_PROGRESS', label: 'Shoot On-Site', desc: 'Event shoot actively underway' },
+  { step: 5, key: 'EDITING', label: 'Editing', desc: 'Raw media in post-production queue' },
+  { step: 6, key: 'ALBUM_DESIGNING', label: 'Album Design', desc: 'Album mockup drafting and client review' },
+  { step: 7, key: 'PRINTING', label: 'Printing Press', desc: 'Approved album sent to print press' },
+  { step: 8, key: 'READY_FOR_DELIVERY', label: 'Ready', desc: 'Deliverables packaged for dispatch' },
+  { step: 9, key: 'COMPLETED', label: 'Completed', desc: 'All deliverables sent and balance paid' },
 ];
 
 function UpdateStatusContent() {
@@ -64,7 +61,7 @@ function UpdateStatusContent() {
 
     setSaving(true);
     const combinedNotes = statusComment.trim() 
-      ? `${new Date().toLocaleDateString()}: [Status changed to ${targetStatus}] ${statusComment}. ${booking.notes || ''}`
+      ? `${new Date().toLocaleDateString('en-IN')}: [Chain advanced to ${targetStatus}] ${statusComment}. ${booking.notes || ''}`
       : booking.notes;
 
     try {
@@ -121,267 +118,267 @@ function UpdateStatusContent() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 12, gap: 2 }}>
-        <RefreshCw className="h-6 w-6 animate-spin text-primary-500" />
-        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
-          Loading booking profile...
-        </Typography>
-      </Box>
+      <div className="flex flex-col items-center justify-center py-20 space-y-3">
+        <RefreshCw className="h-6 w-6 animate-spin text-amber-500" />
+        <span className="text-xs font-semibold text-neutral-400">Loading chain pipeline...</span>
+      </div>
     );
   }
 
   if (!booking) {
     return (
-      <Box sx={{ py: 6, textAlign: 'center' }}>
-        <Typography color="error" variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-          Booking record not found
-        </Typography>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowLeft className="h-4 w-4" />} 
+      <div className="py-12 text-center space-y-4">
+        <p className="text-sm font-bold text-red-600">Booking record not found</p>
+        <button 
           onClick={() => router.push('/dashboard/bookings/status')}
-          sx={{ mt: 2 }}
+          className="inline-flex items-center space-x-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-xs font-bold transition"
         >
-          Back to Status Roster
-        </Button>
-      </Box>
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Status Roster</span>
+        </button>
+      </div>
     );
   }
 
-  const currentFlowIndex = STATUS_FLOW.findIndex(s => s.key === booking.status);
+  const currentIdx = CHAIN_STAGES.findIndex(s => s.key === booking.status);
+  const targetIdx = CHAIN_STAGES.findIndex(s => s.key === targetStatus);
+  const nextStageNode = currentIdx < CHAIN_STAGES.length - 1 ? CHAIN_STAGES[currentIdx + 1] : null;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Top Header Utilities */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+    <div className="space-y-6 animate-fadeIn font-sans">
+      
+      {/* Header Banner */}
+      <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>
-            Update Booking Status
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            Update operational statuses and view project milestone progressions.
-          </Typography>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-xl font-extrabold tracking-tight text-neutral-900 flex items-center space-x-2">
+              <Zap className="h-5 w-5 text-amber-500 fill-amber-400" />
+              <span>Chain Mode Pipeline: #{booking.bookingNumber}</span>
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+              Active Step {currentIdx + 1} of {CHAIN_STAGES.length}
+            </span>
+          </div>
+          <p className="text-xs text-neutral-500 mt-1 font-medium">
+            Client: <span className="font-bold text-neutral-800">{booking.client?.name}</span> • Advance through interconnected stage nodes.
+          </p>
         </div>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowLeft className="h-4 w-4" />} 
+
+        <button 
           onClick={() => router.push('/dashboard/bookings/status')}
-          sx={{ py: 1, px: 2 }}
+          className="inline-flex items-center space-x-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold transition cursor-pointer self-start sm:self-auto"
         >
-          Back
-        </Button>
-      </Box>
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Roster</span>
+        </button>
+      </div>
 
-      <Grid container spacing={3}>
-        {/* Left Side: Booking Profile Summary */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-              <div>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'primary.main', textTransform: 'uppercase', fontSize: 9 }}>
-                  Booking Details
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 0.5 }}>
-                  {booking.bookingNumber}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 'semibold', mt: 0.5 }}>
-                  Client: {booking.client?.name}
-                </Typography>
-              </div>
+      {/* Connected Visual Chain Pipeline Bar */}
+      <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs space-y-4 overflow-x-auto">
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+          Sequential Stage Chain Nodes (Click any node to select)
+        </span>
 
-              <Divider />
+        <div className="flex items-center space-x-2 min-w-[760px] py-3">
+          {CHAIN_STAGES.map((node, idx) => {
+            const isCurrent = node.key === booking.status;
+            const isSelected = node.key === targetStatus;
+            const isCompleted = idx < currentIdx;
 
-              <Stack spacing={1.5}>
-                {booking.package && (
-                  <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5, borderRadius: 0.5 }}>
-                    <CalendarDays className="h-4.5 w-4.5 text-primary-500" />
-                    <div>
-                      <Typography sx={{ fontWeight: 'bold', fontSize: 11 }}>Service Preset Package</Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{booking.package.name} (₹{booking.package.price.toLocaleString()})</Typography>
-                    </div>
-                  </Paper>
-                )}
-                {booking.venue && (
-                  <Paper variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5, borderRadius: 0.5 }}>
-                    <MapPin className="h-4.5 w-4.5 text-secondary-500" />
-                    <div>
-                      <Typography sx={{ fontWeight: 'bold', fontSize: 11 }}>Default Shoot Venue</Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{booking.venue}</Typography>
-                    </div>
-                  </Paper>
-                )}
-              </Stack>
-
-              {booking.notes && (
-                <>
-                  <Divider />
-                  <div>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: 9, display: 'block', mb: 1 }}>
-                      Past Ledger Notes
-                    </Typography>
-                    <Box sx={{ p: 2, bgcolor: 'background.default', border: '1px solid rgba(227, 236, 231, 0.6)', borderRadius: 0.5, maxHeight: 200, overflowY: 'auto', fontSize: 11, fontStyle: 'italic', color: 'text.secondary', lineHeight: 1.5 }}>
-                      {booking.notes}
-                    </Box>
+            return (
+              <React.Fragment key={node.key}>
+                {/* Chain Node */}
+                <div
+                  onClick={() => setTargetStatus(node.key)}
+                  className={`flex-1 p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center text-center relative ${
+                    isSelected
+                      ? 'border-neutral-900 bg-neutral-900 text-white shadow-md scale-105 z-10'
+                      : isCurrent
+                        ? 'border-amber-400 bg-amber-50 text-neutral-900 ring-2 ring-amber-200'
+                        : isCompleted
+                          ? 'border-emerald-200 bg-emerald-50/60 text-emerald-900'
+                          : 'border-neutral-200/80 bg-white text-neutral-400 hover:border-neutral-300'
+                  }`}
+                >
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-extrabold mb-1.5 ${
+                    isSelected
+                      ? 'bg-amber-400 text-neutral-900'
+                      : isCurrent
+                        ? 'bg-amber-500 text-white animate-pulse'
+                        : isCompleted
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-neutral-100 text-neutral-400'
+                  }`}>
+                    {isCompleted ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : node.step}
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                  
+                  <span className="font-bold text-[11px] leading-tight block">{node.label}</span>
+                  <span className={`text-[8px] mt-1 uppercase font-semibold ${isSelected ? 'text-neutral-300' : 'text-neutral-400'}`}>
+                    {isCurrent ? 'Current' : isSelected ? 'Target' : isCompleted ? 'Done' : 'Next'}
+                  </span>
+                </div>
 
-        {/* Right Side: Stepper and Status Form */}
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Card>
-            <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {/* Stepper Timeline */}
-              <div>
-                <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>
-                  Progression Tracker
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2, alignItems: 'center' }}>
-                  {STATUS_FLOW.filter(s => s.key !== 'CANCELLED').map((flow, idx) => {
-                    const isActive = flow.key === booking.status;
-                    const isPassed = idx < currentFlowIndex;
-                    
-                    let chipColor = 'default';
-                    let variant: 'filled' | 'outlined' = 'outlined';
-                    
-                    if (isActive) {
-                      chipColor = flow.color;
-                      variant = 'filled';
-                    } else if (isPassed) {
-                      chipColor = 'primary';
-                    }
+                {/* Interconnecting Chain Connector Line */}
+                {idx < CHAIN_STAGES.length - 1 && (
+                  <div className="flex items-center justify-center">
+                    <div className={`h-1 w-5 rounded-full transition-colors ${
+                      idx < currentIdx ? 'bg-emerald-500' : idx === currentIdx ? 'bg-amber-400' : 'bg-neutral-200'
+                    }`} />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
 
-                    return (
-                      <React.Fragment key={flow.key}>
-                        <Chip
-                          label={flow.label}
-                          color={chipColor as any}
-                          variant={variant}
-                          size="small"
-                          sx={{ 
-                            fontWeight: isActive || isPassed ? 'bold' : 'medium',
-                            fontSize: 9, 
-                            height: 22,
-                            transition: 'all 0.2s',
-                            transform: isActive ? 'scale(1.08)' : 'none',
-                            boxShadow: isActive ? 1 : 0
-                          }}
-                        />
-                        {idx < STATUS_FLOW.filter(s => s.key !== 'CANCELLED').length - 1 && (
-                          <ArrowRight className="h-3 w-3 text-neutral-300" />
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </Box>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column: Contract Profile & Financials */}
+        <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs space-y-5 h-fit">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block mb-1">Contract Profile</span>
+            <h3 className="text-lg font-extrabold text-neutral-900">#{booking.bookingNumber}</h3>
+            <p className="text-xs text-neutral-600 font-semibold mt-0.5">{booking.client?.name}</p>
+          </div>
+
+          <hr className="border-neutral-100" />
+
+          {/* Financials */}
+          <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200/60 space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-neutral-500">Contract Billing:</span>
+              <span className="font-extrabold text-neutral-900">₹{booking.grandTotal?.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs pt-1 border-t border-neutral-200/50">
+              <span className="text-neutral-500">Balance Due:</span>
+              <span className={`font-extrabold ${booking.balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                ₹{booking.balance?.toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="space-y-3 text-xs">
+            {booking.package && (
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/60 flex items-center space-x-3">
+                <CalendarDays className="h-4.5 w-4.5 text-amber-500 flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-neutral-800">Package Preset</p>
+                  <p className="text-[10px] text-neutral-500">{booking.package.name} (₹{booking.package.price.toLocaleString('en-IN')})</p>
+                </div>
               </div>
+            )}
 
-              <Divider />
+            {booking.venue && (
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/60 flex items-center space-x-3">
+                <MapPin className="h-4.5 w-4.5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="font-bold text-neutral-800">Shoot Venue</p>
+                  <p className="text-[10px] text-neutral-500">{booking.venue}</p>
+                </div>
+              </div>
+            )}
+          </div>
 
-              {/* Status Update Form */}
-              <Box component="form" onSubmit={handleUpdateStatus} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Stack spacing={1.5}>
-                  <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>
-                    Update State Option
-                  </Typography>
+          {/* Past Notes */}
+          {booking.notes && (
+            <div className="space-y-2 pt-2">
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Past Chain Audit Log</span>
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200/60 max-h-40 overflow-y-auto text-[11px] text-neutral-600 leading-relaxed font-mono">
+                {booking.notes}
+              </div>
+            </div>
+          )}
+        </div>
 
-                  <Grid container spacing={1.5}>
-                    {STATUS_FLOW.map((flow) => {
-                      const isCurrent = flow.key === booking.status;
-                      const isSelected = flow.key === targetStatus;
+        {/* Right Column: Active Chain Target & Action Control */}
+        <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs lg:col-span-2 space-y-6">
+          
+          {/* Active Chain Transition Card */}
+          <div className="p-5 bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-white rounded-2xl border border-amber-200/80 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700 flex items-center space-x-1.5">
+                <PlayCircle className="h-4 w-4 text-amber-600" />
+                <span>Selected Target Node</span>
+              </span>
+              <span className="text-xs font-bold text-neutral-800 bg-white px-3 py-1 rounded-full border border-amber-200 shadow-2xs">
+                Stage {targetIdx + 1} of {CHAIN_STAGES.length}
+              </span>
+            </div>
 
-                      return (
-                        <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={flow.key}>
-                          <Card 
-                            variant="outlined"
-                            onClick={() => setTargetStatus(flow.key)}
-                            sx={{
-                              cursor: 'pointer',
-                              border: '1px solid',
-                              borderColor: isSelected ? 'primary.main' : isCurrent ? 'success.light' : 'divider',
-                              bgcolor: isSelected ? 'primary.light' : isCurrent ? 'success.light' : 'background.paper',
-                              transition: 'all 0.15s ease',
-                              transform: isSelected ? 'translateY(-2px)' : 'none',
-                              boxShadow: isSelected ? 1 : 0,
-                              '&:hover': {
-                                borderColor: isSelected ? 'primary.main' : 'primary.light',
-                                boxShadow: 1
-                              }
-                            }}
-                          >
-                            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                              <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography sx={{ fontWeight: 'bold', fontSize: 10.5, color: isSelected ? 'primary.dark' : 'text.primary' }}>
-                                  {flow.label}
-                                </Typography>
-                                {isCurrent && (
-                                  <Chip label="Current" color="success" size="small" sx={{ height: 14, fontSize: 7, fontWeight: 'bold' }} />
-                                )}
-                              </Stack>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 8, mt: 0.5, display: 'block', leading: '1.2' }}>
-                                {flow.desc}
-                              </Typography>
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Stack>
+            <div className="space-y-1">
+              <h2 className="text-xl font-extrabold text-neutral-900">{CHAIN_STAGES[targetIdx]?.label}</h2>
+              <p className="text-xs text-neutral-600 font-medium">{CHAIN_STAGES[targetIdx]?.desc}</p>
+            </div>
 
-                {/* Remarks comment box */}
-                <Stack spacing={1}>
-                  <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary', textTransform: 'uppercase', fontSize: 9 }}>
-                    Status Change Remarks / Audit Note
-                  </Typography>
-                  <TextField
-                    placeholder="Enter audit reasons or updates (e.g. photoshoot finished, album approved, client invoice balance clear)..."
-                    fullWidth
-                    multiline
-                    rows={3}
-                    size="small"
-                    value={statusComment}
-                    onChange={(e) => setStatusComment(e.target.value)}
-                  />
-                </Stack>
+            {nextStageNode && targetStatus === booking.status && (
+              <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between">
+                <span className="text-xs text-neutral-600 font-semibold">Fast Advance Chain:</span>
+                <button
+                  type="button"
+                  onClick={() => setTargetStatus(nextStageNode.key)}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg shadow-xs transition cursor-pointer"
+                >
+                  <span>Advance to Next: {nextStageNode.label}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
 
-                <Divider sx={{ my: 1 }} />
+          {/* Form and Remarks */}
+          <form onSubmit={handleUpdateStatus} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block">
+                Chain Transition Audit Remarks / Work Notes
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Enter audit reasons or updates for this chain advancement (e.g., photoshoot wrapped, raw files transferred, album proof approved by client)..."
+                value={statusComment}
+                onChange={(e) => setStatusComment(e.target.value)}
+                className="w-full p-3.5 bg-neutral-50 border border-neutral-200/80 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/40 text-neutral-800 font-sans"
+              />
+            </div>
 
-                <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-                  <Button 
-                    variant="outlined" 
-                    color="secondary"
-                    onClick={() => router.push('/dashboard/bookings/status')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="contained" 
-                    color="primary"
-                    disabled={saving || targetStatus === booking.status}
-                    startIcon={<CheckCircle2 className="h-4.5 w-4.5" />}
-                  >
-                    {saving ? 'Updating...' : 'Save Status Update'}
-                  </Button>
-                </Stack>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+            <hr className="border-neutral-100" />
+
+            {/* Actions */}
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/bookings/status')}
+                className="px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={saving || targetStatus === booking.status}
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-neutral-900 hover:bg-black disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{saving ? 'Advancing Chain...' : `Confirm & Transition to Stage ${targetIdx + 1}`}</span>
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
   );
 }
 
 export default function UpdateStatusPage() {
   return (
     <Suspense fallback={
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 12 }}>
-        <RefreshCw className="h-6 w-6 animate-spin text-neutral-400" />
-      </Box>
+      <div className="flex justify-center py-20">
+        <RefreshCw className="h-6 w-6 animate-spin text-amber-500" />
+      </div>
     }>
       <UpdateStatusContent />
     </Suspense>

@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import {useStore } from '@/store/useStore';
+import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
-import { 
-  Box, Grid, Card, CardContent, Button, TextField, Typography, 
+import {
+  Box, Grid, Card, CardContent, Button, TextField, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select,
   InputLabel, FormControl, Chip, Stack, IconButton, Paper, Divider, Avatar,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip
 } from '@mui/material';
-import { 
-  Plus, Search, FileText, ClipboardPlus, CreditCard, Trash2, Edit3, X, 
+import {
+  Plus, Search, FileText, ClipboardPlus, CreditCard, Trash2, Edit3, X,
   MapPin, Calendar, Clock, Sparkles, Calculator, Eye
 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ const numberToWordsIndian = (num: number): string => {
   if (num === 0) return 'Zero';
   const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
   const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  
+
   if (num < 0) return 'Negative ' + numberToWordsIndian(Math.abs(num));
   if (num > 999999999) return 'Too large';
 
@@ -30,7 +30,7 @@ const numberToWordsIndian = (num: number): string => {
   if (Math.floor(num / 100) > 0) { words += numberToWordsIndian(Math.floor(num / 100)) + ' Hundred '; num %= 100; }
   if (num > 0) {
     if (words !== '') words += 'and ';
-    if (num < 20) { words += a[num]; } 
+    if (num < 20) { words += a[num]; }
     else {
       words += b[Math.floor(num / 10)];
       if (num % 10 > 0) { words += ' ' + a[num % 10]; }
@@ -40,16 +40,16 @@ const numberToWordsIndian = (num: number): string => {
 };
 
 const STATUSES = [
-  'QUOTATION', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'EDITING', 
+  'QUOTATION', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'EDITING',
   'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'
 ];
 
 function BookingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { 
-    bookings, clients, packages, events, fetchData, 
-    createRecord, updateRecord, deleteRecord 
+  const {
+    bookings, clients, packages, events, fetchData,
+    createRecord, updateRecord, deleteRecord
   } = useStore();
   const { toast, confirm: confirmAction } = useToast();
 
@@ -250,7 +250,7 @@ function BookingsContent() {
 
       if (editingBooking) {
         await updateRecord('bookings', { id: editingBooking.id, ...payload });
-        
+
         await fetch(`/api/data/bookingEvents?bookingId=${editingBooking.id}`, { method: 'DELETE' });
         for (const row of selectedEvents) {
           await createRecord('bookingEvents', {
@@ -287,7 +287,7 @@ function BookingsContent() {
       setEditingBooking(null);
       await fetchData('bookings', '?include={"client":true,"package":true,"bookingEvents":{"include":{"event":true}}}');
       toast('Booking details saved successfully!', 'success');
-      
+
       if (savedBookingId) {
         const freshList = await useStore.getState().bookings;
         const freshSelected = freshList.find((b: any) => b.id === savedBookingId);
@@ -361,9 +361,9 @@ function BookingsContent() {
   const handleCollectPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) return;
-    
+
     const amountVal = parseFloat(paymentAmount);
-    
+
     try {
       await createRecord('payments', {
         bookingId: selectedBooking.id,
@@ -376,7 +376,7 @@ function BookingsContent() {
 
       const newPaid = (selectedBooking.paidAmount || 0) + amountVal;
       const newBalance = Math.max(0, selectedBooking.grandTotal - newPaid);
-      
+
       await updateRecord('bookings', {
         id: selectedBooking.id,
         paidAmount: newPaid,
@@ -387,7 +387,7 @@ function BookingsContent() {
       setPaymentModalOpen(false);
       setPaymentAmount('');
       setPaymentNotes('');
-      
+
       await fetchData('bookings', '?include={"client":true,"package":true,"bookingEvents":{"include":{"event":true}}}');
       setDetailsOpen(false);
       setSelectedBooking(null);
@@ -398,8 +398,8 @@ function BookingsContent() {
 
   // Filtering
   const filteredBookings = bookings.filter((b) => {
-    const matchesSearch = 
-      b.bookingNumber.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch =
+      b.bookingNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.client && b.client.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus = filterStatus === 'ALL' || b.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -418,7 +418,7 @@ function BookingsContent() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      
+
       {/* Top Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box>
@@ -523,11 +523,11 @@ function BookingsContent() {
                 </TableRow>
               ) : (
                 filteredBookings.map((b) => (
-                  <TableRow 
-                    key={b.id} 
+                  <TableRow
+                    key={b.id}
                     hover
                     onClick={() => handleOpenDetails(b)}
-                    sx={{ 
+                    sx={{
                       cursor: 'pointer',
                       transition: 'background-color 0.15s ease',
                       '&:hover': { bgcolor: 'primary.light' },
@@ -554,11 +554,11 @@ function BookingsContent() {
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={b.status} 
-                        size="small" 
-                        color={getStatusChipColor(b.status) as any} 
-                        sx={{ height: 20, fontSize: '0.62rem', fontWeight: 500 }} 
+                      <Chip
+                        label={b.status}
+                        size="small"
+                        color={getStatusChipColor(b.status) as any}
+                        sx={{ height: 20, fontSize: '0.62rem', fontWeight: 500 }}
                       />
                     </TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
@@ -577,35 +577,35 @@ function BookingsContent() {
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Chip 
-                        label={`₹${b.balance.toLocaleString()}`} 
+                      <Chip
+                        label={`₹${b.balance.toLocaleString()}`}
                         size="small"
-                        color={b.balance > 0 ? 'warning' : 'success'} 
-                        variant="outlined" 
-                        sx={{ height: 20, fontSize: '0.65rem', fontWeight: 500 }} 
+                        color={b.balance > 0 ? 'warning' : 'success'}
+                        variant="outlined"
+                        sx={{ height: 20, fontSize: '0.65rem', fontWeight: 500 }}
                       />
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                         <Tooltip title="View Details" arrow>
-                          <IconButton 
-                            onClick={(e) => { e.stopPropagation(); handleOpenDetails(b); }} 
+                          <IconButton
+                            onClick={(e) => { e.stopPropagation(); handleOpenDetails(b); }}
                             size="small" color="primary" sx={{ borderRadius: 1 }}
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Edit Booking" arrow>
-                          <IconButton 
-                            onClick={(e) => { e.stopPropagation(); handleOpenEdit(b); }} 
+                          <IconButton
+                            onClick={(e) => { e.stopPropagation(); handleOpenEdit(b); }}
                             size="small" color="secondary" sx={{ borderRadius: 1 }}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete Booking" arrow>
-                          <IconButton 
-                            onClick={(e) => handleDeleteBooking(b.id, e)} 
+                          <IconButton
+                            onClick={(e) => handleDeleteBooking(b.id, e)}
                             size="small" color="error" sx={{ borderRadius: 1 }}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -631,10 +631,10 @@ function BookingsContent() {
       </Card>
 
       {/* ========== BOOKING DETAILS DIALOG (POPUP) ========== */}
-      <Dialog 
-        open={detailsOpen} 
-        onClose={handleCloseDetails} 
-        maxWidth="sm" 
+      <Dialog
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        maxWidth="sm"
         fullWidth
         slotProps={{
           paper: { sx: { borderRadius: 0.5, maxHeight: '85vh' } }
@@ -643,7 +643,7 @@ function BookingsContent() {
         {selectedBooking && (
           <>
             {/* Dialog Header */}
-            <DialogTitle sx={{ 
+            <DialogTitle sx={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               bgcolor: 'background.default', borderBottom: '1px solid rgba(227, 236, 231, 0.6)',
               py: 1.5, px: 2.5
@@ -662,11 +662,11 @@ function BookingsContent() {
                 </Box>
               </Stack>
               <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-                <Chip 
-                  label={selectedBooking.status} 
-                  size="small" 
-                  color={getStatusChipColor(selectedBooking.status) as any} 
-                  sx={{ height: 22, fontSize: '0.65rem', fontWeight: 500 }} 
+                <Chip
+                  label={selectedBooking.status}
+                  size="small"
+                  color={getStatusChipColor(selectedBooking.status) as any}
+                  sx={{ height: 22, fontSize: '0.65rem', fontWeight: 500 }}
                 />
                 <IconButton size="small" onClick={handleCloseDetails} sx={{ borderRadius: 1 }}>
                   <X className="h-4 w-4" />
@@ -677,7 +677,7 @@ function BookingsContent() {
             {/* Dialog Content */}
             <DialogContent sx={{ p: 0 }}>
               <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                
+
                 {/* Booking Info */}
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem', letterSpacing: '0.06em', mb: 1, display: 'block' }}>
@@ -834,16 +834,16 @@ function BookingsContent() {
       </Dialog>
 
       {/* ========== BOOKING FORM DIALOG ========== */}
-      <Dialog 
-        open={formOpen} 
-        onClose={() => setFormOpen(false)} 
-        maxWidth="md" 
+      <Dialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        maxWidth="md"
         fullWidth
         slotProps={{
           paper: { sx: { borderRadius: 0.5, maxHeight: '90vh' } }
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           bgcolor: 'background.default', borderBottom: '1px solid rgba(227, 236, 231, 0.6)',
           py: 1.5, px: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>

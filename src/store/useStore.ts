@@ -29,6 +29,7 @@ interface StoreState {
   inventory: any[];
   expenses: any[];
   auditLogs: any[];
+  attendances: any[];
 
   loading: Record<string, boolean>;
   errors: Record<string, string>;
@@ -63,6 +64,7 @@ export const useStore = create<StoreState>((set, get) => ({
   inventory: [],
   expenses: [],
   auditLogs: [],
+  attendances: [],
 
   loading: {},
   errors: {},
@@ -130,6 +132,7 @@ export const useStore = create<StoreState>((set, get) => ({
           inventory: 'inventory',
           expenses: 'expenses',
           auditlogs: 'auditLogs',
+          attendances: 'attendances',
         };
         const mappedKey = stateKeyMap[pluralKey] || pluralKey;
         return {

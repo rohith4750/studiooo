@@ -4,16 +4,16 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
-import { 
-  Box, Grid, Card, CardContent, Button, TextField, Typography, 
+import {
+  Box, Grid, Card, CardContent, Button, TextField, Typography,
   MenuItem, Select, InputLabel, FormControl, Stack, IconButton, Divider, Paper
 } from '@mui/material';
-import { 
+import {
   Plus, Trash2, X, Sparkles, ArrowLeft, CheckCircle2, RefreshCw
 } from 'lucide-react';
 
 const STATUSES = [
-  'QUOTATION', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'EDITING', 
+  'QUOTATION', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'EDITING',
   'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'
 ];
 
@@ -21,9 +21,9 @@ function BookingCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = searchParams.get('bookingId');
-  const { 
-    bookings, clients, packages, events, fetchData, 
-    createRecord, updateRecord 
+  const {
+    bookings, clients, packages, events, fetchData,
+    createRecord, updateRecord
   } = useStore();
   const { toast } = useToast();
 
@@ -37,7 +37,7 @@ function BookingCreateContent() {
   const [formNotes, setFormNotes] = useState('');
   const [formStatus, setFormStatus] = useState('PENDING');
   const [formGrandTotal, setFormGrandTotal] = useState('0');
-  
+
   const [selectedEvents, setSelectedEvents] = useState<Array<{
     eventId: string;
     eventDate: string;
@@ -171,7 +171,7 @@ function BookingCreateContent() {
       if (booking) {
         // Update booking base
         await updateRecord('bookings', { id: booking.id, ...payload });
-        
+
         // Remove old events and save new ones
         await fetch(`/api/data/bookingEvents?bookingId=${booking.id}`, { method: 'DELETE' });
         for (const row of selectedEvents) {
@@ -238,9 +238,9 @@ function BookingCreateContent() {
             Configure studio packages, multi-shoot dates, and client invoicing details.
           </Typography>
         </div>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowLeft className="h-4 w-4" />} 
+        <Button
+          variant="outlined"
+          startIcon={<ArrowLeft className="h-4 w-4" />}
           onClick={() => router.push('/dashboard/bookings')}
           sx={{ py: 1, px: 2 }}
         >
@@ -430,16 +430,16 @@ function BookingCreateContent() {
             <Divider />
 
             <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 color="secondary"
                 onClick={() => router.push('/dashboard/bookings')}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                variant="contained" 
+              <Button
+                type="submit"
+                variant="contained"
                 color="primary"
                 disabled={saving}
                 startIcon={<CheckCircle2 className="h-4.5 w-4.5" />}

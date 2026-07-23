@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
-import { 
-  Box, Card, CardContent, Button, TextField, Typography, 
+import {
+  Box, Card, CardContent, Button, TextField, Typography,
   Chip, Stack, IconButton, Paper, Dialog, DialogTitle, DialogContent,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Avatar, Divider, Tooltip
 } from '@mui/material';
-import { 
-  Plus, Search, Download, Upload, Trash2, Edit3, X, Mail, Phone, 
+import {
+  Plus, Search, Download, Upload, Trash2, Edit3, X, Mail, Phone,
   MapPin, Gift, Calendar, Notebook, Eye, User
 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ export default function ClientsPage() {
   const router = useRouter();
   const { clients, bookings, payments, fetchData, createRecord, deleteRecord } = useStore();
   const { toast, confirm: confirmAction } = useToast();
-  
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -71,12 +71,12 @@ export default function ClientsPage() {
       c.name, c.phone, c.whatsappNumber || '', c.email || '', c.address || '',
       c.city || '', c.state || '', c.pincode || '', c.birthday || '', c.anniversary || ''
     ]);
-    let csvContent = "data:text/csv;charset=utf-8," 
+    let csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `r2r_studio_clients_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `r2r_studio_clients_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -126,8 +126,8 @@ export default function ClientsPage() {
     reader.readAsText(file);
   };
 
-  const filteredClients = clients.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredClients = clients.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.phone.includes(searchQuery) ||
     (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -241,11 +241,11 @@ export default function ClientsPage() {
                 filteredClients.map((client) => {
                   const clientBookingCount = bookings.filter(b => b.clientId === client.id).length;
                   return (
-                    <TableRow 
-                      key={client.id} 
+                    <TableRow
+                      key={client.id}
                       hover
                       onClick={() => handleOpenProfile(client)}
-                      sx={{ 
+                      sx={{
                         cursor: 'pointer',
                         transition: 'background-color 0.15s ease',
                         '&:hover': {
@@ -255,12 +255,12 @@ export default function ClientsPage() {
                     >
                       <TableCell>
                         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                          <Avatar 
-                            sx={{ 
-                              width: 30, height: 30, 
-                              bgcolor: 'primary.main', 
-                              fontSize: '0.72rem', 
-                              fontWeight: 600 
+                          <Avatar
+                            sx={{
+                              width: 30, height: 30,
+                              bgcolor: 'primary.main',
+                              fontSize: '0.72rem',
+                              fontWeight: 600
                             }}
                           >
                             {client.name.charAt(0).toUpperCase()}
@@ -286,22 +286,22 @@ export default function ClientsPage() {
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
-                        <Chip 
-                          label={clientBookingCount} 
-                          size="small" 
+                        <Chip
+                          label={clientBookingCount}
+                          size="small"
                           variant={clientBookingCount > 0 ? 'filled' : 'outlined'}
                           color={clientBookingCount > 0 ? 'primary' : 'default'}
-                          sx={{ 
+                          sx={{
                             height: 20, fontSize: '0.68rem', fontWeight: 500, minWidth: 28,
-                          }} 
+                          }}
                         />
                       </TableCell>
                       <TableCell align="right">
                         <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                           <Tooltip title="View Profile" arrow>
-                            <IconButton 
-                              onClick={(e) => { e.stopPropagation(); handleOpenProfile(client); }} 
-                              size="small" 
+                            <IconButton
+                              onClick={(e) => { e.stopPropagation(); handleOpenProfile(client); }}
+                              size="small"
                               color="primary"
                               sx={{ borderRadius: 1 }}
                             >
@@ -309,9 +309,9 @@ export default function ClientsPage() {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Edit Client" arrow>
-                            <IconButton 
-                              onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/clients/create?clientId=${client.id}`); }} 
-                              size="small" 
+                            <IconButton
+                              onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/clients/create?clientId=${client.id}`); }}
+                              size="small"
                               color="secondary"
                               sx={{ borderRadius: 1 }}
                             >
@@ -319,9 +319,9 @@ export default function ClientsPage() {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete Client" arrow>
-                            <IconButton 
-                              onClick={(e) => handleDelete(client.id, e)} 
-                              size="small" 
+                            <IconButton
+                              onClick={(e) => handleDelete(client.id, e)}
+                              size="small"
                               color="error"
                               sx={{ borderRadius: 1 }}
                             >
@@ -349,10 +349,10 @@ export default function ClientsPage() {
       </Card>
 
       {/* Client Profile Dialog (Popup) */}
-      <Dialog 
-        open={profileOpen} 
-        onClose={handleCloseProfile} 
-        maxWidth="sm" 
+      <Dialog
+        open={profileOpen}
+        onClose={handleCloseProfile}
+        maxWidth="sm"
         fullWidth
         slotProps={{
           paper: {
@@ -366,7 +366,7 @@ export default function ClientsPage() {
         {selectedClient && (
           <>
             {/* Dialog Header */}
-            <DialogTitle sx={{ 
+            <DialogTitle sx={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               bgcolor: 'background.default', borderBottom: '1px solid rgba(227, 236, 231, 0.6)',
               py: 1.5, px: 2.5
@@ -392,7 +392,7 @@ export default function ClientsPage() {
             {/* Dialog Content */}
             <DialogContent sx={{ p: 0 }}>
               <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                
+
                 {/* Contact Details */}
                 <Box>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem', letterSpacing: '0.06em', mb: 1, display: 'block' }}>
@@ -481,17 +481,17 @@ export default function ClientsPage() {
 
                 {/* Action Buttons */}
                 <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
+                  <Button
+                    variant="outlined"
+                    size="small"
                     startIcon={<Edit3 className="h-3.5 w-3.5" />}
                     onClick={() => { handleCloseProfile(); router.push(`/dashboard/clients/create?clientId=${selectedClient.id}`); }}
                   >
                     Edit Profile
                   </Button>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
+                  <Button
+                    variant="outlined"
+                    size="small"
                     color="error"
                     startIcon={<Trash2 className="h-3.5 w-3.5" />}
                     onClick={() => handleDelete(selectedClient.id)}
