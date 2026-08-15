@@ -61,12 +61,15 @@ body {
   font-family: var(--font-poppins), 'Poppins', sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-size: 13px;
-  font-weight: 350;
+  font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Force Poppins and soft weights across MUI elements */
+/* Force Poppins and soft light typography globally */
+*,
+*::before,
+*::after,
 body,
 button,
 input,
@@ -83,12 +86,39 @@ textarea,
   font-family: var(--font-poppins), 'Poppins', sans-serif !important;
 }
 
-/* Light font weights on table headers, cards and text */
+/* Global font-weight overrides for a clean, very light, premium look */
+h1, h2, h3, h4, h5, h6,
+.MuiTypography-h1, .MuiTypography-h2, .MuiTypography-h3, 
+.MuiTypography-h4, .MuiTypography-h5, .MuiTypography-h6,
+.font-bold, .font-extrabold, .font-semibold, .font-black {
+  font-weight: 450 !important;
+  letter-spacing: -0.01em;
+}
+
+.font-medium {
+  font-weight: 380 !important;
+}
+
+.font-normal, p, span, div, a, li, td, th, label {
+  font-weight: 300;
+}
+
+/* Material-UI table cell & header weights */
 .MuiTableCell-root {
+  font-weight: 300 !important;
+}
+
+.MuiTableCell-head {
+  font-weight: 450 !important;
+  color: #78716c !important;
+}
+
+.MuiButton-root, .MuiButtonBase-root {
   font-weight: 400 !important;
 }
-.MuiTypography-h5, .MuiTypography-h6 {
-  font-weight: 550 !important;
+
+.MuiChip-root {
+  font-weight: 400 !important;
 }
 
 /* Custom Scrollbars to keep UI clean and peaceful */
