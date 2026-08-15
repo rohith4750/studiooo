@@ -38,14 +38,11 @@ export async function POST(req: NextRequest) {
     );
 
     // Create security audit log
-    await createAuditLog({
-      action: 'UPDATE',
-      model: 'User',
-      recordId: user.id,
-      userId: user.id,
-      userName: user.name,
-      details: `Password reset successfully via SMTP email token for ${user.email}`,
-    });
+    await createAuditLog(
+      user.id,
+      'PASSWORD_RESET',
+      `Password reset successfully via SMTP OTP verification for ${user.email}`
+    );
 
     return NextResponse.json({
       success: true,
