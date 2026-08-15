@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
+import VirtualizedList from '@/components/VirtualizedList';
 import { 
   Box, Grid, Card, CardContent, Button, TextField, Typography, 
   MenuItem, Select, InputLabel, FormControl, Chip, Stack,
@@ -57,6 +58,30 @@ export default function WorkflowsPage() {
       fetchData('albums', '?include={"booking":true,"editor":true}'),
     ]).finally(() => setLoading(false));
   }, [fetchData]);
+
+  // Memoize column classification in a single O(N) pass for high performance with thousands of records
+  const filteredBookingsByColumn = useMemo(() => {
+    const map: Record<string, any[]> = {
+      IN_PROGRESS: [],
+      EDITING: [],
+      ALBUM_DESIGNING: [],
+      READY_FOR_DELIVERY: [],
+      COMPLETED: [],
+    };
+
+    bookings.forEach((b: any) => {
+      const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
+      if (!matchesDate) return;
+
+      if (b.status === 'IN_PROGRESS' || b.status === 'CONFIRMED' || b.status === 'PENDING') {
+        map.IN_PROGRESS.push(b);
+      } else if (map[b.status]) {
+        map[b.status].push(b);
+      }
+    });
+
+    return map;
+  }, [bookings, dateFilter]);
 
   const handleOpenManager = (booking: any) => {
     setActiveBooking(booking);
@@ -166,14 +191,7 @@ export default function WorkflowsPage() {
               }}
             >
               {COLUMNS.map((col) => {
-                const colBookings = bookings.filter(b => {
-                  const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
-                  if (!matchesDate) return false;
-                  if (col.key === 'IN_PROGRESS') {
-                    return b.status === 'IN_PROGRESS' || b.status === 'CONFIRMED' || b.status === 'PENDING';
-                  }
-                  return b.status === col.key;
-                });
+                const colBookings = filteredBookingsByColumn[col.key] || [];
 
                 return (
                   <Box 
@@ -206,84 +224,84 @@ export default function WorkflowsPage() {
                       />
                     </Box>
 
-                    {/* Cards */}
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5, overflowY: 'auto', maxHeight: 420 }}>
-                      {colBookings.map((b) => {
-                        const activeAlbum = b.albums?.[0] || null;
-                        return (
-                          <Card 
-                            key={b.id} 
-                            onClick={() => handleOpenManager(b)}
-                            sx={{ 
-                              cursor: 'pointer', 
-                              border: '1px solid rgba(227, 236, 231, 0.6)', 
-                              transition: 'all 0.15s ease',
-                              '&:hover': { borderColor: 'primary.main', boxShadow: 1 }
-                            }}
-                          >
-                            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 }, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography sx={{ fontWeight: 'bold', fontSize: 10, color: 'text.primary' }}>
-                                  {b.bookingNumber}
-                                </Typography>
-                                <IconButton 
-                                  size="small" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAdvanceStatus(b, b.status);
-                                  }}
-                                >
-                                  <ArrowRight className="h-3.5 w-3.5 text-neutral-400 hover:text-primary-500 transition" />
-                                </IconButton>
-                              </Box>
-
-                              <Typography sx={{ fontWeight: 'bold', fontSize: 11, color: 'text.primary' }}>
-                                {b.client?.name}
-                              </Typography>
-
-                              <Stack spacing={0.25} sx={{ color: 'text.secondary', fontSize: 9 }}>
-                                {b.bookingEvents?.slice(0, 2).map((be: any) => (
-                                  <Typography key={be.id} variant="caption" sx={{ fontSize: 9, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', display: 'block' }}>
-                                    • {be.event?.name} ({be.eventDate})
+                    {/* Virtualized Cards Container */}
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: 420 }}>
+                      <VirtualizedList
+                        items={colBookings}
+                        estimateSize={110}
+                        maxHeight={420}
+                        emptyMessage="Column is empty"
+                        getItemKey={(b) => b.id}
+                        renderItem={(b) => {
+                          const activeAlbum = b.albums?.[0] || null;
+                          return (
+                            <Card 
+                              onClick={() => handleOpenManager(b)}
+                              sx={{ 
+                                cursor: 'pointer', 
+                                border: '1px solid rgba(227, 236, 231, 0.6)', 
+                                transition: 'all 0.15s ease',
+                                '&:hover': { borderColor: 'primary.main', boxShadow: 1 }
+                              }}
+                            >
+                              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 }, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography sx={{ fontWeight: 'bold', fontSize: 10, color: 'text.primary' }}>
+                                    {b.bookingNumber}
                                   </Typography>
-                                ))}
-                                {b.bookingEvents && b.bookingEvents.length > 2 && (
-                                  <Typography variant="caption" sx={{ fontSize: 8.5, color: 'primary.main', fontWeight: 'bold', mt: 0.5 }}>
-                                    + {b.bookingEvents.length - 2} more events
-                                  </Typography>
-                                )}
-                              </Stack>
-
-                              <Divider sx={{ my: 0.5 }} />
-
-                              {/* Tags */}
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8 }}>
-                                {activeAlbum?.editor ? (
-                                  <Chip 
-                                    label={`Ed: ${activeAlbum.editor.name.split(' ')[0]}`} 
+                                  <IconButton 
                                     size="small" 
-                                    color="primary" 
-                                    sx={{ height: 16, fontSize: 8, fontWeight: 'bold' }} 
-                                  />
-                                ) : (
-                                  <Typography sx={{ fontSize: 8, color: 'error.main', fontStyle: 'italic', fontWeight: 'bold' }}>Unassigned</Typography>
-                                )}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAdvanceStatus(b, b.status);
+                                    }}
+                                  >
+                                    <ArrowRight className="h-3.5 w-3.5 text-neutral-400 hover:text-primary-500 transition" />
+                                  </IconButton>
+                                </Box>
 
-                                <Stack direction="row" spacing={0.5}>
-                                  {activeAlbum?.rawLink && <HardDriveUpload className="h-3 w-3 text-neutral-400" />}
-                                  {activeAlbum?.editedLink && <Link className="h-3 w-3 text-primary-500" />}
+                                <Typography sx={{ fontWeight: 'bold', fontSize: 11, color: 'text.primary' }}>
+                                  {b.client?.name}
+                                </Typography>
+
+                                <Stack spacing={0.25} sx={{ color: 'text.secondary', fontSize: 9 }}>
+                                  {b.bookingEvents?.slice(0, 2).map((be: any) => (
+                                    <Typography key={be.id} variant="caption" sx={{ fontSize: 9, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', display: 'block' }}>
+                                      • {be.event?.name} ({be.eventDate})
+                                    </Typography>
+                                  ))}
+                                  {b.bookingEvents && b.bookingEvents.length > 2 && (
+                                    <Typography variant="caption" sx={{ fontSize: 8.5, color: 'primary.main', fontWeight: 'bold', mt: 0.5 }}>
+                                      + {b.bookingEvents.length - 2} more events
+                                    </Typography>
+                                  )}
                                 </Stack>
-                              </Box>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
 
-                      {colBookings.length === 0 && (
-                        <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
-                          Column is empty
-                        </Typography>
-                      )}
+                                <Divider sx={{ my: 0.5 }} />
+
+                                {/* Tags */}
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8 }}>
+                                  {activeAlbum?.editor ? (
+                                    <Chip 
+                                      label={`Ed: ${activeAlbum.editor.name.split(' ')[0]}`} 
+                                      size="small" 
+                                      color="primary" 
+                                      sx={{ height: 16, fontSize: 8, fontWeight: 'bold' }} 
+                                    />
+                                  ) : (
+                                    <Typography sx={{ fontSize: 8, color: 'error.main', fontStyle: 'italic', fontWeight: 'bold' }}>Unassigned</Typography>
+                                  )}
+
+                                  <Stack direction="row" spacing={0.5}>
+                                    {activeAlbum?.rawLink && <HardDriveUpload className="h-3 w-3 text-neutral-400" />}
+                                    {activeAlbum?.editedLink && <Link className="h-3 w-3 text-primary-500" />}
+                                  </Stack>
+                                </Box>
+                              </CardContent>
+                            </Card>
+                          );
+                        }}
+                      />
                     </Box>
                   </Box>
                 );

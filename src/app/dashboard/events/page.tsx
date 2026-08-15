@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
 import {
-  Grid, Box, Card, CardContent, Button, Typography, Chip, Stack, IconButton
+  Grid, Box, Card, CardContent, Button, Typography, Stack, IconButton
 } from '@mui/material';
 import { Plus, Trash2, Edit3, Clock } from 'lucide-react';
 
@@ -30,7 +30,7 @@ export default function EventsPage() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>Shoot Event Presets</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Manage base operational templates and shoot categories for events.</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Manage base operational templates for events.</Typography>
         </Box>
         <Button variant="contained" color="primary" startIcon={<Plus className="h-4 w-4" />} onClick={() => router.push('/dashboard/events/create')}>
           New Shoot Event
@@ -45,20 +45,31 @@ export default function EventsPage() {
         <Grid container spacing={2}>
           {events.map((ev) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={ev.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Chip label={ev.category} color="secondary" size="small" sx={{ fontSize: 9, height: 20, fontWeight: 'bold' }} />
-                    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-                      <Box sx={{ borderRadius: '50%', backgroundColor: ev.active ? 'success.main' : 'neutral.300', width: 6, height: 6 }} />
-                      <Typography variant="caption" sx={{ fontSize: 8, color: 'text.secondary', fontWeight: 'bold', textTransform: 'uppercase' }}>{ev.active ? 'Active' : 'Inactive'}</Typography>
-                    </Stack>
-                  </Box>
-                  <Stack spacing={0.5}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'extrabold', color: 'text.primary' }}>{ev.name}</Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: 32 }}>{ev.description || 'No event description.'}</Typography>
-                  </Stack>
-                  <Stack spacing={1} sx={{ pt: 1.5, borderTop: '1px solid rgba(227, 236, 231, 0.6)', fontSize: 10, color: 'text.secondary' }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  borderRadius: 3,
+                  borderColor: 'rgba(227, 236, 231, 0.8)',
+                  boxShadow: 'none',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  },
+                }}
+              >
+                <CardContent sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary' }}>
+                    {ev.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: 32 }}>
+                    {ev.description || 'No event description.'}
+                  </Typography>
+                  <Stack spacing={1} sx={{ pt: 1.5, borderTop: '1px solid rgba(227, 236, 231, 0.6)', fontSize: 10, color: 'text.secondary', mt: 'auto' }}>
                     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                       <Clock className="h-3.5 w-3.5 text-neutral-400" />
                       <Typography variant="caption" sx={{ fontSize: 10 }}>Duration: {ev.duration || 'Full Day'}</Typography>

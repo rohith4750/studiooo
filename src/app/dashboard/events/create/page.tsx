@@ -6,11 +6,9 @@ import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
 import {
   Box, Grid, Card, CardContent, Button, TextField, Typography,
-  MenuItem, Select, InputLabel, FormControl, FormControlLabel, Checkbox, Stack, Divider
+  FormControlLabel, Checkbox, Stack, Divider
 } from '@mui/material';
 import { Sparkles, ArrowLeft, CheckCircle2, RefreshCw } from 'lucide-react';
-
-const CATEGORIES = ['TRADITIONAL', 'CANDID', 'CINEMATIC', 'DRONE', 'PRE_SHOOT', 'PORTRAIT', 'EVENT_OTHER'];
 
 function EventCreateContent() {
   const router = useRouter();
@@ -25,7 +23,6 @@ function EventCreateContent() {
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formDuration, setFormDuration] = useState('Full Day');
-  const [formCategory, setFormCategory] = useState('TRADITIONAL');
   const [formActive, setFormActive] = useState(true);
 
   useEffect(() => {
@@ -40,7 +37,6 @@ function EventCreateContent() {
       setFormName(event.name);
       setFormDescription(event.description || '');
       setFormDuration(event.duration || 'Full Day');
-      setFormCategory(event.category || 'TRADITIONAL');
       setFormActive(event.active);
     }
   }, [event]);
@@ -52,7 +48,7 @@ function EventCreateContent() {
     const payload = {
       name: formName, defaultPrice: 0,
       description: formDescription || null, duration: formDuration || null,
-      category: formCategory, active: formActive,
+      active: formActive,
     };
     try {
       if (event) {
@@ -82,7 +78,7 @@ function EventCreateContent() {
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
         <div>
           <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>{eventId ? 'Modify Shoot Event Preset' : 'Create Shoot Event Preset'}</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Define event templates with shoot categories and duration estimates.</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Define base operational event templates and duration estimates.</Typography>
         </div>
         <Button 
           variant="outlined" 
@@ -107,14 +103,6 @@ function EventCreateContent() {
                 <TextField label="Event Name *" required fullWidth size="small" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Pre-Wedding Outdoor" />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Functional Category</InputLabel>
-                  <Select value={formCategory} label="Functional Category" onChange={(e) => setFormCategory(e.target.value)}>
-                    {CATEGORIES.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Duration Estimate" fullWidth size="small" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} placeholder="e.g. Full Day, 6 Hours" />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -125,7 +113,7 @@ function EventCreateContent() {
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField label="Service Description" fullWidth multiline rows={3} value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="e.g. Multicamera standard photography covers..." />
+                <TextField label="Service Description" fullWidth multiline rows={3} value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="e.g. Standard coverage for event..." />
               </Grid>
             </Grid>
             <Divider />

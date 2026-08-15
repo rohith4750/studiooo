@@ -14,6 +14,39 @@ export default function LoginPage() {
   const [checking, setChecking] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Forgot password modal state
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState('');
+  const [forgotError, setForgotError] = useState('');
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotSuccess('');
+    setForgotLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to request password reset');
+      }
+
+      setForgotSuccess(data.message || 'Password reset instructions sent to your email!');
+    } catch (err: any) {
+      setForgotError(err.message || 'Failed to dispatch reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => {
@@ -195,9 +228,18 @@ export default function LoginPage() {
 
               {/* Password Field */}
               <div className="space-y-1">
-                <label htmlFor="password" className="block text-[11px] font-semibold text-neutral-700">
-                  Password
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-[11px] font-semibold text-neutral-700">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotOpen(true); setForgotSuccess(''); setForgotError(''); }}
+                    className="text-[10px] font-semibold text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
                     <Lock className="h-3.5 w-3.5" />
@@ -238,6 +280,77 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* Forgot Password Modal */}
+      {forgotOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 w-full max-w-sm p-6 space-y-4 animate-scaleIn">
+            <div className="text-center space-y-1">
+              <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Mail className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-neutral-900">Forgot Password</h3>
+              <p className="text-[11px] text-neutral-500 font-normal">
+                Enter your registered work email to receive a secure SMTP password reset link.
+              </p>
+            </div>
+
+            {forgotError && (
+              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg font-medium">
+                {forgotError}
+              </div>
+            )}
+
+            {forgotSuccess ? (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg space-y-2">
+                <p className="font-semibold">{forgotSuccess}</p>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(false)}
+                  className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  Return to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-3">
+                <div>
+                  <label htmlFor="forgot-email" className="block text-[11px] font-semibold text-neutral-700 mb-1">
+                    Account Email
+                  </label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="e.g. rahul@r2r.com"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex space-x-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(false)}
+                    className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="flex-1 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

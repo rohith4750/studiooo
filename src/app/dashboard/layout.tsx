@@ -33,8 +33,8 @@ const MENU_GROUPS = [
       { name: 'Clients', path: '/dashboard/clients', icon: Users, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Bookings', path: '/dashboard/bookings', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Track Status', path: '/dashboard/bookings/status', icon: CheckCircle2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST'] },
-      { name: 'Quotation Studio', path: '/dashboard/quotations', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST'] },
+      { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT'] },
+      { name: 'Quotation Studio', path: '/dashboard/quotations', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT'] },
     ]
   },
   {

@@ -6,15 +6,32 @@ import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
 import {
   Box, Grid, Card, CardContent, Button, TextField, Typography,
-  MenuItem, Select, InputLabel, FormControl, Stack, IconButton, Divider, Paper
+  MenuItem, Select, InputLabel, FormControl, Stack, IconButton, Divider, Paper, Autocomplete,
+  Dialog, DialogTitle, DialogContent, DialogActions, Tooltip
 } from '@mui/material';
 import {
-  Plus, Trash2, X, Sparkles, ArrowLeft, CheckCircle2, RefreshCw
+  Plus, Trash2, X, Sparkles, ArrowLeft, CheckCircle2, RefreshCw, UserPlus
 } from 'lucide-react';
 
 const STATUSES = [
   'QUOTATION', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'EDITING',
   'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 'COMPLETED', 'CANCELLED'
+];
+
+const FUNCTIONAL_CATEGORIES = [
+  'TRADITIONAL',
+  'CANDID',
+  'CINEMATIC',
+  'DRONE',
+  'PRE_SHOOT',
+  'PORTRAIT',
+  'EVENT_OTHER',
+];
+
+const TIME_SLOTS = [
+  '06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+  '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
+  '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM', '10:00 PM', '11:00 PM'
 ];
 
 function BookingCreateContent() {
@@ -23,7 +40,7 @@ function BookingCreateContent() {
   const bookingId = searchParams.get('bookingId');
   const {
     bookings, clients, packages, events, fetchData,
-    createRecord, updateRecord
+    createRecord, updateRecord, user
   } = useStore();
   const { toast } = useToast();
 
@@ -32,14 +49,24 @@ function BookingCreateContent() {
 
   // Form states
   const [formClientId, setFormClientId] = useState('');
+  const [formName, setFormName] = useState('');
   const [formPackageId, setFormPackageId] = useState('');
   const [formVenue, setFormVenue] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formStatus, setFormStatus] = useState('PENDING');
   const [formGrandTotal, setFormGrandTotal] = useState('0');
 
+  // Quick Add Client Modal state
+  const [addClientOpen, setAddClientOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientCity, setNewClientCity] = useState('');
+  const [creatingClient, setCreatingClient] = useState(false);
+
   const [selectedEvents, setSelectedEvents] = useState<Array<{
     eventId: string;
+    category: string;
     eventDate: string;
     eventTime: string;
     venue: string;
@@ -60,6 +87,7 @@ function BookingCreateContent() {
   useEffect(() => {
     if (booking) {
       setFormClientId(booking.clientId);
+      setFormName(booking.name || '');
       setFormPackageId(booking.packageId || '');
       setFormVenue(booking.venue || '');
       setFormNotes(booking.notes || '');
@@ -69,6 +97,7 @@ function BookingCreateContent() {
       if (booking.bookingEvents && Array.isArray(booking.bookingEvents)) {
         const rows = booking.bookingEvents.map((be: any) => ({
           eventId: be.eventId,
+          category: be.category || 'TRADITIONAL',
           eventDate: be.eventDate,
           eventTime: be.eventTime || '',
           venue: be.venue || '',
@@ -96,8 +125,9 @@ function BookingCreateContent() {
           const master = events.find(e => e.name.toLowerCase() === name.toLowerCase());
           return {
             eventId: master ? master.id : '',
+            category: 'TRADITIONAL',
             eventDate: new Date().toISOString().slice(0, 10),
-            eventTime: '09:00 AM',
+            eventTime: '',
             venue: '',
           };
         }).filter(r => r.eventId !== '');
@@ -113,8 +143,9 @@ function BookingCreateContent() {
       ...selectedEvents,
       {
         eventId: events[0]?.id || '',
+        category: 'TRADITIONAL',
         eventDate: new Date().toISOString().slice(0, 10),
-        eventTime: '09:00 AM',
+        eventTime: '',
         venue: '',
       }
     ]);
@@ -128,6 +159,8 @@ function BookingCreateContent() {
     const updated = [...selectedEvents];
     if (field === 'eventId') {
       updated[idx].eventId = value;
+    } else if (field === 'category') {
+      updated[idx].category = value;
     } else if (field === 'eventDate') {
       updated[idx].eventDate = value;
     } else if (field === 'eventTime') {
@@ -155,6 +188,7 @@ function BookingCreateContent() {
 
     const payload = {
       bookingNumber: bookingNum,
+      name: formName || null,
       clientId: formClientId,
       packageId: formPackageId || null,
       venue: formVenue || null,
@@ -178,6 +212,7 @@ function BookingCreateContent() {
           await createRecord('bookingEvents', {
             bookingId: booking.id,
             eventId: row.eventId,
+            category: row.category || 'TRADITIONAL',
             eventDate: row.eventDate,
             eventTime: row.eventTime || null,
             venue: row.venue || null,
@@ -198,6 +233,7 @@ function BookingCreateContent() {
           await createRecord('bookingEvents', {
             bookingId: savedBooking.id,
             eventId: row.eventId,
+            category: row.category || 'TRADITIONAL',
             eventDate: row.eventDate,
             eventTime: row.eventTime || null,
             venue: row.venue || null,
@@ -212,6 +248,40 @@ function BookingCreateContent() {
       toast('Failed to save booking details: ' + err, 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleQuickCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClientName.trim() || !newClientPhone.trim()) {
+      toast('Client name and phone number are required', 'error');
+      return;
+    }
+
+    setCreatingClient(true);
+    try {
+      const created = await createRecord('clients', {
+        name: newClientName.trim(),
+        phone: newClientPhone.trim(),
+        whatsappNumber: newClientPhone.trim(),
+        email: newClientEmail.trim() || null,
+        city: newClientCity.trim() || null,
+      });
+
+      await fetchData('clients');
+      if (created?.id) {
+        setFormClientId(created.id);
+      }
+      toast(`Client "${newClientName}" registered and selected!`, 'success');
+      setAddClientOpen(false);
+      setNewClientName('');
+      setNewClientPhone('');
+      setNewClientEmail('');
+      setNewClientCity('');
+    } catch (err) {
+      toast('Failed to register client: ' + err, 'error');
+    } finally {
+      setCreatingClient(false);
     }
   };
 
@@ -262,19 +332,57 @@ function BookingCreateContent() {
 
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth required size="small">
-                  <InputLabel>Choose Client</InputLabel>
-                  <Select
-                    value={formClientId}
-                    label="Choose Client"
-                    onChange={(e) => setFormClientId(e.target.value)}
-                  >
-                    <MenuItem value="">-- Choose Profile --</MenuItem>
-                    {clients.map(c => (
-                      <MenuItem key={c.id} value={c.id}>{c.name} ({c.phone})</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Autocomplete
+                    fullWidth
+                    options={clients}
+                    getOptionLabel={(option) => typeof option === 'string' ? option : `${option.name} (${option.phone})`}
+                    value={clients.find((c) => c.id === formClientId) || null}
+                    onChange={(_, newValue) => {
+                      setFormClientId(newValue ? newValue.id : '');
+                    }}
+                    isOptionEqualToValue={(option, val) => option.id === val.id}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Choose Client *"
+                        placeholder="Type client name or phone number..."
+                        required={!formClientId}
+                        size="small"
+                      />
+                    )}
+                  />
+                  <Tooltip title="Register New Client Profile">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => setAddClientOpen(true)}
+                      startIcon={<UserPlus className="h-4 w-4" />}
+                      sx={{
+                        whiteSpace: 'nowrap',
+                        height: 40,
+                        px: 2,
+                        minWidth: 'auto',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      + New
+                    </Button>
+                  </Tooltip>
+                </Stack>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Booking Name (e.g. Rahul Weds Simran)"
+                  fullWidth
+                  size="small"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. Rahul Weds Simran"
+                />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -287,7 +395,9 @@ function BookingCreateContent() {
                   >
                     <MenuItem value="">-- Custom Preset --</MenuItem>
                     {packages.map(p => (
-                      <MenuItem key={p.id} value={p.id}>{p.name} (₹{p.price.toLocaleString()})</MenuItem>
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.name} {user?.role !== 'RECEPTIONIST' ? `(₹${p.price.toLocaleString()})` : ''}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -366,9 +476,24 @@ function BookingCreateContent() {
                         </FormControl>
                       </Grid>
 
-                      <Grid size={{ xs: 6, sm: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Functional Category</InputLabel>
+                          <Select
+                            value={row.category || 'TRADITIONAL'}
+                            label="Functional Category"
+                            onChange={(e) => updateEventRow(index, 'category', e.target.value)}
+                          >
+                            {FUNCTIONAL_CATEGORIES.map(c => (
+                              <MenuItem key={c} value={c}>{c}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField
-                          label="Date"
+                          label="Event Date *"
                           type="date"
                           required
                           size="small"
@@ -379,14 +504,38 @@ function BookingCreateContent() {
                         />
                       </Grid>
 
-                      <Grid size={{ xs: 4, sm: 2 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel id={`time-slot-label-${index}`} shrink>Event Time Slot</InputLabel>
+                          <Select
+                            labelId={`time-slot-label-${index}`}
+                            value={row.eventTime || ''}
+                            label="Event Time Slot"
+                            notched
+                            displayEmpty
+                            onChange={(e) => updateEventRow(index, 'eventTime', e.target.value)}
+                          >
+                            <MenuItem value="">
+                              <em style={{ color: '#9ca3af', fontStyle: 'normal' }}>-- Select Time Slot (e.g. 09:00 AM) --</em>
+                            </MenuItem>
+                            {TIME_SLOTS.map((t) => (
+                              <MenuItem key={t} value={t}>{t}</MenuItem>
+                            ))}
+                            {row.eventTime && !TIME_SLOTS.includes(row.eventTime) && (
+                              <MenuItem value={row.eventTime}>{row.eventTime} (Custom)</MenuItem>
+                            )}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid size={{ xs: 10, sm: 11 }}>
                         <TextField
-                          label="Time"
+                          label="Venue Override"
                           size="small"
                           fullWidth
-                          value={row.eventTime}
-                          onChange={(e) => updateEventRow(index, 'eventTime', e.target.value)}
-                          placeholder="09:00 AM"
+                          value={row.venue}
+                          onChange={(e) => updateEventRow(index, 'venue', e.target.value)}
+                          placeholder="Leave blank to inherit default venue"
                         />
                       </Grid>
 
@@ -396,36 +545,29 @@ function BookingCreateContent() {
                         </IconButton>
                       </Grid>
                     </Grid>
-
-                    <TextField
-                      label="Venue Override"
-                      size="small"
-                      fullWidth
-                      value={row.venue}
-                      onChange={(e) => updateEventRow(index, 'venue', e.target.value)}
-                      placeholder="Leave blank to inherit default venue"
-                    />
                   </Paper>
                 ))}
               </Stack>
             </Stack>
 
-            {/* Pricing Input Box */}
-            <Box sx={{ p: 2.5, bgcolor: 'primary.light', borderRadius: 0.5, display: 'flex', flexDirection: 'column', gap: 2, border: '1px solid', borderColor: 'primary.main' }}>
-              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                <Typography sx={{ fontWeight: 'bold', color: 'primary.dark', fontSize: 13 }}>Final Invoiced Total</Typography>
-                <TextField
-                  label="Grand Total (₹)"
-                  type="number"
-                  size="small"
-                  required
-                  value={formGrandTotal}
-                  onChange={(e) => setFormGrandTotal(e.target.value)}
-                  sx={{ width: 180, bgcolor: 'background.paper', borderRadius: 1.5 }}
-                  slotProps={{ htmlInput: { style: { fontWeight: 'bold', textAlign: 'right' } } }}
-                />
-              </Stack>
-            </Box>
+            {/* Pricing Input Box - Hidden for RECEPTIONIST, only accessible to ADMIN/ACCOUNTANT/MANAGER */}
+            {user?.role !== 'RECEPTIONIST' && (
+              <Box sx={{ p: 2.5, bgcolor: 'primary.light', borderRadius: 0.5, display: 'flex', flexDirection: 'column', gap: 2, border: '1px solid', borderColor: 'primary.main' }}>
+                <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                  <Typography sx={{ fontWeight: 'bold', color: 'primary.dark', fontSize: 13 }}>Final Invoiced Total</Typography>
+                  <TextField
+                    label="Grand Total (₹)"
+                    type="number"
+                    size="small"
+                    required
+                    value={formGrandTotal}
+                    onChange={(e) => setFormGrandTotal(e.target.value)}
+                    sx={{ width: 180, bgcolor: 'background.paper', borderRadius: 1.5 }}
+                    slotProps={{ htmlInput: { style: { fontWeight: 'bold', textAlign: 'right' } } }}
+                  />
+                </Stack>
+              </Box>
+            )}
 
             <Divider />
 
@@ -450,6 +592,94 @@ function BookingCreateContent() {
           </Box>
         </CardContent>
       </Card>
+
+      {/* Quick Add Client Dialog */}
+      <Dialog
+        open={addClientOpen}
+        onClose={() => setAddClientOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: { sx: { borderRadius: 2 } }
+        }}
+      >
+        <DialogTitle sx={{
+          bgcolor: 'background.default',
+          borderBottom: '1px solid rgba(227, 236, 231, 0.6)',
+          py: 1.5,
+          px: 2.5,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <UserPlus className="h-4.5 w-4.5 text-primary-600" />
+            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+              Quick Register New Client
+            </Typography>
+          </Stack>
+          <IconButton onClick={() => setAddClientOpen(false)} size="small" sx={{ borderRadius: 1 }}>
+            <X className="h-4 w-4" />
+          </IconButton>
+        </DialogTitle>
+
+        <Box component="form" onSubmit={handleQuickCreateClient}>
+          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2.5 }}>
+            <TextField
+              label="Full Name *"
+              required
+              fullWidth
+              size="small"
+              value={newClientName}
+              onChange={(e) => setNewClientName(e.target.value)}
+              placeholder="e.g. Rahul Sharma"
+              autoFocus
+            />
+            <TextField
+              label="Phone Number (WhatsApp) *"
+              required
+              fullWidth
+              size="small"
+              value={newClientPhone}
+              onChange={(e) => setNewClientPhone(e.target.value)}
+              placeholder="+919876543210"
+            />
+            <TextField
+              label="Email Address"
+              type="email"
+              fullWidth
+              size="small"
+              value={newClientEmail}
+              onChange={(e) => setNewClientEmail(e.target.value)}
+              placeholder="rahul.sharma@gmail.com"
+            />
+            <TextField
+              label="City"
+              fullWidth
+              size="small"
+              value={newClientCity}
+              onChange={(e) => setNewClientCity(e.target.value)}
+              placeholder="e.g. Hyderabad, Bengaluru"
+            />
+          </DialogContent>
+
+          <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(227, 236, 231, 0.6)' }}>
+            <Button onClick={() => setAddClientOpen(false)} variant="outlined" color="secondary" size="small">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="small"
+              disabled={creatingClient}
+              startIcon={<CheckCircle2 className="h-4 w-4" />}
+            >
+              {creatingClient ? 'Saving...' : 'Add & Select Client'}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
     </Box>
   );
 }

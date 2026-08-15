@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { setSession } from '@/lib/session';
+import { createAuditLog } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,13 +70,7 @@ export async function POST(req: NextRequest) {
 
 
     // Create Audit Log
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'LOGIN',
-        details: `User ${user.email} successfully logged in.`,
-      },
-    });
+    await createAuditLog(user.id, 'LOGIN', `User ${user.email} successfully logged in.`);
 
     return response;
   } catch (error: any) {

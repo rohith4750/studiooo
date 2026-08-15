@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useStore } from '@/store/useStore';
 import { 
   Box, Paper, FormControl, Select, MenuItem, 
   Chip, Button, Typography, Stack, InputAdornment, Tooltip,
@@ -66,7 +67,7 @@ function MuiDatePickerButton({
 
   const [viewDate, setViewDate] = useState(() => {
     if (value) return new Date(value);
-    return new Date(2026, 7, 1); // Default August 2026
+    return new Date();
   });
 
   const year = viewDate.getFullYear();
@@ -211,6 +212,65 @@ export default function DateYearFilter({
   className = '',
   showPresets = true,
 }: DateYearFilterProps) {
+  // Subscribe to store collections to compute Dynamic Peak Day across real records
+  const bookings = useStore((state) => state.bookings);
+  const bookingEvents = useStore((state) => state.bookingEvents);
+  const leads = useStore((state) => state.leads);
+
+  // Dynamic Today calculation
+  const todayDateObj = new Date();
+  const todayYearStr = String(todayDateObj.getFullYear());
+  const todayMonthStr = String(todayDateObj.getMonth() + 1).padStart(2, '0');
+  const todayDayStr = String(todayDateObj.getDate()).padStart(2, '0');
+  const todayStr = `${todayYearStr}-${todayMonthStr}-${todayDayStr}`;
+  const todayDisplayLabel = `Today (${MONTH_NAMES[todayDateObj.getMonth()].substring(0, 3)} ${todayDateObj.getDate()})`;
+
+  // Calculate Peak Day dynamically based on actual order / event frequency in database
+  const peakDayInfo = useMemo(() => {
+    const counts: Record<string, number> = {};
+
+    const addCount = (dateVal: string | null | undefined) => {
+      if (!dateVal || dateVal.length < 10) return;
+      const d = dateVal.substring(0, 10);
+      counts[d] = (counts[d] || 0) + 1;
+    };
+
+    bookings.forEach((b: any) => {
+      addCount(b.createdAt);
+      if (Array.isArray(b.bookingEvents)) {
+        b.bookingEvents.forEach((be: any) => addCount(be.eventDate));
+      }
+    });
+
+    bookingEvents.forEach((be: any) => addCount(be.eventDate));
+    leads.forEach((l: any) => addCount(l.eventDate));
+
+    let topDate = '';
+    let maxCount = 0;
+
+    Object.entries(counts).forEach(([date, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topDate = date;
+      }
+    });
+
+    if (!topDate || maxCount === 0) return null;
+
+    const parts = topDate.split('-').map(Number);
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    const monthName = MONTH_NAMES[dateObj.getMonth()].substring(0, 3);
+    const day = dateObj.getDate();
+
+    return {
+      date: topDate, // "YYYY-MM-DD"
+      year: topDate.substring(0, 4),
+      month: topDate.substring(5, 7),
+      label: `★ ${monthName} ${day} (Peak Day: ${maxCount} ${maxCount === 1 ? 'event' : 'events'})`,
+      count: maxCount,
+    };
+  }, [bookings, bookingEvents, leads]);
+
   const handleYearChange = (year: string) => {
     onChange({ ...filter, year, exactDate: '', startDate: '', endDate: '' });
   };
@@ -241,24 +301,25 @@ export default function DateYearFilter({
     });
   };
 
-  const applyPreset = (preset: 'ALL' | 'TODAY' | 'AUG_2026' | 'AUG_27' | 'Q1_2026' | 'Q2_2026' | 'Q3_2026' | 'Q4_2026') => {
+  const applyPreset = (preset: 'ALL' | 'TODAY' | 'CURRENT_MONTH' | 'PEAK_DAY' | 'Q1' | 'Q2' | 'Q3' | 'Q4') => {
     if (preset === 'ALL') {
       onChange({ year: 'ALL', month: 'ALL', exactDate: '', startDate: '', endDate: '' });
     } else if (preset === 'TODAY') {
-      const todayStr = '2026-08-15';
-      onChange({ year: '2026', month: '08', exactDate: todayStr, startDate: '', endDate: '' });
-    } else if (preset === 'AUG_2026') {
-      onChange({ year: '2026', month: '08', exactDate: '', startDate: '', endDate: '' });
-    } else if (preset === 'AUG_27') {
-      onChange({ year: '2026', month: '08', exactDate: '2026-08-27', startDate: '', endDate: '' });
-    } else if (preset === 'Q1_2026') {
-      onChange({ year: '2026', month: 'ALL', exactDate: '', startDate: '2026-01-01', endDate: '2026-03-31' });
-    } else if (preset === 'Q2_2026') {
-      onChange({ year: '2026', month: 'ALL', exactDate: '', startDate: '2026-04-01', endDate: '2026-06-30' });
-    } else if (preset === 'Q3_2026') {
-      onChange({ year: '2026', month: 'ALL', exactDate: '', startDate: '2026-07-01', endDate: '2026-09-30' });
-    } else if (preset === 'Q4_2026') {
-      onChange({ year: '2026', month: 'ALL', exactDate: '', startDate: '2026-10-01', endDate: '2026-12-31' });
+      onChange({ year: todayYearStr, month: todayMonthStr, exactDate: todayStr, startDate: '', endDate: '' });
+    } else if (preset === 'CURRENT_MONTH') {
+      onChange({ year: todayYearStr, month: todayMonthStr, exactDate: '', startDate: '', endDate: '' });
+    } else if (preset === 'PEAK_DAY') {
+      if (peakDayInfo) {
+        onChange({ year: peakDayInfo.year, month: peakDayInfo.month, exactDate: peakDayInfo.date, startDate: '', endDate: '' });
+      }
+    } else if (preset === 'Q1') {
+      onChange({ year: todayYearStr, month: 'ALL', exactDate: '', startDate: `${todayYearStr}-01-01`, endDate: `${todayYearStr}-03-31` });
+    } else if (preset === 'Q2') {
+      onChange({ year: todayYearStr, month: 'ALL', exactDate: '', startDate: `${todayYearStr}-04-01`, endDate: `${todayYearStr}-06-30` });
+    } else if (preset === 'Q3') {
+      onChange({ year: todayYearStr, month: 'ALL', exactDate: '', startDate: `${todayYearStr}-07-01`, endDate: `${todayYearStr}-09-30` });
+    } else if (preset === 'Q4') {
+      onChange({ year: todayYearStr, month: 'ALL', exactDate: '', startDate: `${todayYearStr}-10-01`, endDate: `${todayYearStr}-12-31` });
     }
   };
 
@@ -426,66 +487,69 @@ export default function DateYearFilter({
 
             <Chip
               icon={<Clock className="h-3 w-3" />}
-              label="Today (Aug 15)"
+              label={todayDisplayLabel}
               size="small"
               onClick={() => applyPreset('TODAY')}
-              color={filter.exactDate === '2026-08-15' ? 'info' : 'default'}
-              variant={filter.exactDate === '2026-08-15' ? 'filled' : 'outlined'}
+              color={filter.exactDate === todayStr ? 'info' : 'default'}
+              variant={filter.exactDate === todayStr ? 'filled' : 'outlined'}
               sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
             />
 
             <Chip
-              label="August 2026"
+              label={`${MONTH_NAMES[todayDateObj.getMonth()]} ${todayYearStr}`}
               size="small"
-              onClick={() => applyPreset('AUG_2026')}
-              color={filter.year === '2026' && filter.month === '08' && !filter.exactDate && !filter.startDate ? 'primary' : 'default'}
-              variant={filter.year === '2026' && filter.month === '08' && !filter.exactDate && !filter.startDate ? 'filled' : 'outlined'}
+              onClick={() => applyPreset('CURRENT_MONTH')}
+              color={filter.year === todayYearStr && filter.month === todayMonthStr && !filter.exactDate && !filter.startDate ? 'primary' : 'default'}
+              variant={filter.year === todayYearStr && filter.month === todayMonthStr && !filter.exactDate && !filter.startDate ? 'filled' : 'outlined'}
+              sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
+            />
+
+            {/* Dynamic Peak Day Chip: Only renders when peak date data exists */}
+            {peakDayInfo && (
+              <Chip
+                icon={<Sparkles className="h-3 w-3" />}
+                label={peakDayInfo.label}
+                size="small"
+                onClick={() => applyPreset('PEAK_DAY')}
+                color={filter.exactDate === peakDayInfo.date ? 'warning' : 'default'}
+                variant={filter.exactDate === peakDayInfo.date ? 'filled' : 'outlined'}
+                sx={{ fontSize: '0.7rem', height: 24, fontWeight: 700, cursor: 'pointer' }}
+              />
+            )}
+
+            <Chip
+              label={`Q1 ${todayYearStr}`}
+              size="small"
+              onClick={() => applyPreset('Q1')}
+              color={filter.startDate === `${todayYearStr}-01-01` && filter.endDate === `${todayYearStr}-03-31` ? 'primary' : 'default'}
+              variant={filter.startDate === `${todayYearStr}-01-01` && filter.endDate === `${todayYearStr}-03-31` ? 'filled' : 'outlined'}
               sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
             />
 
             <Chip
-              icon={<Sparkles className="h-3 w-3" />}
-              label="★ August 27 (Peak Day)"
+              label={`Q2 ${todayYearStr}`}
               size="small"
-              onClick={() => applyPreset('AUG_27')}
-              color={filter.exactDate === '2026-08-27' ? 'warning' : 'default'}
-              variant={filter.exactDate === '2026-08-27' ? 'filled' : 'outlined'}
-              sx={{ fontSize: '0.7rem', height: 24, fontWeight: 700, cursor: 'pointer' }}
-            />
-
-            <Chip
-              label="Q1 2026"
-              size="small"
-              onClick={() => applyPreset('Q1_2026')}
-              color={filter.startDate === '2026-01-01' && filter.endDate === '2026-03-31' ? 'primary' : 'default'}
-              variant={filter.startDate === '2026-01-01' && filter.endDate === '2026-03-31' ? 'filled' : 'outlined'}
+              onClick={() => applyPreset('Q2')}
+              color={filter.startDate === `${todayYearStr}-04-01` && filter.endDate === `${todayYearStr}-06-30` ? 'primary' : 'default'}
+              variant={filter.startDate === `${todayYearStr}-04-01` && filter.endDate === `${todayYearStr}-06-30` ? 'filled' : 'outlined'}
               sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
             />
 
             <Chip
-              label="Q2 2026"
+              label={`Q3 ${todayYearStr} (Jul-Sep)`}
               size="small"
-              onClick={() => applyPreset('Q2_2026')}
-              color={filter.startDate === '2026-04-01' && filter.endDate === '2026-06-30' ? 'primary' : 'default'}
-              variant={filter.startDate === '2026-04-01' && filter.endDate === '2026-06-30' ? 'filled' : 'outlined'}
+              onClick={() => applyPreset('Q3')}
+              color={filter.startDate === `${todayYearStr}-07-01` && filter.endDate === `${todayYearStr}-09-30` ? 'primary' : 'default'}
+              variant={filter.startDate === `${todayYearStr}-07-01` && filter.endDate === `${todayYearStr}-09-30` ? 'filled' : 'outlined'}
               sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
             />
 
             <Chip
-              label="Q3 2026 (Jul-Sep)"
+              label={`Q4 ${todayYearStr}`}
               size="small"
-              onClick={() => applyPreset('Q3_2026')}
-              color={filter.startDate === '2026-07-01' && filter.endDate === '2026-09-30' ? 'primary' : 'default'}
-              variant={filter.startDate === '2026-07-01' && filter.endDate === '2026-09-30' ? 'filled' : 'outlined'}
-              sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
-            />
-
-            <Chip
-              label="Q4 2026"
-              size="small"
-              onClick={() => applyPreset('Q4_2026')}
-              color={filter.startDate === '2026-10-01' && filter.endDate === '2026-12-31' ? 'primary' : 'default'}
-              variant={filter.startDate === '2026-10-01' && filter.endDate === '2026-12-31' ? 'filled' : 'outlined'}
+              onClick={() => applyPreset('Q4')}
+              color={filter.startDate === `${todayYearStr}-10-01` && filter.endDate === `${todayYearStr}-12-31` ? 'primary' : 'default'}
+              variant={filter.startDate === `${todayYearStr}-10-01` && filter.endDate === `${todayYearStr}-12-31` ? 'filled' : 'outlined'}
               sx={{ fontSize: '0.7rem', height: 24, fontWeight: 600, cursor: 'pointer' }}
             />
           </Stack>

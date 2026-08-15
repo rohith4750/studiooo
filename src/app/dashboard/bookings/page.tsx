@@ -51,7 +51,7 @@ function BookingsContent() {
   const searchParams = useSearchParams();
   const {
     bookings, clients, packages, events, fetchData,
-    createRecord, updateRecord, deleteRecord
+    createRecord, updateRecord, deleteRecord, user
   } = useStore();
   const { toast, confirm: confirmAction } = useToast();
 
@@ -123,42 +123,12 @@ function BookingsContent() {
   };
 
   const handleOpenAdd = () => {
-    setEditingBooking(null);
-    setFormClientId('');
-    setFormName('');
-    setFormPackageId('');
-    setFormVenue('');
-    setFormNotes('');
-    setFormStatus('PENDING');
-    setFormGrandTotal('0');
-    setSelectedEvents([]);
-    setFormOpen(true);
+    router.push('/dashboard/bookings/create');
   };
 
   const handleOpenEdit = (booking: any) => {
-    setEditingBooking(booking);
-    setFormClientId(booking.clientId);
-    setFormName(booking.name || '');
-    setFormPackageId(booking.packageId || '');
-    setFormVenue(booking.venue || '');
-    setFormNotes(booking.notes || '');
-    setFormStatus(booking.status);
-    setFormGrandTotal(booking.grandTotal.toString());
-
-    // Populate events list
-    if (booking.bookingEvents && Array.isArray(booking.bookingEvents)) {
-      const rows = booking.bookingEvents.map((be: any) => ({
-        eventId: be.eventId,
-        eventDate: be.eventDate,
-        eventTime: be.eventTime || '',
-        venue: be.venue || '',
-      }));
-      setSelectedEvents(rows);
-    } else {
-      setSelectedEvents([]);
-    }
     setDetailsOpen(false);
-    setFormOpen(true);
+    router.push(`/dashboard/bookings/create?bookingId=${booking.id}`);
   };
 
   const handlePackageChange = (pkgId: string) => {
@@ -501,15 +471,19 @@ function BookingsContent() {
                 <TableCell sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>
                   Venue
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
-                  Total
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>
-                  Paid
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
-                  Balance
-                </TableCell>
+                {user?.role !== 'RECEPTIONIST' && (
+                  <>
+                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
+                      Total
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>
+                      Paid
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
+                      Balance
+                    </TableCell>
+                  </>
+                )}
                 <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
                   Actions
                 </TableCell>
@@ -573,25 +547,29 @@ function BookingsContent() {
                         {b.venue || '—'}
                       </Typography>
                     </TableCell>
-                    <TableCell align="right">
-                      <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
-                        ₹{b.grandTotal.toLocaleString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      <Typography sx={{ fontSize: '0.76rem', color: 'text.secondary' }}>
-                        ₹{b.paidAmount.toLocaleString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Chip
-                        label={`₹${b.balance.toLocaleString()}`}
-                        size="small"
-                        color={b.balance > 0 ? 'warning' : 'success'}
-                        variant="outlined"
-                        sx={{ height: 20, fontSize: '0.65rem', fontWeight: 500 }}
-                      />
-                    </TableCell>
+                    {user?.role !== 'RECEPTIONIST' && (
+                      <>
+                        <TableCell align="right">
+                          <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
+                            ₹{b.grandTotal.toLocaleString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                          <Typography sx={{ fontSize: '0.76rem', color: 'text.secondary' }}>
+                            ₹{b.paidAmount.toLocaleString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Chip
+                            label={`₹${b.balance.toLocaleString()}`}
+                            size="small"
+                            color={b.balance > 0 ? 'warning' : 'success'}
+                            variant="outlined"
+                            sx={{ height: 20, fontSize: '0.65rem', fontWeight: 500 }}
+                          />
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell align="right">
                       <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
                         <Tooltip title="View Details" arrow>
@@ -746,30 +724,32 @@ function BookingsContent() {
 
                 <Divider />
 
-                {/* Pricing Breakdown */}
-                <Box sx={{ p: 2, bgcolor: 'background.default', border: '1px solid rgba(227, 236, 231, 0.6)', borderRadius: 1.5 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem', letterSpacing: '0.06em', mb: 1.5, display: 'block' }}>
-                    Pricing Breakdown
-                  </Typography>
-                  <Stack spacing={1}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 500, color: 'text.primary' }}>
-                      <span>Grand Total</span>
-                      <span>₹{selectedBooking.grandTotal.toLocaleString()}</span>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'primary.main', fontWeight: 500 }}>
-                      <span>Amount Paid</span>
-                      <span>₹{selectedBooking.paidAmount.toLocaleString()}</span>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'warning.light', color: 'warning.dark', p: 0.75, borderRadius: 1, fontWeight: 500, fontSize: '0.76rem' }}>
-                      <span>Outstanding Balance</span>
-                      <span>₹{selectedBooking.balance.toLocaleString()}</span>
-                    </Box>
-                  </Stack>
-                </Box>
+                {/* Pricing Breakdown - Hidden for RECEPTIONIST */}
+                {user?.role !== 'RECEPTIONIST' && (
+                  <Box sx={{ p: 2, bgcolor: 'background.default', border: '1px solid rgba(227, 236, 231, 0.6)', borderRadius: 1.5 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem', letterSpacing: '0.06em', mb: 1.5, display: 'block' }}>
+                      Pricing Breakdown
+                    </Typography>
+                    <Stack spacing={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 500, color: 'text.primary' }}>
+                        <span>Grand Total</span>
+                        <span>₹{selectedBooking.grandTotal.toLocaleString()}</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'primary.main', fontWeight: 500 }}>
+                        <span>Amount Paid</span>
+                        <span>₹{selectedBooking.paidAmount.toLocaleString()}</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'warning.light', color: 'warning.dark', p: 0.75, borderRadius: 1, fontWeight: 500, fontSize: '0.76rem' }}>
+                        <span>Outstanding Balance</span>
+                        <span>₹{selectedBooking.balance.toLocaleString()}</span>
+                      </Box>
+                    </Stack>
+                  </Box>
+                )}
 
                 {/* Action Buttons */}
                 <Stack spacing={1} sx={{ pt: 1 }}>
-                  {selectedBooking.balance > 0 && (
+                  {user?.role !== 'RECEPTIONIST' && selectedBooking.balance > 0 && (
                     <Button
                       variant="contained"
                       color="primary"
@@ -781,30 +761,32 @@ function BookingsContent() {
                     </Button>
                   )}
 
-                  <Grid container spacing={1}>
-                    <Grid size={{ xs: 6 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<FileText className="h-3.5 w-3.5" />}
-                        onClick={() => handleGenerateQuotation(selectedBooking)}
-                        fullWidth
-                      >
-                        Quotation
-                      </Button>
+                  {user?.role !== 'RECEPTIONIST' && (
+                    <Grid container spacing={1}>
+                      <Grid size={{ xs: 6 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<FileText className="h-3.5 w-3.5" />}
+                          onClick={() => handleGenerateQuotation(selectedBooking)}
+                          fullWidth
+                        >
+                          Quotation
+                        </Button>
+                      </Grid>
+                      <Grid size={{ xs: 6 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<ClipboardPlus className="h-3.5 w-3.5" />}
+                          onClick={() => handleGenerateInvoice(selectedBooking)}
+                          fullWidth
+                        >
+                          Tax Invoice
+                        </Button>
+                      </Grid>
                     </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<ClipboardPlus className="h-3.5 w-3.5" />}
-                        onClick={() => handleGenerateInvoice(selectedBooking)}
-                        fullWidth
-                      >
-                        Tax Invoice
-                      </Button>
-                    </Grid>
-                  </Grid>
+                  )}
 
                   <Grid container spacing={1}>
                     <Grid size={{ xs: 6 }}>
@@ -838,226 +820,6 @@ function BookingsContent() {
             </DialogContent>
           </>
         )}
-      </Dialog>
-
-      {/* ========== BOOKING FORM DIALOG ========== */}
-      <Dialog
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        maxWidth="md"
-        fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: 0.5, maxHeight: '90vh' } }
-        }}
-      >
-        <DialogTitle sx={{
-          bgcolor: 'background.default', borderBottom: '1px solid rgba(227, 236, 231, 0.6)',
-          py: 1.5, px: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Sparkles className="h-5 w-5 text-primary-500" />
-            <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-              {editingBooking ? 'Modify Booking Contract' : 'Create Booking Contract'}
-            </Typography>
-          </Stack>
-          <IconButton onClick={() => setFormOpen(false)} size="small" sx={{ borderRadius: 1 }}>
-            <X className="h-4 w-4" />
-          </IconButton>
-        </DialogTitle>
-
-        <Box component="form" onSubmit={handleSaveBooking}>
-          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 3 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth required size="small">
-                  <InputLabel>Choose Client</InputLabel>
-                  <Select
-                    value={formClientId}
-                    label="Choose Client"
-                    onChange={(e) => setFormClientId(e.target.value)}
-                  >
-                    <MenuItem value="">-- Choose Profile --</MenuItem>
-                    {clients.map(c => (
-                      <MenuItem key={c.id} value={c.id}>{c.name} ({c.phone})</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Booking Name (e.g. Rahul Weds Simran)"
-                  fullWidth
-                  required
-                  size="small"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Package Preset</InputLabel>
-                  <Select
-                    value={formPackageId}
-                    label="Package Preset"
-                    onChange={(e) => handlePackageChange(e.target.value)}
-                  >
-                    <MenuItem value="">-- Custom Preset --</MenuItem>
-                    {packages.map(p => (
-                      <MenuItem key={p.id} value={p.id}>{p.name} (₹{p.price.toLocaleString()})</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Booking Status</InputLabel>
-                  <Select
-                    value={formStatus}
-                    label="Booking Status"
-                    onChange={(e) => setFormStatus(e.target.value)}
-                  >
-                    {STATUSES.map(s => (
-                      <MenuItem key={s} value={s}>{s}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Default Venue"
-                  fullWidth
-                  size="small"
-                  value={formVenue}
-                  onChange={(e) => setFormVenue(e.target.value)}
-                  placeholder="Petals Palace, Bengaluru"
-                />
-              </Grid>
-            </Grid>
-
-            <TextField
-              label="Contract Notes"
-              fullWidth
-              size="small"
-              value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
-              placeholder="Any photographer or styling guidelines..."
-            />
-
-            {/* Dynamic Event Builder */}
-            <Stack spacing={1.5} sx={{ pt: 1, borderTop: '1px solid rgba(227, 236, 231, 0.6)' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem' }}>
-                  Events Scheduled ({selectedEvents.length})
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Plus className="h-3.5 w-3.5" />}
-                  onClick={addEventRow}
-                >
-                  Add Custom Event
-                </Button>
-              </Box>
-
-              <Stack spacing={2}>
-                {selectedEvents.map((row, index) => (
-                  <Box key={index} sx={{ p: 2, bgcolor: 'background.default', border: '1px solid rgba(227, 236, 231, 0.6)', borderRadius: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Grid container spacing={1.5} sx={{ alignItems: 'center' }}>
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <FormControl fullWidth required size="small">
-                          <InputLabel>Event Master</InputLabel>
-                          <Select
-                            value={row.eventId}
-                            label="Event Master"
-                            onChange={(e) => updateEventRow(index, 'eventId', e.target.value)}
-                          >
-                            {events.map(e => (
-                              <MenuItem key={e.id} value={e.id}>{e.name}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-
-                      <Grid size={{ xs: 6, sm: 3 }}>
-                        <TextField
-                          label="Date"
-                          type="date"
-                          required
-                          size="small"
-                          fullWidth
-                          slotProps={{ inputLabel: { shrink: true } }}
-                          value={row.eventDate}
-                          onChange={(e) => updateEventRow(index, 'eventDate', e.target.value)}
-                        />
-                      </Grid>
-
-                      <Grid size={{ xs: 4, sm: 2 }}>
-                        <TextField
-                          label="Time"
-                          size="small"
-                          fullWidth
-                          value={row.eventTime}
-                          onChange={(e) => updateEventRow(index, 'eventTime', e.target.value)}
-                          placeholder="09:00 AM"
-                        />
-                      </Grid>
-
-                      <Grid size={{ xs: 2, sm: 1 }} sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <IconButton color="error" size="small" onClick={() => removeEventRow(index)}>
-                          <Trash2 className="h-4 w-4" />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-
-                    <TextField
-                      label="Venue Override"
-                      size="small"
-                      fullWidth
-                      value={row.venue}
-                      onChange={(e) => updateEventRow(index, 'venue', e.target.value)}
-                      placeholder="Blank inherits default venue override"
-                    />
-                  </Box>
-                ))}
-              </Stack>
-            </Stack>
-
-            {/* Pricing Box */}
-            <Box sx={{ p: 2.5, bgcolor: 'primary.light', borderRadius: 1.5, display: 'flex', flexDirection: 'column', gap: 1, border: '1px solid', borderColor: 'primary.main' }}>
-              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography sx={{ fontWeight: 500, color: 'primary.dark', fontSize: '0.82rem' }}>Final Price Settings</Typography>
-                <TextField
-                  label="Grand Total (₹)"
-                  type="number"
-                  size="small"
-                  required
-                  value={formGrandTotal}
-                  onChange={(e) => setFormGrandTotal(e.target.value)}
-                  sx={{ width: 160, bgcolor: 'background.paper', borderRadius: 1 }}
-                  slotProps={{ htmlInput: { style: { fontWeight: 500, textAlign: 'right' } } }}
-                />
-              </Stack>
-              {parseFloat(formGrandTotal) > 0 && (
-                <Typography sx={{ fontSize: '0.72rem', color: 'primary.main', fontWeight: 600, textAlign: 'right', fontStyle: 'italic', pr: 0.5 }}>
-                  {numberToWordsIndian(parseFloat(formGrandTotal))} Rupees Only
-                </Typography>
-              )}
-            </Box>
-          </DialogContent>
-
-          <DialogActions sx={{ p: 2.5, borderTop: '1px solid rgba(227, 236, 231, 0.6)' }}>
-            <Button onClick={() => setFormOpen(false)} variant="outlined" color="secondary">
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" color="primary">
-              {editingBooking ? 'Save Changes' : 'Register Booking'}
-            </Button>
-          </DialogActions>
-        </Box>
       </Dialog>
 
       {/* ========== COLLECT PAYMENT DIALOG ========== */}

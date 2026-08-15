@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { createAuditLog } from '@/lib/audit';
 
 // Map URL parameter names to Prisma model names
 const MODEL_MAPPING: Record<string, any> = {
@@ -32,7 +33,7 @@ const ROLE_DENY_LIST: Record<string, string[]> = {
   PHOTOGRAPHER: ['expense', 'payment', 'invoice', 'quotation', 'user', 'client', 'lead'],
   EDITOR: ['expense', 'payment', 'invoice', 'quotation', 'user', 'client', 'lead', 'employee', 'inventory'],
   ACCOUNTANT: ['assignment', 'inventory', 'lead', 'user'],
-  RECEPTIONIST: ['expense', 'user'],
+  RECEPTIONIST: ['expense', 'user', 'payment', 'invoice', 'quotation'],
 };
 
 export async function GET(
@@ -51,10 +52,10 @@ export async function GET(
     return NextResponse.json({ error: `Model '${model}' not found` }, { status: 404 });
   }
 
-  // Check role access
+  // Check role access - return empty array gracefully for restricted tables
   const deniedTables = ROLE_DENY_LIST[user.role] || [];
   if (deniedTables.includes(modelName as string) && user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Access denied for this role' }, { status: 403 });
+    return NextResponse.json([]);
   }
 
   const url = new URL(req.url);
@@ -137,13 +138,7 @@ export async function POST(
 
     // Format human-readable audit summary
     const itemLabel = created.invoiceNumber || created.quotationNumber || created.bookingNumber || created.name || created.title || created.email || `ID: ${created.id}`;
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'CREATE',
-        details: `Created ${String(modelName)} (${itemLabel})`,
-      },
-    });
+    await createAuditLog(user.id, 'CREATE', `Created ${String(modelName)} (${itemLabel})`);
 
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {
@@ -194,13 +189,7 @@ export async function PUT(
 
     // Format human-readable audit summary
     const itemLabel = updated.invoiceNumber || updated.quotationNumber || updated.bookingNumber || updated.name || updated.title || updated.email || `ID: ${id}`;
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'UPDATE',
-        details: `Updated ${String(modelName)} (${itemLabel})`,
-      },
-    });
+    await createAuditLog(user.id, 'UPDATE', `Updated ${String(modelName)} (${itemLabel})`);
 
     return NextResponse.json(updated);
   } catch (error: any) {
@@ -249,13 +238,7 @@ export async function DELETE(
     });
 
     // Log the audit record
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'DELETE',
-        details: `Deleted ${String(modelName)} (ID: ${id})`,
-      },
-    });
+    await createAuditLog(user.id, 'DELETE', `Deleted ${String(modelName)} (ID: ${id})`);
 
 
     return NextResponse.json(deleted);

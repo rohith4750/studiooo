@@ -8,14 +8,16 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   // ADMIN, MANAGER, PHOTOGRAPHER, EDITOR, ACCOUNTANT, RECEPTIONIST
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  auditLogs AuditLog[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  name             String
+  role             String    // ADMIN, MANAGER, PHOTOGRAPHER, EDITOR, ACCOUNTANT, RECEPTIONIST
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  auditLogs        AuditLog[]
   managedEmployees Employee[] @relation("ManagerToEmployee")
 }
 
@@ -121,6 +123,7 @@ model BookingEvent {
   eventDate   String       // YYYY-MM-DD
   eventTime   String?
   venue       String?
+  category    String?      // TRADITIONAL, CANDID, CINEMATIC, DRONE, PRE_SHOOT, PORTRAIT, EVENT_OTHER
   price       Float
   status      String       // ASSIGNED, STARTED, COMPLETED
   assignments Assignment[]

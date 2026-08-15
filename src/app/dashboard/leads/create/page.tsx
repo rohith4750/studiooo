@@ -17,7 +17,7 @@ function LeadCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const leadId = searchParams.get('leadId');
-  const { leads, fetchData, createRecord, updateRecord } = useStore();
+  const { leads, fetchData, createRecord, updateRecord, user } = useStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,9 @@ function LeadCreateContent() {
                 <TextField label="Event Date *" type="date" required fullWidth size="small" slotProps={{ inputLabel: { shrink: true } }} value={formEventDate} onChange={(e) => setFormEventDate(e.target.value)} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField label="Estimated Budget (₹)" type="number" fullWidth size="small" value={formBudget} onChange={(e) => setFormBudget(e.target.value)} placeholder="e.g. 150000" />
+                {user?.role !== 'RECEPTIONIST' && (
+                  <TextField label="Estimated Budget (₹)" type="number" fullWidth size="small" value={formBudget} onChange={(e) => setFormBudget(e.target.value)} placeholder="e.g. 150000" />
+                )}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth size="small">

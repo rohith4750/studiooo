@@ -7,7 +7,7 @@ import {
   Sparkles, CheckCircle2, AlertCircle, MessageSquare, Download, 
   ExternalLink, Layers, ArrowLeft, ArrowRight, UserCheck, HelpCircle 
 } from 'lucide-react';
-import { Select, MenuItem, FormControl, TextField } from '@mui/material';
+import { Select, MenuItem, FormControl, TextField, Autocomplete } from '@mui/material';
 
 const MOCK_PAGES = [
   { title: 'Cover Sheet', desc: 'Premium Leather Bound with Embossed Names', color: 'bg-neutral-800 text-white' },
@@ -101,19 +101,24 @@ export default function CustomerPortal() {
           </div>
         </div>
 
-        <FormControl size="small">
-          <Select
-            value={selectedClientId}
-            onChange={(e) => setSelectedClientId(e.target.value as string)}
-            displayEmpty
-            sx={{ minWidth: 200, height: 32, fontSize: '0.75rem', bgcolor: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e3ece7' } }}
-          >
-            <MenuItem value="" disabled>Select Client</MenuItem>
-            {clients.map(c => (
-              <MenuItem key={c.id} value={c.id}>{c.name} ({c.phone})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Autocomplete
+          options={clients}
+          getOptionLabel={(option) => typeof option === 'string' ? option : `${option.name} (${option.phone})`}
+          value={clients.find((c) => c.id === selectedClientId) || null}
+          onChange={(_, newValue) => {
+            setSelectedClientId(newValue ? newValue.id : '');
+          }}
+          isOptionEqualToValue={(option, val) => option.id === val.id}
+          sx={{ minWidth: 260 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Search client by name/phone..."
+              size="small"
+              sx={{ bgcolor: 'white', borderRadius: 1 }}
+            />
+          )}
+        />
       </div>
 
       {loading ? (
