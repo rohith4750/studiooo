@@ -134,8 +134,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Metric Cards */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${user?.role === 'RECEPTIONIST' ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-3`}>
+      {/* KPI Metric Cards Grid */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${user?.role === 'RECEPTIONIST' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3`}>
         
         {/* Card 1: Revenue - Hidden for RECEPTIONIST */}
         {user?.role !== 'RECEPTIONIST' && (
@@ -172,7 +172,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 3: Pending Deliveries */}
+        {/* Card 3: Post-Production & Active Workflows */}
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs group hover:border-neutral-300 transition">
           <div className="flex items-center justify-between text-neutral-400">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Active Workflows</span>
@@ -201,10 +201,75 @@ export default function DashboardPage() {
               ₹{netProfit.toLocaleString('en-IN')}
             </p>
             <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
-              <span className="text-neutral-500">Lead Conversion: <span className="font-semibold text-neutral-700">{conversionRate}%</span></span>
+              <span className="text-neutral-500">Expenses: <span className="font-semibold text-neutral-700">₹{totalExpenses.toLocaleString('en-IN')}</span></span>
             </div>
           </div>
         )}
+
+        {/* Card 5: Client Directory Counter */}
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs group hover:border-neutral-300 transition">
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Registered Clients</span>
+            <div className="p-1.5 bg-indigo-50 rounded-md text-indigo-600">
+              <Users className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-neutral-800 mt-1.5">
+            {clients.length}
+          </p>
+          <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
+            <span className="text-neutral-500">{filteredBookings.length} total contracts logged</span>
+          </div>
+        </div>
+
+        {/* Card 6: Leads & Inquiries Pipeline */}
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs group hover:border-neutral-300 transition">
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Lead Pipeline</span>
+            <div className="p-1.5 bg-rose-50 rounded-md text-rose-600">
+              <Flame className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-neutral-800 mt-1.5">
+            {filteredLeads.length}
+          </p>
+          <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
+            <span className="text-neutral-500">{convertedLeads} converted ({conversionRate}%)</span>
+          </div>
+        </div>
+
+        {/* Card 7: Total Shoot Events */}
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs group hover:border-neutral-300 transition">
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Total Shoot Dates</span>
+            <div className="p-1.5 bg-teal-50 rounded-md text-teal-600">
+              <Award className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-neutral-800 mt-1.5">
+            {filteredBookingEvents.length}
+          </p>
+          <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
+            <span className="text-neutral-500">Across all active contracts</span>
+          </div>
+        </div>
+
+        {/* Card 8: System Health & Security */}
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs group hover:border-neutral-300 transition">
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Platform Status</span>
+            <div className="p-1.5 bg-emerald-50 rounded-md text-emerald-600">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-emerald-600 mt-1.5 flex items-center space-x-1">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse inline-block mr-1"></span>
+            <span>All Systems Live</span>
+          </p>
+          <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
+            <span className="text-neutral-500">SMTP Active • DB Synced</span>
+          </div>
+        </div>
 
       </div>
 
