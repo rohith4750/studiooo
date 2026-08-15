@@ -182,10 +182,15 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-amber-500/8 rounded-full blur-[120px] pointer-events-none" />
 
         {/* Top Branding Header */}
-        <div className="relative z-10 flex items-center space-x-3">
-          <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-neutral-200/80 shadow-xs overflow-hidden h-14 w-52 flex items-center justify-center">
-            <Image src="/r2r-logo.png" alt="R2R Story Arcs Logo" width={200} height={60} className="object-contain" style={{ transform: 'scale(0.452)' }} priority />
-          </div>
+        <div className="relative z-10 flex items-center">
+          <Image
+            src="/r2r-logo.png"
+            alt="R2R Story Arcs Logo"
+            width={170}
+            height={55}
+            className="object-contain"
+            priority
+          />
         </div>
 
         {/* Center Studio Hero Info */}
