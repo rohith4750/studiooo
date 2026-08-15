@@ -159,7 +159,12 @@ export default function WorkflowsPage() {
               }}
             >
               {COLUMNS.map((col) => {
-                const colBookings = bookings.filter(b => b.status === col.key);
+                const colBookings = bookings.filter(b => {
+                  if (col.key === 'IN_PROGRESS') {
+                    return b.status === 'IN_PROGRESS' || b.status === 'CONFIRMED' || b.status === 'PENDING';
+                  }
+                  return b.status === col.key;
+                });
 
                 return (
                   <Box 

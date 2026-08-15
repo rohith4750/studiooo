@@ -2,29 +2,27 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Helper to pick random item from array
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Helper to generate random number between min and max
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Hyderabadi Seed Data Arrays
 const HYD_FIRST_NAMES = [
   'Syed', 'Mohammed', 'Venkat', 'Ananya', 'Goutham', 'Lakshmi', 'Vikram', 'Asif', 'Priya',
   'Karthik', 'Sneha', 'Harish', 'Swapna', 'Zeeshan', 'Rahul', 'Srinivas', 'Rajesh', 'Mahesh',
   'Divya', 'Kavya', 'Archana', 'Sandeep', 'Tarun', 'Vamsi', 'Akhil', 'Salman', 'Tariq',
   'Imran', 'Fatima', 'Ayesha', 'Nithya', 'Rohit', 'Teja', 'Pradeep', 'Shravan', 'Deepthi',
-  'Manasa', 'Bhavana', 'Naresh', 'Harika', 'Pooja', 'Swathi', 'Revanth', 'Nikhil', 'Rithesh'
+  'Manasa', 'Bhavana', 'Naresh', 'Harika', 'Pooja', 'Swathi', 'Revanth', 'Nikhil', 'Rithesh',
+  'Mir', 'Osman', 'Zahir', 'Tanveer', 'Nasser', 'Sameer', 'Farhan', 'Shoaib', 'Kavitha', 'Shalini'
 ];
 
 const HYD_LAST_NAMES = [
   'Reddy', 'Rao', 'Goud', 'Khan', 'Pasha', 'Varma', 'Prasad', 'Chowdary', 'Raju', 'Shah',
   'Patel', 'Nambiar', 'Begum', 'Sharma', 'Verma', 'Chander', 'Naidu', 'Kulkarni', 'Joshi',
-  'Deshmukh', 'Basha', 'Quadri', 'Siddiqui', 'Shaik', 'Shanker', 'Murthy', 'Yadav'
+  'Deshmukh', 'Basha', 'Quadri', 'Siddiqui', 'Shaik', 'Shanker', 'Murthy', 'Yadav', 'Ali'
 ];
 
 const HYD_LOCALITIES = [
@@ -53,12 +51,16 @@ const HYD_VENUES = [
   'Hyatt Place, Banjara Hills'
 ];
 
-const BOOKING_STATUSES = [
-  'CONFIRMED', 'CONFIRMED', 'CONFIRMED', 
+// Production Pipeline Statuses spread evenly across all 5 columns
+const PIPELINE_STATUSES = [
   'IN_PROGRESS', 'IN_PROGRESS', 
-  'EDITING', 'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 
-  'COMPLETED', 'COMPLETED', 'COMPLETED'
+  'EDITING', 'EDITING', 
+  'ALBUM_DESIGNING', 'ALBUM_DESIGNING', 
+  'READY_FOR_DELIVERY', 'READY_FOR_DELIVERY',
+  'COMPLETED', 'COMPLETED'
 ];
+
+const ALBUM_TYPES = ['PREMIUM', 'ACRYLIC', 'MAGAZINE', 'HD'];
 
 async function main() {
   console.log('Clearing existing data...');
@@ -122,8 +124,6 @@ async function main() {
     { name: 'Royal Heritage Production', defaultPrice: 250000, category: 'Luxury Production', duration: '2 Days' },
     { name: 'Drone Aerial Cinema', defaultPrice: 30000, category: 'Add-on', duration: 'Event' },
     { name: 'Live 4K Broadcast', defaultPrice: 40000, category: 'Add-on', duration: 'Event' },
-    { name: 'Baby Shower & Cradle', defaultPrice: 30000, category: 'Events', duration: 'Half Day' },
-    { name: 'Birthday Bash', defaultPrice: 25000, category: 'Events', duration: 'Half Day' },
   ];
 
   const dbEvents: Record<string, string> = {};
@@ -150,9 +150,9 @@ async function main() {
     dbPackagesList.push(created);
   }
 
-  console.log('Generating 320 Hyderabadi Clients...');
+  console.log('Generating 400 Hyderabadi Clients...');
   const createdClients: any[] = [];
-  for (let i = 1; i <= 320; i++) {
+  for (let i = 1; i <= 400; i++) {
     const firstName = pick(HYD_FIRST_NAMES);
     const lastName = pick(HYD_LAST_NAMES);
     const locality = pick(HYD_LOCALITIES);
@@ -175,22 +175,136 @@ async function main() {
     createdClients.push(client);
   }
 
-  console.log('Generating 310 Hyderabadi Orders / Bookings across 2026...');
-  // Total August turnover target: > 35 - 50 Lakhs
   let orderCounter = 1001;
+  let clientIndex = 0;
 
-  for (let i = 0; i < 310; i++) {
-    const client = createdClients[i % createdClients.length];
+  console.log('Seeding EVERY SINGLE DAY IN AUGUST 2026 (Aug 1 to Aug 31) with Peak Density on August 27...');
+  for (let day = 1; day <= 31; day++) {
+    const dayStr = day < 10 ? `0${day}` : `${day}`;
+    const dateStr = `2026-08-${dayStr}`;
+
+    // For August 27: generate 15 heavy events. For other August days: generate 3 to 6 events per day.
+    const eventsCountForDay = (day === 27) ? 15 : randomInt(3, 6);
+
+    for (let j = 0; j < eventsCountForDay; j++) {
+      const client = createdClients[clientIndex % createdClients.length];
+      clientIndex++;
+
+      const pkg = (day === 27 && j < 3) ? dbPackagesList[0] : pick(dbPackagesList);
+      const venue = pick(HYD_VENUES);
+      const status = pick(PIPELINE_STATUSES);
+
+      const bookingNum = `R2R-2026-AUG${dayStr}-${1000 + orderCounter++}`;
+      const subtotal = pkg.price;
+      const discount = Math.random() > 0.6 ? randomInt(5000, 25000) : 0;
+      const netTotal = Math.max(subtotal - discount, 20000);
+      const gstAmount = Math.round(netTotal * 0.18);
+      const grandTotal = netTotal + gstAmount;
+
+      const paidFactor = status === 'COMPLETED' ? 1 : Math.random() > 0.5 ? 0.8 : 0.5;
+      const paidAmount = Math.round(grandTotal * paidFactor);
+      const balance = grandTotal - paidAmount;
+
+      const booking = await prisma.booking.create({
+        data: {
+          bookingNumber: bookingNum,
+          name: `${client.name}'s ${pkg.name} Shoot`,
+          clientId: client.id,
+          packageId: pkg.id,
+          venue: venue,
+          notes: day === 27 
+            ? `★ PEAK DAY EVENT on August 27, 2026 at ${venue}. Full 4K Cinema team assigned.` 
+            : `August ${day} Event at ${venue}.`,
+          status: status,
+          subtotal: subtotal,
+          discount: discount,
+          gstAmount: gstAmount,
+          grandTotal: grandTotal,
+          paidAmount: paidAmount,
+          balance: balance,
+          createdAt: new Date(`${dateStr}T08:00:00Z`),
+        },
+      });
+
+      // Create BookingEvent
+      await prisma.bookingEvent.create({
+        data: {
+          bookingId: booking.id,
+          eventId: pick(Object.values(dbEvents)),
+          eventDate: dateStr,
+          eventTime: `${randomInt(6, 11)}:00 ${randomInt(0, 1) === 0 ? 'AM' : 'PM'}`,
+          venue: venue,
+          price: Math.round(subtotal * 0.6),
+          status: status === 'COMPLETED' ? 'COMPLETED' : 'ASSIGNED',
+        },
+      });
+
+      // Create Album Workflow record for Production Pipeline / Editing Tasks
+      await prisma.album.create({
+        data: {
+          bookingId: booking.id,
+          type: pick(ALBUM_TYPES),
+          status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
+          designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
+          editorId: dbEmployees['EDITOR'],
+          notes: `Editing task for ${client.name} (${dateStr}). Raw & Edited links uploaded.`,
+          rawLink: `https://drive.google.com/drive/folders/hyd_raw_aug${dayStr}_${booking.id.substring(0, 6)}`,
+          editedLink: `https://drive.google.com/drive/folders/hyd_edited_aug${dayStr}_${booking.id.substring(0, 6)}`,
+        },
+      });
+
+      // Create Payment
+      if (paidAmount > 0) {
+        await prisma.payment.create({
+          data: {
+            bookingId: booking.id,
+            receiptNumber: `RCPT-2026-AUG${dayStr}-${randomInt(1000, 9999)}`,
+            amount: paidAmount,
+            paymentMode: pick(['UPI', 'BANK_TRANSFER', 'CASH', 'CHEQUE']),
+            paymentDate: dateStr,
+            notes: `August ${day} payment received`,
+          },
+        });
+      }
+
+      // Create Invoice
+      await prisma.invoice.create({
+        data: {
+          bookingId: booking.id,
+          invoiceNumber: `INV-2026-AUG${dayStr}-${orderCounter++}`,
+          gstRate: 18,
+          gstAmount: gstAmount,
+          totalAmount: netTotal,
+          grandTotal: grandTotal,
+          paidAmount: paidAmount,
+          balance: balance,
+          status: balance === 0 ? 'PAID' : paidAmount > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+          createdAt: new Date(`${dateStr}T08:00:00Z`),
+        },
+      });
+
+      // Create Quotation
+      await prisma.quotation.create({
+        data: {
+          bookingId: booking.id,
+          version: 1,
+          terms: '50% advance to confirm date slot.',
+          status: 'APPROVED',
+          createdAt: new Date(`${dateStr}T08:00:00Z`),
+        },
+      });
+    }
+  }
+
+  console.log('Generating additional events across remaining months of 2026...');
+  for (let i = 0; i < 160; i++) {
+    const client = createdClients[clientIndex % createdClients.length];
+    clientIndex++;
     const pkg = pick(dbPackagesList);
     const venue = pick(HYD_VENUES);
-    const status = pick(BOOKING_STATUSES);
+    const status = pick(PIPELINE_STATUSES);
 
-    // Distribute dates across Jan to Nov 2026, with 80+ bookings in August 2026
-    let month = randomInt(1, 11);
-    // 30% of all bookings concentrated in August (Month 8) for heavy turnover
-    if (i % 3 === 0) {
-      month = 8;
-    }
+    const month = pick([1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12]);
     const day = randomInt(1, 28);
     const monthStr = month < 10 ? `0${month}` : `${month}`;
     const dayStr = day < 10 ? `0${day}` : `${day}`;
@@ -203,7 +317,6 @@ async function main() {
     const gstAmount = Math.round(netTotal * 0.18);
     const grandTotal = netTotal + gstAmount;
 
-    // Paid amount: 40% to 100%
     const paidFactor = status === 'COMPLETED' ? 1 : Math.random() > 0.5 ? 0.7 : 0.4;
     const paidAmount = Math.round(grandTotal * paidFactor);
     const balance = grandTotal - paidAmount;
@@ -215,7 +328,7 @@ async function main() {
         clientId: client.id,
         packageId: pkg.id,
         venue: venue,
-        notes: `Event booked for ${dateStr} at ${venue}. GST Included.`,
+        notes: `Event booked for ${dateStr} at ${venue}.`,
         status: status,
         subtotal: subtotal,
         discount: discount,
@@ -227,7 +340,6 @@ async function main() {
       },
     });
 
-    // Create BookingEvent
     await prisma.bookingEvent.create({
       data: {
         bookingId: booking.id,
@@ -240,7 +352,19 @@ async function main() {
       },
     });
 
-    // Create Payment record for deposit
+    await prisma.album.create({
+      data: {
+        bookingId: booking.id,
+        type: pick(ALBUM_TYPES),
+        status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
+        designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
+        editorId: dbEmployees['EDITOR'],
+        notes: `Editing task for ${client.name} - ${pkg.name}.`,
+        rawLink: `https://drive.google.com/drive/folders/hyd_raw_${booking.id.substring(0, 8)}`,
+        editedLink: `https://drive.google.com/drive/folders/hyd_edited_${booking.id.substring(0, 8)}`,
+      },
+    });
+
     if (paidAmount > 0) {
       await prisma.payment.create({
         data: {
@@ -254,11 +378,10 @@ async function main() {
       });
     }
 
-    // Create Invoice record
     await prisma.invoice.create({
       data: {
         bookingId: booking.id,
-        invoiceNumber: `INV-2026-${1000 + i}`,
+        invoiceNumber: `INV-2026-${3000 + i}`,
         gstRate: 18,
         gstAmount: gstAmount,
         totalAmount: netTotal,
@@ -270,36 +393,19 @@ async function main() {
       },
     });
 
-    // Create Quotation record
     await prisma.quotation.create({
       data: {
         bookingId: booking.id,
         version: 1,
-        terms: '50% advance to confirm date slot, remaining balance prior to raw delivery.',
+        terms: '50% advance to confirm date slot.',
         status: 'APPROVED',
         createdAt: new Date(dateStr),
       },
     });
-
-    // Create Album record for completed/editing bookings
-    if (['EDITING', 'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 'COMPLETED'].includes(status)) {
-      await prisma.album.create({
-        data: {
-          bookingId: booking.id,
-          type: pick(['PREMIUM', 'ACRYLIC', 'MAGAZINE', 'HD']),
-          status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
-          designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
-          editorId: dbEmployees['EDITOR'],
-          notes: 'Hyderabadi album design template.',
-          rawLink: `https://drive.google.com/drive/folders/hyd_raw_${booking.id.substring(0, 6)}`,
-          editedLink: `https://drive.google.com/drive/folders/hyd_edited_${booking.id.substring(0, 6)}`,
-        },
-      });
-    }
   }
 
   // Seed inventory
-  console.log('Seeding camera equipment inventory...');
+  console.log('Seeding equipment inventory...');
   const inventoryItems = [
     { name: 'Sony FX6 Cinema Camera', category: 'CAMERA', serialNumber: 'SN-FX6-HYD001', status: 'AVAILABLE', notes: '4K Full Frame Cinema Rig' },
     { name: 'Sony Alpha 7S III Body 1', category: 'CAMERA', serialNumber: 'SN-A7S3-HYD002', status: 'AVAILABLE' },
@@ -307,9 +413,7 @@ async function main() {
     { name: 'Sony Alpha 7R V High-Res Body', category: 'CAMERA', serialNumber: 'SN-A7R5-HYD004', status: 'AVAILABLE' },
     { name: 'Sony FE 24-70mm f/2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-2470-HYD', status: 'AVAILABLE' },
     { name: 'Sony FE 70-200mm f/2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-70200-HYD', status: 'AVAILABLE' },
-    { name: 'Sony FE 50mm f/1.2 GM Prime', category: 'LENS', serialNumber: 'SN-LENS-5012-HYD', status: 'AVAILABLE' },
     { name: 'DJI Inspire 3 Cinema Drone', category: 'DRONE', serialNumber: 'SN-INS3-HYD099', status: 'AVAILABLE', notes: '8K Raw Cinema Drone' },
-    { name: 'DJI Mavic 3 Pro Cine', category: 'DRONE', serialNumber: 'SN-MAV3-HYD100', status: 'AVAILABLE' },
     { name: 'DJI Ronin 4D 6K Gimbal Rig', category: 'GIMBAL', serialNumber: 'SN-RONIN4D-HYD01', status: 'AVAILABLE' },
     { name: 'Aputure 600d Pro Lighting Strobe', category: 'LIGHT', serialNumber: 'SN-APUT-600D-HYD', status: 'AVAILABLE' },
   ];
@@ -318,21 +422,20 @@ async function main() {
     await prisma.inventory.create({ data: item });
   }
 
-  // Seed August & Monthly Expenses
-  console.log('Seeding studio operating expenses...');
+  // Seed August Expenses
+  console.log('Seeding August studio expenses...');
   const expenses = [
-    { category: 'FUEL', amount: 35500, description: 'Fuel & transport for Taj Falaknuma, Novotel HICC & Ramoji shoots', date: '2026-08-04' },
-    { category: 'PRINTING', amount: 185000, description: 'Acrylic & Velvet photobook printing charges for August deliveries', date: '2026-08-06' },
-    { category: 'SALARY', amount: 368000, description: 'Monthly payroll for Photographers, Editors & Managers', date: '2026-08-01' },
-    { category: 'MARKETING', amount: 95000, description: 'Jubilee Hills & Banjara Hills targeted Instagram & Google ads', date: '2026-08-02' },
-    { category: 'EQUIPMENT', amount: 240000, description: 'Heavy Jimmy Jib Crane & 4K Outdoor LED Wall rentals for August weddings', date: '2026-08-10' },
+    { category: 'FUEL', amount: 58500, description: 'Fuel & logistics for August 31 days of shoots (Falaknuma, HICC & JRC)', date: '2026-08-27' },
+    { category: 'PRINTING', amount: 285000, description: 'Acrylic & Velvet photobook printing for August events', date: '2026-08-27' },
+    { category: 'EQUIPMENT', amount: 390000, description: 'Heavy Jimmy Jib Crane & 4K Outdoor LED Wall rentals for August peak shoots', date: '2026-08-27' },
+    { category: 'SALARY', amount: 368000, description: 'August monthly payroll for Photographers, Editors & Managers', date: '2026-08-01' },
   ];
 
   for (const exp of expenses) {
     await prisma.expense.create({ data: exp });
   }
 
-  console.log('Successfully generated 310+ Hyderabadi Orders / Bookings with massive August turnover!');
+  console.log('Successfully seeded EVERY SINGLE DAY IN AUGUST 2026 (with Peak on Aug 27) + Production Pipeline Editing Tasks!');
 }
 
 main()
