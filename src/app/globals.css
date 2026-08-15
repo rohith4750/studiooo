@@ -61,11 +61,12 @@ body {
   font-family: var(--font-poppins), 'Poppins', sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-size: 13px;
+  font-weight: 350;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Force Poppins on all text elements and MUI components */
+/* Force Poppins and soft weights across MUI elements */
 body,
 button,
 input,
@@ -80,6 +81,14 @@ textarea,
 .MuiTableCell-root,
 .MuiTab-root {
   font-family: var(--font-poppins), 'Poppins', sans-serif !important;
+}
+
+/* Light font weights on table headers, cards and text */
+.MuiTableCell-root {
+  font-weight: 400 !important;
+}
+.MuiTypography-h5, .MuiTypography-h6 {
+  font-weight: 550 !important;
 }
 
 /* Custom Scrollbars to keep UI clean and peaceful */

@@ -235,20 +235,20 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
       )}
 
       {/* Main Quotation Sheet Container */}
-      <div className="relative bg-white text-neutral-900 font-sans p-6 sm:p-10 border-l-[16px] sm:border-l-[20px] border-[#F59E0B] shadow-sm min-h-[950px] w-full max-w-[760px] text-left border-y border-r border-neutral-200">
+      <div className="relative bg-white text-neutral-800 font-sans p-6 sm:p-10 border-l-[10px] sm:border-l-[12px] border-amber-300/80 shadow-xs min-h-[950px] w-full max-w-[760px] text-left border-y border-r border-neutral-100/90 rounded-[3px]">
         
         {/* Header Section */}
-        <div className="flex justify-between items-start pb-6 border-b border-neutral-300 gap-4">
+        <div className="flex justify-between items-start pb-6 border-b border-neutral-200/60 gap-4">
           
           {/* Left Header: QR & Contact Details */}
-          <div className="space-y-1.5 text-xs text-neutral-700">
+          <div className="space-y-1.5 text-xs text-neutral-600 font-light">
             <div className="flex items-center space-x-3">
               {/* Instagram / QR Box */}
-              <div className="h-16 w-16 bg-neutral-900 text-white rounded p-1 flex flex-col items-center justify-center border border-neutral-200 flex-shrink-0">
-                <svg className="w-9 h-9 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="7" height="7" strokeWidth="2" />
-                  <rect x="14" y="3" width="7" height="7" strokeWidth="2" />
-                  <rect x="3" y="14" width="7" height="7" strokeWidth="2" />
+              <div className="h-14 w-14 bg-neutral-900/90 text-white rounded p-1 flex flex-col items-center justify-center border border-neutral-100 flex-shrink-0">
+                <svg className="w-8 h-8 text-amber-300/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7" strokeWidth="1.5" />
+                  <rect x="14" y="3" width="7" height="7" strokeWidth="1.5" />
+                  <rect x="3" y="14" width="7" height="7" strokeWidth="1.5" />
                   <rect x="14" y="14" width="3" height="3" fill="currentColor" />
                   <rect x="18" y="18" width="3" height="3" fill="currentColor" />
                 </svg>
@@ -260,24 +260,24 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                       type="text"
                       value={studioHandle}
                       onChange={(e) => setStudioHandle(e.target.value)}
-                      className="font-extrabold text-[11px] uppercase tracking-wider text-neutral-900 border-b border-amber-300 focus:outline-none w-full"
+                      className="font-medium text-[11px] uppercase tracking-wider text-neutral-800 border-b border-amber-200 focus:outline-none w-full"
                     />
                     <input
                       type="text"
                       value={studioMobile}
                       onChange={(e) => setStudioMobile(e.target.value)}
-                      className="font-semibold text-neutral-700 text-[11px] border-b border-amber-300 focus:outline-none w-full"
+                      className="font-normal text-neutral-600 text-[11px] border-b border-amber-200 focus:outline-none w-full"
                     />
                   </>
                 ) : (
                   <>
-                    <p className="font-extrabold text-[11px] uppercase tracking-wider text-neutral-900">
+                    <p className="font-medium text-[11px] uppercase tracking-wider text-neutral-800">
                       {studioHandle}
                     </p>
-                    <p className="font-semibold text-neutral-700 text-[11px]">
+                    <p className="font-normal text-neutral-600 text-[11px]">
                       Mobile No: {studioMobile}
                     </p>
-                    <p className="text-neutral-500 text-[10px]">
+                    <p className="text-neutral-400 text-[10px] font-light">
                       instagram.com/r2rstudiophotography
                     </p>
                   </>
@@ -290,10 +290,10 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                 value={studioAddress}
                 onChange={(e) => setStudioAddress(e.target.value)}
                 rows={2}
-                className="text-[10px] text-neutral-600 font-medium pt-1 w-full border border-amber-300 rounded p-1"
+                className="text-[10px] text-neutral-500 font-light pt-1 w-full border border-amber-200 rounded p-1"
               />
             ) : (
-              <p className="text-[10px] text-neutral-600 font-medium pt-1 max-w-md leading-relaxed">
+              <p className="text-[10px] text-neutral-500 font-light pt-1 max-w-md leading-relaxed">
                 {studioAddress}
               </p>
             )}
@@ -304,7 +304,7 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
             <img
               src={studioLogoUrl}
               alt="R2R Story Arcs Logo"
-              className="h-20 sm:h-24 w-auto object-contain max-w-[200px]"
+              className="h-16 sm:h-20 w-auto object-contain max-w-[180px] opacity-90"
             />
             {isEditing && (
               <input
@@ -312,40 +312,39 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                 value={studioLogoUrl}
                 onChange={(e) => setStudioLogoUrl(e.target.value)}
                 placeholder="Logo Image Path"
-                className="text-[9px] text-right border-b border-amber-300 focus:outline-none mt-1 w-36"
+                className="text-[9px] text-right border-b border-amber-200 focus:outline-none mt-1 w-36 font-light"
               />
             )}
           </div>
-
 
         </div>
 
         {/* Main Title: Quotation For [Client Name] */}
         <div className="my-6 flex items-center justify-between">
           {isEditing ? (
-            <div className="flex items-center space-x-2 text-2xl font-extrabold text-neutral-800">
-              <span>Quotation For</span>
+            <div className="flex items-center space-x-2 text-xl font-medium text-neutral-800">
+              <span className="font-light text-neutral-500">Quotation For</span>
               <input
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="border-b-2 border-amber-400 font-extrabold focus:outline-none text-neutral-900 px-1"
+                className="border-b border-amber-300 font-medium focus:outline-none text-neutral-800 px-1"
               />
             </div>
           ) : (
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-800 tracking-tight">
-              Quotation For {clientName}
+            <h2 className="text-xl sm:text-2xl font-light text-neutral-800 tracking-wide">
+              Quotation For <span className="font-medium text-neutral-900">{clientName}</span>
             </h2>
           )}
         </div>
 
         {/* Per-Event Service Breakdown */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {eventItems.map((item, idx) => (
             <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start pb-4 border-b border-neutral-100 relative group">
               
               {/* Left Column: Event Name & Deliverables */}
-              <div className="sm:col-span-2 space-y-1.5">
+              <div className="sm:col-span-2 space-y-1">
                 {isEditing ? (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -353,33 +352,33 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                         type="text"
                         value={item.name}
                         onChange={(e) => handleUpdateEventName(idx, e.target.value)}
-                        className="text-lg font-bold text-neutral-800 tracking-wide border-b border-amber-300 focus:outline-none w-full mr-2"
+                        className="text-base font-medium text-neutral-800 tracking-wide border-b border-amber-200 focus:outline-none w-full mr-2"
                       />
                       <button
                         onClick={() => handleRemoveEvent(idx)}
-                        className="text-red-500 hover:text-red-700 p-1"
+                        className="text-red-400 hover:text-red-600 p-1"
                         title="Remove Event"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <label className="text-[9px] font-bold text-neutral-400 uppercase block">Deliverables (1 per line):</label>
+                    <label className="text-[9px] font-medium text-neutral-400 uppercase block">Deliverables (1 per line):</label>
                     <textarea
                       rows={item.deliverables.length || 3}
                       value={item.deliverables.join('\n')}
                       onChange={(e) => handleUpdateDeliverables(idx, e.target.value)}
-                      className="w-full text-xs text-neutral-700 p-1.5 border border-amber-200 rounded font-sans focus:outline-none focus:ring-1 focus:ring-amber-400"
+                      className="w-full text-xs text-neutral-600 p-1.5 border border-amber-100 rounded font-sans focus:outline-none focus:ring-1 focus:ring-amber-200"
                     />
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-lg font-bold text-neutral-800 tracking-wide">
+                    <h3 className="text-base font-medium text-neutral-800 tracking-wide">
                       {item.name}
                     </h3>
-                    <ul className="space-y-1 text-xs text-neutral-600 font-medium">
+                    <ul className="space-y-0.5 text-xs text-neutral-500 font-light">
                       {item.deliverables.map((dItem, dIdx) => (
                         <li key={dIdx} className="flex items-center">
-                          <span className="mr-2 text-neutral-400">•</span>
+                          <span className="mr-2 text-neutral-300 text-[10px]">•</span>
                           <span>{dItem}</span>
                         </li>
                       ))}
@@ -389,23 +388,23 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
               </div>
 
               {/* Right Column: Event Subtotal & Note */}
-              <div className="sm:text-right space-y-1 flex flex-col sm:items-end justify-start">
-                <div className="flex items-center space-x-3 text-lg font-extrabold text-neutral-900">
-                  <span className="font-bold text-neutral-500 text-sm">Total</span>
-                  <span className="text-neutral-400 font-normal">|</span>
+              <div className="sm:text-right space-y-0.5 flex flex-col sm:items-end justify-start">
+                <div className="flex items-center space-x-2.5 text-base font-medium text-neutral-800">
+                  <span className="font-light text-neutral-400 text-xs">Total</span>
+                  <span className="text-neutral-200 font-light">|</span>
                   {isEditing ? (
                     <input
                       type="number"
                       value={item.price}
                       onChange={(e) => handleUpdateEventPrice(idx, e.target.value)}
-                      className="w-28 text-right font-extrabold text-xl border-b border-amber-300 focus:outline-none"
+                      className="w-24 text-right font-medium text-lg border-b border-amber-200 focus:outline-none"
                     />
                   ) : (
-                    <span className="text-xl sm:text-2xl">{formatAmount(item.price)}</span>
+                    <span className="text-lg sm:text-xl font-normal text-neutral-800">{formatAmount(item.price)}</span>
                   )}
                 </div>
-                <p className="text-[9px] text-neutral-400 font-medium leading-tight max-w-[190px]">
-                  Note: Additional charges applicable for extra videographer/photographer
+                <p className="text-[9px] text-neutral-400 font-light leading-tight max-w-[190px]">
+                  Note: Additional charges applicable for extra crew
                 </p>
               </div>
             </div>
@@ -414,35 +413,35 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
           {isEditing && (
             <button
               onClick={handleAddEvent}
-              className="w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded border border-dashed border-amber-400 flex items-center justify-center space-x-1 cursor-pointer"
+              className="w-full py-1.5 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 text-xs font-medium rounded border border-dashed border-neutral-300 flex items-center justify-center space-x-1 cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
               <span>Add Custom Event Block</span>
             </button>
           )}
         </div>
 
         {/* Grand Total & Payment Schedule Block */}
-        <div className="mt-8 pt-4 border-t-2 border-neutral-200 flex flex-col items-end space-y-3">
-          <div className="flex items-center space-x-3 text-2xl font-extrabold text-neutral-900">
-            <span className="font-bold text-neutral-700 text-lg">Grand Total</span>
-            <span className="text-neutral-400 font-normal">|</span>
-            <span className="text-2xl sm:text-3xl text-neutral-900">{formatAmount(calculatedGrandTotal)}</span>
+        <div className="mt-7 pt-4 border-t border-neutral-200/80 flex flex-col items-end space-y-2">
+          <div className="flex items-center space-x-3 text-xl font-normal text-neutral-800">
+            <span className="font-light text-neutral-500 text-base">Grand Total</span>
+            <span className="text-neutral-200 font-light">|</span>
+            <span className="text-2xl font-medium text-neutral-900">{formatAmount(calculatedGrandTotal)}</span>
           </div>
-          <p className="text-[10px] text-neutral-400 font-medium text-right max-w-xs">
+          <p className="text-[9px] text-neutral-400 font-light text-right max-w-xs">
             Note: Additional charges applicable for extra videographer/photographer
           </p>
 
           {/* Milestone Schedule */}
-          <div className="text-right space-y-0.5 text-xs font-semibold text-neutral-700 pt-2 w-full max-w-xs">
+          <div className="text-right space-y-0.5 text-xs font-light text-neutral-600 pt-2 w-full max-w-xs">
             {isEditing ? (
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-neutral-400 uppercase block text-right">Payment Schedule (1 per line):</label>
+                <label className="text-[9px] font-medium text-neutral-400 uppercase block text-right">Payment Schedule (1 per line):</label>
                 <textarea
                   rows={3}
                   value={paymentSchedule.join('\n')}
                   onChange={(e) => handleUpdateSchedule(e.target.value)}
-                  className="w-full text-xs text-right border border-amber-200 p-1 rounded"
+                  className="w-full text-xs text-right border border-amber-100 p-1 rounded font-light"
                 />
               </div>
             ) : (
@@ -454,8 +453,8 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
         </div>
 
         {/* Terms and Conditions Section */}
-        <div className="mt-10 space-y-2 pt-4">
-          <h4 className="font-bold text-xs text-neutral-800 uppercase tracking-wider">
+        <div className="mt-8 space-y-1.5 pt-4 border-t border-neutral-100">
+          <h4 className="font-medium text-xs text-neutral-600 uppercase tracking-wider">
             Terms and Conditions :
           </h4>
           {isEditing ? (
@@ -463,10 +462,10 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
               rows={5}
               value={terms.join('\n')}
               onChange={(e) => handleUpdateTerms(e.target.value)}
-              className="w-full text-[10px] text-neutral-700 p-2 border border-amber-200 rounded font-mono"
+              className="w-full text-[10px] text-neutral-600 p-2 border border-neutral-200 rounded font-light"
             />
           ) : (
-            <ul className="space-y-1 text-[10px] text-neutral-600 leading-relaxed font-normal">
+            <ul className="space-y-1 text-[10px] text-neutral-500 leading-relaxed font-light">
               {terms.map((term, tIdx) => (
                 <li key={tIdx}>{term}</li>
               ))}
@@ -475,7 +474,7 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
         </div>
 
         {/* Bottom Horizontal Accent Line */}
-        <div className="mt-8 border-b-2 border-neutral-800 w-full" />
+        <div className="mt-8 border-b border-neutral-200/80 w-full" />
 
       </div>
 
