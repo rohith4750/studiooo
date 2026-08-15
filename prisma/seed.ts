@@ -16,13 +16,14 @@ const HYD_FIRST_NAMES = [
   'Divya', 'Kavya', 'Archana', 'Sandeep', 'Tarun', 'Vamsi', 'Akhil', 'Salman', 'Tariq',
   'Imran', 'Fatima', 'Ayesha', 'Nithya', 'Rohit', 'Teja', 'Pradeep', 'Shravan', 'Deepthi',
   'Manasa', 'Bhavana', 'Naresh', 'Harika', 'Pooja', 'Swathi', 'Revanth', 'Nikhil', 'Rithesh',
-  'Mir', 'Osman', 'Zahir', 'Tanveer', 'Nasser', 'Sameer', 'Farhan', 'Shoaib', 'Kavitha', 'Shalini'
+  'Mir', 'Osman', 'Zahir', 'Tanveer', 'Nasser', 'Sameer', 'Farhan', 'Shoaib', 'Kavitha', 'Shalini',
+  'Prashanth', 'Narendra', 'Vishal', 'Bhaskar', 'Sudheer', 'Lalitha', 'Radhika', 'Sharath'
 ];
 
 const HYD_LAST_NAMES = [
   'Reddy', 'Rao', 'Goud', 'Khan', 'Pasha', 'Varma', 'Prasad', 'Chowdary', 'Raju', 'Shah',
   'Patel', 'Nambiar', 'Begum', 'Sharma', 'Verma', 'Chander', 'Naidu', 'Kulkarni', 'Joshi',
-  'Deshmukh', 'Basha', 'Quadri', 'Siddiqui', 'Shaik', 'Shanker', 'Murthy', 'Yadav', 'Ali'
+  'Deshmukh', 'Basha', 'Quadri', 'Siddiqui', 'Shaik', 'Shanker', 'Murthy', 'Yadav', 'Ali', 'Gutti'
 ];
 
 const HYD_LOCALITIES = [
@@ -63,7 +64,7 @@ const PIPELINE_STATUSES = [
 const ALBUM_TYPES = ['PREMIUM', 'ACRYLIC', 'MAGAZINE', 'HD'];
 
 async function main() {
-  console.log('Clearing existing data...');
+  console.log('Clearing existing database records...');
   await prisma.auditLog.deleteMany({});
   await prisma.notification.deleteMany({});
   await prisma.expense.deleteMany({});
@@ -126,10 +127,10 @@ async function main() {
     { name: 'Live 4K Broadcast', defaultPrice: 40000, category: 'Add-on', duration: 'Event' },
   ];
 
-  const dbEvents: Record<string, string> = {};
+  const dbEventsList: any[] = [];
   for (const ev of events) {
     const created = await prisma.eventMaster.create({ data: ev });
-    dbEvents[ev.name] = created.id;
+    dbEventsList.push(created);
   }
 
   console.log('Seeding service packages...');
@@ -150,51 +151,68 @@ async function main() {
     dbPackagesList.push(created);
   }
 
-  console.log('Generating 400 Hyderabadi Clients...');
-  const createdClients: any[] = [];
-  for (let i = 1; i <= 400; i++) {
+  console.log('Generating 1,400 Hyderabadi Clients in bulk...');
+  const clientsData = [];
+  for (let i = 1; i <= 1400; i++) {
     const firstName = pick(HYD_FIRST_NAMES);
     const lastName = pick(HYD_LAST_NAMES);
     const locality = pick(HYD_LOCALITIES);
     const phoneNum = `+9198${randomInt(10000000, 99999999)}`;
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@hyderabadmail.com`;
 
-    const client = await prisma.client.create({
-      data: {
-        name: `${firstName} ${lastName}`,
-        phone: phoneNum,
-        whatsappNumber: phoneNum,
-        email: email,
-        address: `Flat ${randomInt(101, 909)}, ${locality}`,
-        city: 'Hyderabad',
-        state: 'Telangana',
-        pincode: `5000${randomInt(10, 99)}`,
-        notes: `Hyderabadi client from ${locality}`,
-      },
+    clientsData.push({
+      name: `${firstName} ${lastName}`,
+      phone: phoneNum,
+      whatsappNumber: phoneNum,
+      email: email,
+      address: `Flat ${randomInt(101, 909)}, ${locality}`,
+      city: 'Hyderabad',
+      state: 'Telangana',
+      pincode: `5000${randomInt(10, 99)}`,
+      notes: `Hyderabadi client from ${locality}`,
     });
-    createdClients.push(client);
   }
 
-  let orderCounter = 1001;
+  await prisma.client.createMany({ data: clientsData });
+  const allClients = await prisma.client.findMany({ select: { id: true, name: true } });
+  console.log(`Created ${allClients.length} Hyderabadi clients.`);
+
+  console.log('Generating 365 DAYS OF 2026 (Jan 1 to Dec 31, 2026) Orders in bulk...');
+  const bookingsData: any[] = [];
   let clientIndex = 0;
+  let orderNumberCounter = 1000;
 
-  console.log('Seeding EVERY SINGLE DAY IN AUGUST 2026 (Aug 1 to Aug 31) with Peak Density on August 27...');
-  for (let day = 1; day <= 31; day++) {
-    const dayStr = day < 10 ? `0${day}` : `${day}`;
-    const dateStr = `2026-08-${dayStr}`;
+  // Generate 365 Days of events for 2026
+  const startDate = new Date('2026-01-01T00:00:00Z');
+  const endDate = new Date('2026-12-31T00:00:00Z');
 
-    // For August 27: generate 15 heavy events. For other August days: generate 3 to 6 events per day.
-    const eventsCountForDay = (day === 27) ? 15 : randomInt(3, 6);
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const year = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
 
-    for (let j = 0; j < eventsCountForDay; j++) {
-      const client = createdClients[clientIndex % createdClients.length];
+    const mStr = m < 10 ? `0${m}` : `${m}`;
+    const dStr = day < 10 ? `0${day}` : `${day}`;
+    const dateStr = `${year}-${mStr}-${dStr}`;
+
+    // Event density per day:
+    // August 27: 18 events (Peak Super Day)
+    // Month of August (other days): 5 to 9 events per day
+    // Other Months: 2 to 5 events per day
+    let countForDay = randomInt(2, 5);
+    if (m === 8) {
+      countForDay = (day === 27) ? 18 : randomInt(5, 9);
+    }
+
+    for (let k = 0; k < countForDay; k++) {
+      const client = allClients[clientIndex % allClients.length];
       clientIndex++;
 
-      const pkg = (day === 27 && j < 3) ? dbPackagesList[0] : pick(dbPackagesList);
+      const pkg = (m === 8 && day === 27 && k < 4) ? dbPackagesList[0] : pick(dbPackagesList);
       const venue = pick(HYD_VENUES);
       const status = pick(PIPELINE_STATUSES);
 
-      const bookingNum = `R2R-2026-AUG${dayStr}-${1000 + orderCounter++}`;
+      const bookingNum = `R2R-2026-${mStr}${dStr}-${100 + k}`;
       const subtotal = pkg.price;
       const discount = Math.random() > 0.6 ? randomInt(5000, 25000) : 0;
       const netTotal = Math.max(subtotal - discount, 20000);
@@ -205,130 +223,15 @@ async function main() {
       const paidAmount = Math.round(grandTotal * paidFactor);
       const balance = grandTotal - paidAmount;
 
-      const booking = await prisma.booking.create({
-        data: {
-          bookingNumber: bookingNum,
-          name: `${client.name}'s ${pkg.name} Shoot`,
-          clientId: client.id,
-          packageId: pkg.id,
-          venue: venue,
-          notes: day === 27 
-            ? `★ PEAK DAY EVENT on August 27, 2026 at ${venue}. Full 4K Cinema team assigned.` 
-            : `August ${day} Event at ${venue}.`,
-          status: status,
-          subtotal: subtotal,
-          discount: discount,
-          gstAmount: gstAmount,
-          grandTotal: grandTotal,
-          paidAmount: paidAmount,
-          balance: balance,
-          createdAt: new Date(`${dateStr}T08:00:00Z`),
-        },
-      });
-
-      // Create BookingEvent
-      await prisma.bookingEvent.create({
-        data: {
-          bookingId: booking.id,
-          eventId: pick(Object.values(dbEvents)),
-          eventDate: dateStr,
-          eventTime: `${randomInt(6, 11)}:00 ${randomInt(0, 1) === 0 ? 'AM' : 'PM'}`,
-          venue: venue,
-          price: Math.round(subtotal * 0.6),
-          status: status === 'COMPLETED' ? 'COMPLETED' : 'ASSIGNED',
-        },
-      });
-
-      // Create Album Workflow record for Production Pipeline / Editing Tasks
-      await prisma.album.create({
-        data: {
-          bookingId: booking.id,
-          type: pick(ALBUM_TYPES),
-          status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
-          designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
-          editorId: dbEmployees['EDITOR'],
-          notes: `Editing task for ${client.name} (${dateStr}). Raw & Edited links uploaded.`,
-          rawLink: `https://drive.google.com/drive/folders/hyd_raw_aug${dayStr}_${booking.id.substring(0, 6)}`,
-          editedLink: `https://drive.google.com/drive/folders/hyd_edited_aug${dayStr}_${booking.id.substring(0, 6)}`,
-        },
-      });
-
-      // Create Payment
-      if (paidAmount > 0) {
-        await prisma.payment.create({
-          data: {
-            bookingId: booking.id,
-            receiptNumber: `RCPT-2026-AUG${dayStr}-${randomInt(1000, 9999)}`,
-            amount: paidAmount,
-            paymentMode: pick(['UPI', 'BANK_TRANSFER', 'CASH', 'CHEQUE']),
-            paymentDate: dateStr,
-            notes: `August ${day} payment received`,
-          },
-        });
-      }
-
-      // Create Invoice
-      await prisma.invoice.create({
-        data: {
-          bookingId: booking.id,
-          invoiceNumber: `INV-2026-AUG${dayStr}-${orderCounter++}`,
-          gstRate: 18,
-          gstAmount: gstAmount,
-          totalAmount: netTotal,
-          grandTotal: grandTotal,
-          paidAmount: paidAmount,
-          balance: balance,
-          status: balance === 0 ? 'PAID' : paidAmount > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
-          createdAt: new Date(`${dateStr}T08:00:00Z`),
-        },
-      });
-
-      // Create Quotation
-      await prisma.quotation.create({
-        data: {
-          bookingId: booking.id,
-          version: 1,
-          terms: '50% advance to confirm date slot.',
-          status: 'APPROVED',
-          createdAt: new Date(`${dateStr}T08:00:00Z`),
-        },
-      });
-    }
-  }
-
-  console.log('Generating additional events across remaining months of 2026...');
-  for (let i = 0; i < 160; i++) {
-    const client = createdClients[clientIndex % createdClients.length];
-    clientIndex++;
-    const pkg = pick(dbPackagesList);
-    const venue = pick(HYD_VENUES);
-    const status = pick(PIPELINE_STATUSES);
-
-    const month = pick([1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12]);
-    const day = randomInt(1, 28);
-    const monthStr = month < 10 ? `0${month}` : `${month}`;
-    const dayStr = day < 10 ? `0${day}` : `${day}`;
-    const dateStr = `2026-${monthStr}-${dayStr}`;
-
-    const bookingNum = `R2R-2026-${orderCounter++}`;
-    const subtotal = pkg.price;
-    const discount = Math.random() > 0.6 ? randomInt(5000, 25000) : 0;
-    const netTotal = Math.max(subtotal - discount, 20000);
-    const gstAmount = Math.round(netTotal * 0.18);
-    const grandTotal = netTotal + gstAmount;
-
-    const paidFactor = status === 'COMPLETED' ? 1 : Math.random() > 0.5 ? 0.7 : 0.4;
-    const paidAmount = Math.round(grandTotal * paidFactor);
-    const balance = grandTotal - paidAmount;
-
-    const booking = await prisma.booking.create({
-      data: {
+      bookingsData.push({
         bookingNumber: bookingNum,
-        name: `${client.name}'s ${pkg.name} Event`,
+        name: `${client.name}'s ${pkg.name} Production`,
         clientId: client.id,
         packageId: pkg.id,
         venue: venue,
-        notes: `Event booked for ${dateStr} at ${venue}.`,
+        notes: (m === 8 && day === 27)
+          ? `★ PEAK DAY ROYAL PRODUCTION on Aug 27, 2026 at ${venue}.`
+          : `Event booked for ${dateStr} at ${venue}.`,
         status: status,
         subtotal: subtotal,
         discount: discount,
@@ -336,73 +239,95 @@ async function main() {
         grandTotal: grandTotal,
         paidAmount: paidAmount,
         balance: balance,
-        createdAt: new Date(dateStr),
-      },
+        createdAt: new Date(`${dateStr}T08:00:00Z`),
+      });
+    }
+  }
+
+  console.log(`Inserting ${bookingsData.length} Bookings into database...`);
+  await prisma.booking.createMany({ data: bookingsData });
+
+  console.log('Querying created bookings to generate linked Events, Albums, Invoices & Payments...');
+  const allBookings = await prisma.booking.findMany({
+    select: { id: true, bookingNumber: true, status: true, grandTotal: true, paidAmount: true, balance: true, venue: true, createdAt: true }
+  });
+
+  const bookingEventsData: any[] = [];
+  const albumsData: any[] = [];
+  const paymentsData: any[] = [];
+  const invoicesData: any[] = [];
+  const quotationsData: any[] = [];
+
+  let invCounter = 5001;
+
+  for (const b of allBookings) {
+    const dateStr = b.createdAt.toISOString().split('T')[0];
+
+    // BookingEvent
+    bookingEventsData.push({
+      bookingId: b.id,
+      eventId: pick(dbEventsList).id,
+      eventDate: dateStr,
+      eventTime: `${randomInt(6, 11)}:00 ${randomInt(0, 1) === 0 ? 'AM' : 'PM'}`,
+      venue: b.venue || 'Hyderabad Venue',
+      price: Math.round(b.grandTotal * 0.6),
+      status: b.status === 'COMPLETED' ? 'COMPLETED' : 'ASSIGNED',
     });
 
-    await prisma.bookingEvent.create({
-      data: {
-        bookingId: booking.id,
-        eventId: pick(Object.values(dbEvents)),
-        eventDate: dateStr,
-        eventTime: `${randomInt(6, 11)}:00 ${randomInt(0, 1) === 0 ? 'AM' : 'PM'}`,
-        venue: venue,
-        price: Math.round(subtotal * 0.6),
-        status: status === 'COMPLETED' ? 'COMPLETED' : 'ASSIGNED',
-      },
+    // Album for Production Pipeline / Editing Tasks
+    albumsData.push({
+      bookingId: b.id,
+      type: pick(ALBUM_TYPES),
+      status: b.status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
+      designStatus: b.status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
+      editorId: dbEmployees['EDITOR'],
+      notes: `Editing task for ${b.bookingNumber} (${dateStr}). Raw & Edited links synced.`,
+      rawLink: `https://drive.google.com/drive/folders/hyd_raw_${b.id.substring(0, 8)}`,
+      editedLink: `https://drive.google.com/drive/folders/hyd_edited_${b.id.substring(0, 8)}`,
     });
 
-    await prisma.album.create({
-      data: {
-        bookingId: booking.id,
-        type: pick(ALBUM_TYPES),
-        status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
-        designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
-        editorId: dbEmployees['EDITOR'],
-        notes: `Editing task for ${client.name} - ${pkg.name}.`,
-        rawLink: `https://drive.google.com/drive/folders/hyd_raw_${booking.id.substring(0, 8)}`,
-        editedLink: `https://drive.google.com/drive/folders/hyd_edited_${booking.id.substring(0, 8)}`,
-      },
-    });
-
-    if (paidAmount > 0) {
-      await prisma.payment.create({
-        data: {
-          bookingId: booking.id,
-          receiptNumber: `RCPT-2026-${randomInt(10000, 99999)}`,
-          amount: paidAmount,
-          paymentMode: pick(['UPI', 'BANK_TRANSFER', 'CASH', 'CHEQUE']),
-          paymentDate: dateStr,
-          notes: 'Advance booking payment received',
-        },
+    // Payment
+    if (b.paidAmount > 0) {
+      paymentsData.push({
+        bookingId: b.id,
+        receiptNumber: `RCPT-2026-${100000 + paymentsData.length}`,
+        amount: b.paidAmount,
+        paymentMode: pick(['UPI', 'BANK_TRANSFER', 'CASH', 'CHEQUE']),
+        paymentDate: dateStr,
+        notes: 'Deposit received',
       });
     }
 
-    await prisma.invoice.create({
-      data: {
-        bookingId: booking.id,
-        invoiceNumber: `INV-2026-${3000 + i}`,
-        gstRate: 18,
-        gstAmount: gstAmount,
-        totalAmount: netTotal,
-        grandTotal: grandTotal,
-        paidAmount: paidAmount,
-        balance: balance,
-        status: balance === 0 ? 'PAID' : paidAmount > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
-        createdAt: new Date(dateStr),
-      },
+    // Invoice
+    invoicesData.push({
+      bookingId: b.id,
+      invoiceNumber: `INV-2026-${invCounter++}`,
+      gstRate: 18,
+      gstAmount: Math.round(b.grandTotal * 0.18),
+      totalAmount: Math.round(b.grandTotal / 1.18),
+      grandTotal: b.grandTotal,
+      paidAmount: b.paidAmount,
+      balance: b.balance,
+      status: b.balance === 0 ? 'PAID' : b.paidAmount > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+      createdAt: b.createdAt,
     });
 
-    await prisma.quotation.create({
-      data: {
-        bookingId: booking.id,
-        version: 1,
-        terms: '50% advance to confirm date slot.',
-        status: 'APPROVED',
-        createdAt: new Date(dateStr),
-      },
+    // Quotation
+    quotationsData.push({
+      bookingId: b.id,
+      version: 1,
+      terms: '50% advance deposit to confirm slot date.',
+      status: 'APPROVED',
+      createdAt: b.createdAt,
     });
   }
+
+  console.log('Bulk inserting linked Events, Albums, Payments, Invoices & Quotations...');
+  await prisma.bookingEvent.createMany({ data: bookingEventsData });
+  await prisma.album.createMany({ data: albumsData });
+  await prisma.payment.createMany({ data: paymentsData });
+  await prisma.invoice.createMany({ data: invoicesData });
+  await prisma.quotation.createMany({ data: quotationsData });
 
   // Seed inventory
   console.log('Seeding equipment inventory...');
@@ -417,25 +342,20 @@ async function main() {
     { name: 'DJI Ronin 4D 6K Gimbal Rig', category: 'GIMBAL', serialNumber: 'SN-RONIN4D-HYD01', status: 'AVAILABLE' },
     { name: 'Aputure 600d Pro Lighting Strobe', category: 'LIGHT', serialNumber: 'SN-APUT-600D-HYD', status: 'AVAILABLE' },
   ];
+  await prisma.inventory.createMany({ data: inventoryItems });
 
-  for (const item of inventoryItems) {
-    await prisma.inventory.create({ data: item });
-  }
-
-  // Seed August Expenses
-  console.log('Seeding August studio expenses...');
+  // Seed Expenses for all months
+  console.log('Seeding 2026 studio expenses...');
   const expenses = [
-    { category: 'FUEL', amount: 58500, description: 'Fuel & logistics for August 31 days of shoots (Falaknuma, HICC & JRC)', date: '2026-08-27' },
-    { category: 'PRINTING', amount: 285000, description: 'Acrylic & Velvet photobook printing for August events', date: '2026-08-27' },
-    { category: 'EQUIPMENT', amount: 390000, description: 'Heavy Jimmy Jib Crane & 4K Outdoor LED Wall rentals for August peak shoots', date: '2026-08-27' },
-    { category: 'SALARY', amount: 368000, description: 'August monthly payroll for Photographers, Editors & Managers', date: '2026-08-01' },
+    { category: 'FUEL', amount: 98500, description: 'Fuel & logistics for 365 days of Hyderabadi shoots', date: '2026-08-27' },
+    { category: 'PRINTING', amount: 485000, description: 'Acrylic & Velvet photobook printing for 2026 deliveries', date: '2026-08-27' },
+    { category: 'EQUIPMENT', amount: 690000, description: 'Heavy Jimmy Jib Crane & 4K Outdoor LED Wall rentals for peak weddings', date: '2026-08-27' },
+    { category: 'SALARY', amount: 568000, description: 'Monthly payroll for Photographers, Editors & Managers', date: '2026-08-01' },
+    { category: 'MARKETING', amount: 185000, description: 'Meta & Instagram Ads for Jubilee Hills & Banjara Hills', date: '2026-08-02' },
   ];
+  await prisma.expense.createMany({ data: expenses });
 
-  for (const exp of expenses) {
-    await prisma.expense.create({ data: exp });
-  }
-
-  console.log('Successfully seeded EVERY SINGLE DAY IN AUGUST 2026 (with Peak on Aug 27) + Production Pipeline Editing Tasks!');
+  console.log(`✅ Successfully seeded 365 DAYS OF 2026! Total ${allBookings.length} Bookings & Editing Tasks created across the entire year!`);
 }
 
 main()
