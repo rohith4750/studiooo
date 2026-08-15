@@ -13,6 +13,7 @@ import {
 import { Select, MenuItem, FormControl } from '@mui/material';
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+import DataTablePagination from '@/components/DataTablePagination';
 
 const EXPENSE_CATEGORIES = ['FUEL', 'SALARY', 'PRINTING', 'EQUIPMENT', 'MARKETING', 'FOOD', 'MISCELLANEOUS'];
 const COLORS = ['#e0a96d', '#8294c4', '#5c8f7a', '#8ea8c3', '#a78bfa', '#f48fb1', '#4db6ac'];
@@ -35,11 +36,16 @@ export default function ExpensesPage() {
     }
   };
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const filteredExpenses = expenses.filter(exp => {
     const matchesCat = filterCategory === 'ALL' || exp.category === filterCategory;
     const matchesDate = matchesDateFilter(exp.date || exp.createdAt, dateFilter);
     return matchesCat && matchesDate;
   });
+
+  const paginatedExpenses = filteredExpenses.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -58,45 +64,50 @@ export default function ExpensesPage() {
       {/* Date & Year Filter */}
       <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-lg font-bold tracking-tight text-neutral-800">Operational Expenses</h1>
-          <p className="text-[11px] text-neutral-500 mt-0.5 font-normal">Record studio bills, employee salaries, and printing press expenses.</p>
+          <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Expense Ledger & Accounts</h2>
+          <p className="text-xs text-neutral-500 font-normal mt-0.5">Track studio operating expenses, vendor disbursements and equipment expenditures.</p>
         </div>
-        <button onClick={() => router.push('/dashboard/expenses/create')} className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-neutral-900 hover:bg-black text-white text-xs font-medium rounded-lg cursor-pointer shadow-xs transition duration-150 self-start sm:self-auto">
-          <Plus className="h-3.5 w-3.5" /><span>Record Expense Bill</span>
+        <button
+          onClick={() => router.push('/dashboard/expenses/create')}
+          className="px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center space-x-1.5 cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Record Expense</span>
         </button>
       </div>
 
-      {/* Financial Counters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
-          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Clock className="h-5 w-5" /></div>
-          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Spent Today</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{dailyExpenses.toLocaleString('en-IN')}</p></div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Expenses</p>
+          <p className="text-2xl font-black text-neutral-900">₹{totalExpenses.toLocaleString('en-IN')}</p>
         </div>
-        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
-          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Calendar className="h-5 w-5" /></div>
-          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Spent This Month</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{monthlyExpenses.toLocaleString('en-IN')}</p></div>
+        <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">This Month</p>
+          <p className="text-2xl font-black text-amber-600">₹{monthlyExpenses.toLocaleString('en-IN')}</p>
         </div>
-        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
-          <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Banknote className="h-5 w-5" /></div>
-          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Total Accumulation</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{totalExpenses.toLocaleString('en-IN')}</p></div>
+        <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
+          <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Today's Spend</p>
+          <p className="text-2xl font-black text-neutral-800">₹{dailyExpenses.toLocaleString('en-IN')}</p>
         </div>
       </div>
 
-
-      {/* Grid: Charts + Ledger */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:p-5">
-        <div className="glass-card p-5 rounded border border-neutral-200/50 lg:col-span-2 space-y-4">
-          <h3 className="font-bold text-xs uppercase text-neutral-500 tracking-wider flex items-center space-x-1.5">
-            <BarChart3 className="h-4.5 w-4.5 text-primary-500" /><span>Expenses by Category</span>
+      {/* Analytics & Table */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass-card rounded p-4 border border-neutral-200/50 flex flex-col justify-between">
+          <h3 className="text-xs font-bold text-neutral-800 mb-2 flex items-center space-x-1.5">
+            <BarChart3 className="h-4 w-4 text-amber-600" />
+            <span>Category Spending Breakdown</span>
           </h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeef5" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#817963', fontSize: 10 }} />
-                <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v/1000}k`} tick={{ fill: '#817963', fontSize: 10 }} />
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(val) => `₹${val}`} />
                 <Tooltip formatter={(value) => value !== undefined ? `₹${Number(value).toLocaleString()}` : ''} />
                 <Bar dataKey="Amount" radius={[8, 8, 0, 0]} barSize={30}>
                   {chartData.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />))}
@@ -106,7 +117,7 @@ export default function ExpensesPage() {
           </div>
         </div>
 
-        <div className="glass-card rounded overflow-hidden border border-neutral-200/50 flex flex-col h-[328px]">
+        <div className="glass-card rounded overflow-hidden border border-neutral-200/50 flex flex-col">
           <div className="bg-neutral-50 px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center space-x-1">
               <NotebookTabs className="h-4 w-4" /><span>Expense Receipts ({filteredExpenses.length})</span>
@@ -114,7 +125,7 @@ export default function ExpensesPage() {
             <FormControl size="small">
               <Select
                 value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value as string)}
+                onChange={(e) => { setFilterCategory(e.target.value as string); setPage(0); }}
                 displayEmpty
                 sx={{ minWidth: 120, height: 28, fontSize: '0.7rem', bgcolor: 'white' }}
               >
@@ -123,26 +134,36 @@ export default function ExpensesPage() {
               </Select>
             </FormControl>
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-neutral-100 text-xs">
+          <div className="flex-1 overflow-y-auto divide-y divide-neutral-100 text-xs max-h-[280px]">
             {loading ? (
               <div className="p-12 text-center text-xs font-semibold text-neutral-400">Loading ledger...</div>
             ) : filteredExpenses.length === 0 ? (
               <div className="p-12 text-center text-neutral-400 font-medium">No logged expense receipts.</div>
             ) : (
-              filteredExpenses.map((exp) => (
+              paginatedExpenses.map((exp) => (
                 <div key={exp.id} className="p-3 flex items-center justify-between hover:bg-neutral-50/40 transition">
                   <div className="space-y-0.5">
                     <p className="font-bold text-neutral-800">₹{exp.amount.toLocaleString('en-IN')}</p>
                     <p className="text-[10px] text-neutral-500">{exp.category} • {exp.description}</p>
                     <span className="text-[9px] text-neutral-400 font-medium">{exp.date}</span>
                   </div>
-                  <button onClick={() => handleDeleteExpense(exp.id)} className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded">
+                  <button onClick={() => handleDeleteExpense(exp.id)} className="p-1.5 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded cursor-pointer">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))
             )}
           </div>
+
+          {/* Pagination */}
+          <DataTablePagination
+            count={filteredExpenses.length}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setPage}
+            onRowsPerPageChange={setRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
         </div>
       </div>
     </div>

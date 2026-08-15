@@ -11,6 +11,7 @@ import {
 import { TextField, Select, MenuItem, InputAdornment, FormControl } from '@mui/material';
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+import DataTablePagination from '@/components/DataTablePagination';
 
 const SOURCES = ['INSTAGRAM', 'FACEBOOK', 'WHATSAPP', 'WEBSITE', 'WALK_IN', 'REFERRAL', 'GOOGLE_ADS'];
 const STATUSES = ['NEW', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CONVERTED', 'LOST'];
@@ -52,6 +53,9 @@ export default function LeadsPage() {
     }
   };
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || lead.phone.includes(searchQuery);
     const matchesSource = filterSource === 'ALL' || lead.source === filterSource;
@@ -59,6 +63,8 @@ export default function LeadsPage() {
     const matchesDate = matchesDateFilter(lead.eventDate || lead.createdAt, dateFilter);
     return matchesSearch && matchesSource && matchesStatus && matchesDate;
   });
+
+  const paginatedLeads = filteredLeads.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -168,7 +174,7 @@ export default function LeadsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 text-xs text-neutral-700">
-                {filteredLeads.map((lead) => (
+                {paginatedLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-neutral-50/40 transition">
                     <td className="py-3.5 px-4">
                       <p className="font-bold text-neutral-800">{lead.name}</p>
@@ -211,6 +217,16 @@ export default function LeadsPage() {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        <DataTablePagination
+          count={filteredLeads.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={setRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   Plus, Search, Download, Upload, Trash2, Edit3, X, Mail, Phone,
   MapPin, Gift, Calendar, Notebook, Eye, User
 } from 'lucide-react';
+import DataTablePagination from '@/components/DataTablePagination';
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -126,11 +127,16 @@ export default function ClientsPage() {
     reader.readAsText(file);
   };
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const filteredClients = clients.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.phone.includes(searchQuery) ||
     (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const paginatedClients = filteredClients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const clientBookings = selectedClient ? bookings.filter(b => b.clientId === selectedClient.id) : [];
   const clientPayments = selectedClient ? payments.filter(p => clientBookings.map(b => b.id).includes(p.bookingId)) : [];
@@ -238,7 +244,7 @@ export default function ClientsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredClients.map((client) => {
+                paginatedClients.map((client) => {
                   const clientBookingCount = bookings.filter(b => b.clientId === client.id).length;
                   return (
                     <TableRow
@@ -338,14 +344,15 @@ export default function ClientsPage() {
           </Table>
         </TableContainer>
 
-        {/* Row count footer */}
-        {!loading && filteredClients.length > 0 && (
-          <Box sx={{ px: 2, py: 1.5, borderTop: '1px solid rgba(227, 236, 231, 0.6)', bgcolor: 'background.default' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.68rem' }}>
-              Showing {filteredClients.length} of {clients.length} client profiles
-            </Typography>
-          </Box>
-        )}
+        {/* Pagination */}
+        <DataTablePagination
+          count={filteredClients.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={setRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
       </Card>
 
       {/* Client Profile Dialog (Popup) */}

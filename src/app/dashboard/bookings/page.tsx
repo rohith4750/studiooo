@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+import DataTablePagination from '@/components/DataTablePagination';
 
 const numberToWordsIndian = (num: number): string => {
   if (num === 0) return 'Zero';
@@ -369,6 +370,9 @@ function BookingsContent() {
     }
   };
 
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // Filtering
   const filteredBookings = bookings.filter((b) => {
     const matchesSearch =
@@ -378,6 +382,8 @@ function BookingsContent() {
     const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  const paginatedBookings = filteredBookings.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const getStatusChipColor = (status: string) => {
     switch (status) {
@@ -503,7 +509,7 @@ function BookingsContent() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredBookings.map((b) => (
+                paginatedBookings.map((b) => (
                   <TableRow
                     key={b.id}
                     hover
@@ -511,28 +517,42 @@ function BookingsContent() {
                     sx={{
                       cursor: 'pointer',
                       transition: 'background-color 0.15s ease',
-                      '&:hover': { bgcolor: 'primary.light' },
+                      '&:hover': {
+                        bgcolor: 'primary.light',
+                      },
                     }}
                   >
                     <TableCell>
-                      <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
-                        #{b.bookingNumber}
+                      <Typography sx={{ fontWeight: 600, fontSize: '0.78rem', color: 'text.primary' }}>
+                        {b.bookingNumber}
                       </Typography>
-                      {b.name && (
-                        <Typography sx={{ fontWeight: 600, fontSize: '0.8rem', mt: 0.25, color: 'text.primary' }}>
-                          {b.name}
-                        </Typography>
-                      )}
                     </TableCell>
                     <TableCell>
-                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                        <Avatar sx={{ width: 26, height: 26, bgcolor: 'primary.main', fontSize: '0.65rem', fontWeight: 600 }}>
-                          {b.client?.name?.charAt(0).toUpperCase() || '?'}
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                        <Avatar
+                          sx={{
+                            width: 28, height: 28,
+                            bgcolor: 'primary.main',
+                            fontSize: '0.72rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {(b.client?.name || 'C').charAt(0).toUpperCase()}
                         </Avatar>
-                        <Typography sx={{ fontSize: '0.76rem', color: 'text.primary' }}>
-                          {b.client?.name || 'Unknown'}
-                        </Typography>
+                        <Box>
+                          <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
+                            {b.client?.name || '—'}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.68rem', color: 'text.secondary' }}>
+                            {b.client?.phone || ''}
+                          </Typography>
+                        </Box>
                       </Stack>
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
+                      <Typography sx={{ fontSize: '0.76rem', color: 'text.secondary' }}>
+                        {b.package?.name || '—'}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -605,14 +625,15 @@ function BookingsContent() {
           </Table>
         </TableContainer>
 
-        {/* Row count footer */}
-        {!loading && filteredBookings.length > 0 && (
-          <Box sx={{ px: 2, py: 1.5, borderTop: '1px solid rgba(227, 236, 231, 0.6)', bgcolor: 'background.default' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.68rem' }}>
-              Showing {filteredBookings.length} of {bookings.length} bookings
-            </Typography>
-          </Box>
-        )}
+        {/* Pagination */}
+        <DataTablePagination
+          count={filteredBookings.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={setRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+        />
       </Card>
 
       {/* ========== BOOKING DETAILS DIALOG (POPUP) ========== */}
