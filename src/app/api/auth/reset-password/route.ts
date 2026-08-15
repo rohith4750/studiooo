@@ -4,27 +4,28 @@ import { createAuditLog } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, newPassword } = await req.json();
+    const { token, otp, newPassword } = await req.json();
+    const verificationCode = (otp || token || '').trim();
 
-    if (!token || typeof token !== 'string') {
-      return NextResponse.json({ error: 'Reset token is required or invalid' }, { status: 400 });
+    if (!verificationCode) {
+      return NextResponse.json({ error: '6-digit OTP verification code is required' }, { status: 400 });
     }
 
     if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters long' }, { status: 400 });
     }
 
-    // Find user with matching token that hasn't expired
+    // Find user with matching OTP that hasn't expired
     const users: any[] = await prisma.$queryRawUnsafe(
       `SELECT * FROM "public"."User" WHERE "resetToken" = $1 AND "resetTokenExpiry" > NOW() LIMIT 1`,
-      token
+      verificationCode
     );
 
     const user = users && users.length > 0 ? users[0] : null;
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Password reset link is invalid or has expired. Please request a new one.' },
+        { error: 'Invalid or expired OTP verification code. Please check your email or request a new OTP.' },
         { status: 400 }
       );
     }
