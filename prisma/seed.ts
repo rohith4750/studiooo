@@ -2,9 +2,66 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper to pick random item from array
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Helper to generate random number between min and max
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Hyderabadi Seed Data Arrays
+const HYD_FIRST_NAMES = [
+  'Syed', 'Mohammed', 'Venkat', 'Ananya', 'Goutham', 'Lakshmi', 'Vikram', 'Asif', 'Priya',
+  'Karthik', 'Sneha', 'Harish', 'Swapna', 'Zeeshan', 'Rahul', 'Srinivas', 'Rajesh', 'Mahesh',
+  'Divya', 'Kavya', 'Archana', 'Sandeep', 'Tarun', 'Vamsi', 'Akhil', 'Salman', 'Tariq',
+  'Imran', 'Fatima', 'Ayesha', 'Nithya', 'Rohit', 'Teja', 'Pradeep', 'Shravan', 'Deepthi',
+  'Manasa', 'Bhavana', 'Naresh', 'Harika', 'Pooja', 'Swathi', 'Revanth', 'Nikhil', 'Rithesh'
+];
+
+const HYD_LAST_NAMES = [
+  'Reddy', 'Rao', 'Goud', 'Khan', 'Pasha', 'Varma', 'Prasad', 'Chowdary', 'Raju', 'Shah',
+  'Patel', 'Nambiar', 'Begum', 'Sharma', 'Verma', 'Chander', 'Naidu', 'Kulkarni', 'Joshi',
+  'Deshmukh', 'Basha', 'Quadri', 'Siddiqui', 'Shaik', 'Shanker', 'Murthy', 'Yadav'
+];
+
+const HYD_LOCALITIES = [
+  'Jubilee Hills', 'Banjara Hills', 'Gachibowli', 'Madhapur', 'Hitec City', 'Begumpet',
+  'Secunderabad', 'Shamshabad', 'Kondapur', 'Himayatnagar', 'Abids', 'Financial District',
+  'Miyapur', 'Kukatpally', 'Kompally', 'Alwal', 'Mehdipatnam', 'Tolichowki', 'Somajiguda',
+  'Punjagutta', 'Manikonda', 'Narsingi', 'Tellapur', 'Gandipet'
+];
+
+const HYD_VENUES = [
+  'Taj Falaknuma Palace, Engine Bowli',
+  'Novotel Hyderabad Convention Centre (HICC), Gachibowli',
+  'Taj Krishna, Road No. 1, Banjara Hills',
+  'JRC Conventions, Jubilee Hills',
+  'Golkonda Resort & Spa, Gandipet',
+  'Ramoji Film City, Hayathnagar',
+  'N Convention, Madhapur',
+  'ITC Kohenur, Knowledge City, Madhapur',
+  'Park Hyatt, Road No. 2, Banjara Hills',
+  'Chowmahalla Palace, Khilwat',
+  'Boulder Hills Golf & Country Club, Gachibowli',
+  'Westin Mindspace, Hitec City',
+  'Fort Grand, Shamshabad',
+  'Shilpakalam Vedika, Hitec City',
+  'Avasa Hotel, Madhapur',
+  'Hyatt Place, Banjara Hills'
+];
+
+const BOOKING_STATUSES = [
+  'CONFIRMED', 'CONFIRMED', 'CONFIRMED', 
+  'IN_PROGRESS', 'IN_PROGRESS', 
+  'EDITING', 'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 
+  'COMPLETED', 'COMPLETED', 'COMPLETED'
+];
+
 async function main() {
   console.log('Clearing existing data...');
-  // Delete in reverse order of dependency
   await prisma.auditLog.deleteMany({});
   await prisma.notification.deleteMany({});
   await prisma.expense.deleteMany({});
@@ -25,7 +82,7 @@ async function main() {
   await prisma.client.deleteMany({});
   await prisma.user.deleteMany({});
 
-  console.log('Seeding users...');
+  console.log('Seeding admin & staff users...');
   const users = [
     { email: 'rohithtelidevara@gmail.com', password: 'Rohith@143', name: 'R2R Admin', role: 'ADMIN' },
     { email: 'manager@r2r.com', password: 'manager123', name: 'R2R Manager', role: 'MANAGER' },
@@ -34,18 +91,19 @@ async function main() {
     { email: 'accountant@r2r.com', password: 'acc123', name: 'R2R Accountant', role: 'ACCOUNTANT' },
     { email: 'receptionist@r2r.com', password: 'recep123', name: 'R2R Receptionist', role: 'RECEPTIONIST' },
   ];
-
   for (const u of users) {
     await prisma.user.create({ data: u });
   }
 
   console.log('Seeding employee profiles...');
   const employees = [
-    { name: 'Anand Kumar', email: 'anand.photo@r2r.com', phone: '+919999888877', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 35000 },
-    { name: 'Kiran Dev', email: 'kiran.photo@r2r.com', phone: '+919999888876', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 32000 },
-    { name: 'Rahul Mehta', email: 'rahul.edit@r2r.com', phone: '+919999888875', role: 'EDITOR', status: 'ACTIVE', salary: 28000 },
-    { name: 'Srinivas Rao', email: 'srinivas.m@r2r.com', phone: '+919999888874', role: 'MANAGER', status: 'ACTIVE', salary: 45000 },
-    { name: 'Nisha Sharma', email: 'nisha.acc@r2r.com', phone: '+919999888873', role: 'ACCOUNTANT', status: 'ACTIVE', salary: 30000 },
+    { name: 'Srinivas Rao', email: 'srinivas.m@r2r.com', phone: '+919849011223', role: 'MANAGER', status: 'ACTIVE', salary: 65000 },
+    { name: 'Anand Kumar Varma', email: 'anand.photo@r2r.com', phone: '+919949022334', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 45000 },
+    { name: 'Kiran Dev Reddy', email: 'kiran.photo@r2r.com', phone: '+919700033445', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 42000 },
+    { name: 'Rahul Mehta', email: 'rahul.edit@r2r.com', phone: '+919866044556', role: 'EDITOR', status: 'ACTIVE', salary: 38000 },
+    { name: 'Nisha Sharma', email: 'nisha.acc@r2r.com', phone: '+919989055667', role: 'ACCOUNTANT', status: 'ACTIVE', salary: 35000 },
+    { name: 'Mohammed Sameer', email: 'sameer.photo@r2r.com', phone: '+919848066778', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 40000 },
+    { name: 'Venkatesh Naidu', email: 'venky.photo@r2r.com', phone: '+919848077889', role: 'PHOTOGRAPHER', status: 'ACTIVE', salary: 41000 },
   ];
 
   const dbEmployees: Record<string, string> = {};
@@ -54,76 +112,18 @@ async function main() {
     dbEmployees[e.role] = created.id;
   }
 
-  console.log('Seeding client profiles...');
-  const clients = [
-    {
-      name: 'Rajesh Patel',
-      phone: '+919876543210',
-      whatsappNumber: '+919876543210',
-      email: 'rajesh@gmail.com',
-      address: '102, Shanti Vihar, Jayanagar',
-      city: 'Bengaluru',
-      state: 'Karnataka',
-      pincode: '560041',
-      birthday: '1990-05-12',
-      anniversary: '2018-11-22',
-      notes: 'Prefers classic framing, very detail oriented.',
-    },
-    {
-      name: 'Priya Nair',
-      phone: '+919823456789',
-      whatsappNumber: '+919823456789',
-      email: 'priya.nair@yahoo.com',
-      address: 'Flat 4B, Prestige Heights',
-      city: 'Kochi',
-      state: 'Kerala',
-      pincode: '682015',
-      birthday: '1993-08-25',
-      anniversary: '2021-02-14',
-    },
-    {
-      name: 'Amit Shah',
-      phone: '+919911223344',
-      whatsappNumber: '+919911223344',
-      email: 'amit.s@gmail.com',
-      address: '22, Rosewood Layout',
-      city: 'Bengaluru',
-      state: 'Karnataka',
-      pincode: '560068',
-      birthday: '1988-10-05',
-    },
-  ];
-
-  const dbClients = [];
-  for (const c of clients) {
-    const created = await prisma.client.create({ data: c });
-    dbClients.push(created);
-  }
-
-  console.log('Seeding lead records...');
-  const leads = [
-    { name: 'Vinay Prasad', phone: '+919123456789', email: 'vinay.p@gmail.com', event: 'Wedding', eventDate: '2026-09-12', budget: 150000, source: 'INSTAGRAM', status: 'NEW', notes: 'Enquired about cinematic video + album bundle' },
-    { name: 'Sneha Gowda', phone: '+919012345678', email: 'sneha.g@gmail.com', event: 'Baby Shower', eventDate: '2026-08-25', budget: 45000, source: 'WHATSAPP', status: 'FOLLOW_UP', notes: 'Requested quotation for half-day shoot' },
-    { name: 'Vikram Roy', phone: '+919567890123', email: 'vikram.roy@corporate.com', event: 'Corporate Event', eventDate: '2026-10-05', budget: 200000, source: 'GOOGLE_ADS', status: 'CONTACTED', notes: 'Need live streaming and crane cameras' },
-  ];
-
-  for (const l of leads) {
-    await prisma.lead.create({ data: l });
-  }
-
   console.log('Seeding event masters...');
   const events = [
-    { name: 'Pre Wedding', defaultPrice: 25000, category: 'Photography', duration: '1 Day' },
-    { name: 'Wedding', defaultPrice: 80000, category: 'Photography & Videography', duration: '1 Day' },
-    { name: 'Haldi', defaultPrice: 15000, category: 'Photography', duration: 'Half Day' },
-    { name: 'Mehendi', defaultPrice: 15000, category: 'Photography', duration: 'Half Day' },
-    { name: 'Sangeet', defaultPrice: 20000, category: 'Photography & Videography', duration: '1 Day' },
-    { name: 'Reception', defaultPrice: 40000, category: 'Photography & Videography', duration: '1 Day' },
-    { name: 'Engagement', defaultPrice: 30000, category: 'Photography & Videography', duration: '1 Day' },
-    { name: 'Baby Shower', defaultPrice: 25000, category: 'Photography', duration: 'Half Day' },
-    { name: 'Drone Shoot', defaultPrice: 15000, category: 'Add-on', duration: 'Event' },
-    { name: 'Live Streaming', defaultPrice: 20000, category: 'Add-on', duration: 'Event' },
-    { name: 'Album Design', defaultPrice: 10000, category: 'Design', duration: 'Deliverable' },
+    { name: 'Pre Wedding Shoot', defaultPrice: 35000, category: 'Photography', duration: '1 Day' },
+    { name: 'Wedding Ceremony', defaultPrice: 120000, category: 'Photography & Videography', duration: '1 Day' },
+    { name: 'Haldi & Mehendi', defaultPrice: 45000, category: 'Photography', duration: 'Half Day' },
+    { name: 'Sangeet Night', defaultPrice: 75000, category: 'Photography & Videography', duration: '1 Evening' },
+    { name: 'Grand Reception', defaultPrice: 90000, category: 'Photography & Videography', duration: '1 Day' },
+    { name: 'Royal Heritage Production', defaultPrice: 250000, category: 'Luxury Production', duration: '2 Days' },
+    { name: 'Drone Aerial Cinema', defaultPrice: 30000, category: 'Add-on', duration: 'Event' },
+    { name: 'Live 4K Broadcast', defaultPrice: 40000, category: 'Add-on', duration: 'Event' },
+    { name: 'Baby Shower & Cradle', defaultPrice: 30000, category: 'Events', duration: 'Half Day' },
+    { name: 'Birthday Bash', defaultPrice: 25000, category: 'Events', duration: 'Half Day' },
   ];
 
   const dbEvents: Record<string, string> = {};
@@ -134,230 +134,205 @@ async function main() {
 
   console.log('Seeding service packages...');
   const packages = [
-    { name: 'Bronze', price: 30000, includedEvents: JSON.stringify(['Engagement']), photographers: 1, cinematographers: 0, drone: false, album: false },
-    { name: 'Silver', price: 65000, includedEvents: JSON.stringify(['Engagement', 'Reception']), photographers: 1, cinematographers: 1, drone: false, album: true },
-    { name: 'Gold', price: 110000, includedEvents: JSON.stringify(['Wedding', 'Reception']), photographers: 2, cinematographers: 1, drone: false, album: true },
-    { name: 'Premium', price: 140000, includedEvents: JSON.stringify(['Pre Wedding', 'Wedding', 'Reception']), photographers: 2, cinematographers: 2, drone: true, album: true, complimentaryShoot: 'Pre Wedding' },
-    { name: 'Luxury', price: 180000, includedEvents: JSON.stringify(['Pre Wedding', 'Wedding', 'Reception', 'Haldi', 'Sangeet']), photographers: 3, cinematographers: 2, drone: true, album: true, led: true, liveStreaming: true },
+    { name: 'Royal Falaknuma Heritage', price: 1250000, includedEvents: JSON.stringify(['Royal Heritage Production', 'Wedding Ceremony', 'Grand Reception']), photographers: 4, cinematographers: 3, drone: true, album: true, led: true, liveStreaming: true },
+    { name: 'Nizam Luxury Edition', price: 650000, includedEvents: JSON.stringify(['Pre Wedding Shoot', 'Wedding Ceremony', 'Sangeet Night', 'Grand Reception']), photographers: 3, cinematographers: 2, drone: true, album: true, led: true, liveStreaming: true },
+    { name: 'Pearl City Grand', price: 480000, includedEvents: JSON.stringify(['Wedding Ceremony', 'Sangeet Night', 'Grand Reception']), photographers: 3, cinematographers: 2, drone: true, album: true },
+    { name: 'Gachibowli Premium', price: 380000, includedEvents: JSON.stringify(['Pre Wedding Shoot', 'Wedding Ceremony', 'Grand Reception']), photographers: 2, cinematographers: 2, drone: true, album: true },
+    { name: 'Jubilee Gold', price: 290000, includedEvents: JSON.stringify(['Wedding Ceremony', 'Grand Reception']), photographers: 2, cinematographers: 1, drone: false, album: true },
+    { name: 'Deccan Classic', price: 180000, includedEvents: JSON.stringify(['Pre Wedding Shoot', 'Wedding Ceremony']), photographers: 2, cinematographers: 1, drone: true, album: true },
+    { name: 'Charminar Silver', price: 95000, includedEvents: JSON.stringify(['Wedding Ceremony']), photographers: 1, cinematographers: 1, drone: false, album: true },
+    { name: 'Telangana Bronze', price: 45000, includedEvents: JSON.stringify(['Baby Shower & Cradle']), photographers: 1, cinematographers: 0, drone: false, album: false },
   ];
 
-  const dbPackages: Record<string, string> = {};
+  const dbPackagesList: any[] = [];
   for (const pkg of packages) {
     const created = await prisma.package.create({ data: pkg });
-    dbPackages[pkg.name] = created.id;
+    dbPackagesList.push(created);
   }
 
-  console.log('Seeding bookings...');
-  // Booking 1: Gold Package
-  const b1Subtotal = 120000.0;
-  const b1Discount = 10000.0;
-  const b1Total = b1Subtotal - b1Discount;
-  const b1Gst = b1Total * 0.18;
-  const b1GrandTotal = b1Total + b1Gst;
+  console.log('Generating 320 Hyderabadi Clients...');
+  const createdClients: any[] = [];
+  for (let i = 1; i <= 320; i++) {
+    const firstName = pick(HYD_FIRST_NAMES);
+    const lastName = pick(HYD_LAST_NAMES);
+    const locality = pick(HYD_LOCALITIES);
+    const phoneNum = `+9198${randomInt(10000000, 99999999)}`;
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@hyderabadmail.com`;
 
-  const booking1 = await prisma.booking.create({
-    data: {
-      bookingNumber: 'R2R-2026-0001',
-      clientId: dbClients[0].id,
-      packageId: dbPackages['Gold'],
-      notes: 'Ensure drone operator is available for outdoor shots.',
-      status: 'CONFIRMED',
-      subtotal: b1Subtotal,
-      discount: b1Discount,
-      gstAmount: b1Gst,
-      grandTotal: b1GrandTotal,
-      paidAmount: 50000,
-      balance: b1GrandTotal - 50000,
-      venue: 'White Petals Palace, Bengaluru',
-    },
-  });
+    const client = await prisma.client.create({
+      data: {
+        name: `${firstName} ${lastName}`,
+        phone: phoneNum,
+        whatsappNumber: phoneNum,
+        email: email,
+        address: `Flat ${randomInt(101, 909)}, ${locality}`,
+        city: 'Hyderabad',
+        state: 'Telangana',
+        pincode: `5000${randomInt(10, 99)}`,
+        notes: `Hyderabadi client from ${locality}`,
+      },
+    });
+    createdClients.push(client);
+  }
 
-  const b1Event1 = await prisma.bookingEvent.create({
-    data: {
-      bookingId: booking1.id,
-      eventId: dbEvents['Wedding'],
-      eventDate: '2026-07-20',
-      eventTime: '08:00 AM',
-      venue: 'White Petals Palace, Main Hall',
-      price: 80000,
-      status: 'ASSIGNED',
-    },
-  });
+  console.log('Generating 310 Hyderabadi Orders / Bookings across 2026...');
+  // Total August turnover target: > 35 - 50 Lakhs
+  let orderCounter = 1001;
 
-  const b1Event2 = await prisma.bookingEvent.create({
-    data: {
-      bookingId: booking1.id,
-      eventId: dbEvents['Reception'],
-      eventDate: '2026-07-21',
-      eventTime: '06:00 PM',
-      venue: 'White Petals Palace, Grand Ballroom',
-      price: 40000,
-      status: 'ASSIGNED',
-    },
-  });
+  for (let i = 0; i < 310; i++) {
+    const client = createdClients[i % createdClients.length];
+    const pkg = pick(dbPackagesList);
+    const venue = pick(HYD_VENUES);
+    const status = pick(BOOKING_STATUSES);
 
-  // Assign staff to Booking 1 Events
-  await prisma.assignment.create({
-    data: {
-      bookingEventId: b1Event1.id,
-      employeeId: dbEmployees['PHOTOGRAPHER'],
-      role: 'LEAD_PHOTOGRAPHER',
-      travelAllowance: 1000,
-      attendance: 'PENDING',
-    },
-  });
+    // Distribute dates across Jan to Nov 2026, with 80+ bookings in August 2026
+    let month = randomInt(1, 11);
+    // 30% of all bookings concentrated in August (Month 8) for heavy turnover
+    if (i % 3 === 0) {
+      month = 8;
+    }
+    const day = randomInt(1, 28);
+    const monthStr = month < 10 ? `0${month}` : `${month}`;
+    const dayStr = day < 10 ? `0${day}` : `${day}`;
+    const dateStr = `2026-${monthStr}-${dayStr}`;
 
-  // Payments for Booking 1
-  await prisma.payment.create({
-    data: {
-      bookingId: booking1.id,
-      receiptNumber: 'RCPT-2026-0001',
-      amount: 50000,
-      paymentMode: 'UPI',
-      paymentDate: '2026-07-10',
-      notes: 'Advance booking deposit',
-    },
-  });
+    const bookingNum = `R2R-2026-${orderCounter++}`;
+    const subtotal = pkg.price;
+    const discount = Math.random() > 0.6 ? randomInt(5000, 25000) : 0;
+    const netTotal = Math.max(subtotal - discount, 20000);
+    const gstAmount = Math.round(netTotal * 0.18);
+    const grandTotal = netTotal + gstAmount;
 
-  // Quotation & Invoice for Booking 1
-  await prisma.quotation.create({
-    data: {
-      bookingId: booking1.id,
-      version: 1,
-      terms: 'Standard 50% advance, balance on deliverable approval.',
-      status: 'APPROVED',
-    },
-  });
+    // Paid amount: 40% to 100%
+    const paidFactor = status === 'COMPLETED' ? 1 : Math.random() > 0.5 ? 0.7 : 0.4;
+    const paidAmount = Math.round(grandTotal * paidFactor);
+    const balance = grandTotal - paidAmount;
 
-  await prisma.invoice.create({
-    data: {
-      bookingId: booking1.id,
-      invoiceNumber: 'INV-2026-0001',
-      gstRate: 18,
-      gstAmount: b1Gst,
-      totalAmount: b1Total,
-      grandTotal: b1GrandTotal,
-      paidAmount: 50000,
-      balance: b1GrandTotal - 50000,
-      status: 'PARTIALLY_PAID',
-    },
-  });
+    const booking = await prisma.booking.create({
+      data: {
+        bookingNumber: bookingNum,
+        name: `${client.name}'s ${pkg.name} Event`,
+        clientId: client.id,
+        packageId: pkg.id,
+        venue: venue,
+        notes: `Event booked for ${dateStr} at ${venue}. GST Included.`,
+        status: status,
+        subtotal: subtotal,
+        discount: discount,
+        gstAmount: gstAmount,
+        grandTotal: grandTotal,
+        paidAmount: paidAmount,
+        balance: balance,
+        createdAt: new Date(dateStr),
+      },
+    });
 
-  // Booking 2: Premium Package
-  const b2Subtotal = 140000.0;
-  const b2Total = b2Subtotal;
-  const b2Gst = b2Total * 0.18;
-  const b2GrandTotal = b2Total + b2Gst;
+    // Create BookingEvent
+    await prisma.bookingEvent.create({
+      data: {
+        bookingId: booking.id,
+        eventId: pick(Object.values(dbEvents)),
+        eventDate: dateStr,
+        eventTime: `${randomInt(6, 11)}:00 ${randomInt(0, 1) === 0 ? 'AM' : 'PM'}`,
+        venue: venue,
+        price: Math.round(subtotal * 0.6),
+        status: status === 'COMPLETED' ? 'COMPLETED' : 'ASSIGNED',
+      },
+    });
 
-  const booking2 = await prisma.booking.create({
-    data: {
-      bookingNumber: 'R2R-2026-0002',
-      clientId: dbClients[1].id,
-      packageId: dbPackages['Premium'],
-      notes: 'Completed shoot, album in design phase.',
-      status: 'ALBUM_DESIGNING',
-      subtotal: b2Subtotal,
-      discount: 0,
-      gstAmount: b2Gst,
-      grandTotal: b2GrandTotal,
-      paidAmount: b2GrandTotal, // Fully paid
-      balance: 0,
-      venue: 'Saj Earth Resort, Kochi',
-    },
-  });
+    // Create Payment record for deposit
+    if (paidAmount > 0) {
+      await prisma.payment.create({
+        data: {
+          bookingId: booking.id,
+          receiptNumber: `RCPT-2026-${randomInt(10000, 99999)}`,
+          amount: paidAmount,
+          paymentMode: pick(['UPI', 'BANK_TRANSFER', 'CASH', 'CHEQUE']),
+          paymentDate: dateStr,
+          notes: 'Advance booking payment received',
+        },
+      });
+    }
 
-  const b2Event1 = await prisma.bookingEvent.create({
-    data: {
-      bookingId: booking2.id,
-      eventId: dbEvents['Pre Wedding'],
-      eventDate: '2026-06-15',
-      eventTime: '05:00 AM',
-      venue: 'Vagamon Pine Hills',
-      price: 25000,
-      status: 'COMPLETED',
-    },
-  });
+    // Create Invoice record
+    await prisma.invoice.create({
+      data: {
+        bookingId: booking.id,
+        invoiceNumber: `INV-2026-${1000 + i}`,
+        gstRate: 18,
+        gstAmount: gstAmount,
+        totalAmount: netTotal,
+        grandTotal: grandTotal,
+        paidAmount: paidAmount,
+        balance: balance,
+        status: balance === 0 ? 'PAID' : paidAmount > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+        createdAt: new Date(dateStr),
+      },
+    });
 
-  const b2Event2 = await prisma.bookingEvent.create({
-    data: {
-      bookingId: booking2.id,
-      eventId: dbEvents['Wedding'],
-      eventDate: '2026-06-20',
-      eventTime: '09:00 AM',
-      venue: 'Saj Earth Resort, Kochi',
-      price: 75000,
-      status: 'COMPLETED',
-    },
-  });
+    // Create Quotation record
+    await prisma.quotation.create({
+      data: {
+        bookingId: booking.id,
+        version: 1,
+        terms: '50% advance to confirm date slot, remaining balance prior to raw delivery.',
+        status: 'APPROVED',
+        createdAt: new Date(dateStr),
+      },
+    });
 
-  // Assign editor and seed Album
-  await prisma.album.create({
-    data: {
-      bookingId: booking2.id,
-      type: 'PREMIUM',
-      status: 'CLIENT_REVIEW',
-      designStatus: 'DESIGNING',
-      editorId: dbEmployees['EDITOR'],
-      rawLink: 'https://drive.google.com/drive/folders/raw_photos_mock_id',
-      editedLink: 'https://drive.google.com/drive/folders/edited_photos_mock_id',
-      notes: 'Draft album submitted for customer approval.',
-    },
-  });
-
-  await prisma.payment.create({
-    data: {
-      bookingId: booking2.id,
-      receiptNumber: 'RCPT-2026-0002',
-      amount: b2GrandTotal,
-      paymentMode: 'BANK_TRANSFER',
-      paymentDate: '2026-06-10',
-      notes: 'Full payment received',
-    },
-  });
-
-  await prisma.invoice.create({
-    data: {
-      bookingId: booking2.id,
-      invoiceNumber: 'INV-2026-0002',
-      gstRate: 18,
-      gstAmount: b2Gst,
-      totalAmount: b2Total,
-      grandTotal: b2GrandTotal,
-      paidAmount: b2GrandTotal,
-      balance: 0,
-      status: 'PAID',
-    },
-  });
+    // Create Album record for completed/editing bookings
+    if (['EDITING', 'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY', 'COMPLETED'].includes(status)) {
+      await prisma.album.create({
+        data: {
+          bookingId: booking.id,
+          type: pick(['PREMIUM', 'ACRYLIC', 'MAGAZINE', 'HD']),
+          status: status === 'COMPLETED' ? 'COMPLETED' : 'IN_EDITING',
+          designStatus: status === 'COMPLETED' ? 'DELIVERED' : 'DESIGNING',
+          editorId: dbEmployees['EDITOR'],
+          notes: 'Hyderabadi album design template.',
+          rawLink: `https://drive.google.com/drive/folders/hyd_raw_${booking.id.substring(0, 6)}`,
+          editedLink: `https://drive.google.com/drive/folders/hyd_edited_${booking.id.substring(0, 6)}`,
+        },
+      });
+    }
+  }
 
   // Seed inventory
-  console.log('Seeding inventory items...');
+  console.log('Seeding camera equipment inventory...');
   const inventoryItems = [
-    { name: 'Sony Alpha 7 IV', category: 'CAMERA', serialNumber: 'SN-SONY-740921', status: 'AVAILABLE', notes: 'Lead camera body' },
-    { name: 'Sony Alpha 7R V', category: 'CAMERA', serialNumber: 'SN-SONY-758912', status: 'AVAILABLE', notes: 'High-res portrait body' },
-    { name: 'Sony FE 24-70mm f2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-247022', status: 'AVAILABLE' },
-    { name: 'Sony FE 70-200mm f2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-702005', status: 'AVAILABLE' },
-    { name: 'DJI Mavic 3 Pro', category: 'DRONE', serialNumber: 'SN-DRONE-MAV301', status: 'AVAILABLE' },
-    { name: 'Godox AD600 Pro Strobe', category: 'LIGHT', serialNumber: 'SN-GODX-60032', status: 'AVAILABLE' },
+    { name: 'Sony FX6 Cinema Camera', category: 'CAMERA', serialNumber: 'SN-FX6-HYD001', status: 'AVAILABLE', notes: '4K Full Frame Cinema Rig' },
+    { name: 'Sony Alpha 7S III Body 1', category: 'CAMERA', serialNumber: 'SN-A7S3-HYD002', status: 'AVAILABLE' },
+    { name: 'Sony Alpha 7S III Body 2', category: 'CAMERA', serialNumber: 'SN-A7S3-HYD003', status: 'AVAILABLE' },
+    { name: 'Sony Alpha 7R V High-Res Body', category: 'CAMERA', serialNumber: 'SN-A7R5-HYD004', status: 'AVAILABLE' },
+    { name: 'Sony FE 24-70mm f/2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-2470-HYD', status: 'AVAILABLE' },
+    { name: 'Sony FE 70-200mm f/2.8 GM II', category: 'LENS', serialNumber: 'SN-LENS-70200-HYD', status: 'AVAILABLE' },
+    { name: 'Sony FE 50mm f/1.2 GM Prime', category: 'LENS', serialNumber: 'SN-LENS-5012-HYD', status: 'AVAILABLE' },
+    { name: 'DJI Inspire 3 Cinema Drone', category: 'DRONE', serialNumber: 'SN-INS3-HYD099', status: 'AVAILABLE', notes: '8K Raw Cinema Drone' },
+    { name: 'DJI Mavic 3 Pro Cine', category: 'DRONE', serialNumber: 'SN-MAV3-HYD100', status: 'AVAILABLE' },
+    { name: 'DJI Ronin 4D 6K Gimbal Rig', category: 'GIMBAL', serialNumber: 'SN-RONIN4D-HYD01', status: 'AVAILABLE' },
+    { name: 'Aputure 600d Pro Lighting Strobe', category: 'LIGHT', serialNumber: 'SN-APUT-600D-HYD', status: 'AVAILABLE' },
   ];
 
   for (const item of inventoryItems) {
     await prisma.inventory.create({ data: item });
   }
 
-  // Seed expenses
-  console.log('Seeding expenses...');
+  // Seed August & Monthly Expenses
+  console.log('Seeding studio operating expenses...');
   const expenses = [
-    { category: 'FUEL', amount: 1800, description: 'Fuel for Pre Wedding shoot travel', date: '2026-07-01' },
-    { category: 'PRINTING', amount: 12000, description: 'Acrylic photo frame printing charges', date: '2026-07-05' },
-    { category: 'SALARY', amount: 35000, description: 'Photographer monthly salary payout', date: '2026-07-02' },
-    { category: 'MARKETING', amount: 5000, description: 'Instagram ads budget for June', date: '2026-06-30' },
+    { category: 'FUEL', amount: 35500, description: 'Fuel & transport for Taj Falaknuma, Novotel HICC & Ramoji shoots', date: '2026-08-04' },
+    { category: 'PRINTING', amount: 185000, description: 'Acrylic & Velvet photobook printing charges for August deliveries', date: '2026-08-06' },
+    { category: 'SALARY', amount: 368000, description: 'Monthly payroll for Photographers, Editors & Managers', date: '2026-08-01' },
+    { category: 'MARKETING', amount: 95000, description: 'Jubilee Hills & Banjara Hills targeted Instagram & Google ads', date: '2026-08-02' },
+    { category: 'EQUIPMENT', amount: 240000, description: 'Heavy Jimmy Jib Crane & 4K Outdoor LED Wall rentals for August weddings', date: '2026-08-10' },
   ];
 
   for (const exp of expenses) {
     await prisma.expense.create({ data: exp });
   }
 
-  console.log('Database successfully pre-populated!');
+  console.log('Successfully generated 310+ Hyderabadi Orders / Bookings with massive August turnover!');
 }
 
 main()

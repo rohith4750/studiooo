@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import {
@@ -122,13 +123,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
           {/* Desktop Sidebar */}
           <Box component="aside" sx={{ display: { xs: 'none', lg: 'flex' }, flexDirection: 'column', width: 256, bgcolor: 'background.paper', borderRight: '1px solid', borderColor: 'primary.light', flexShrink: 0, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-            <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'primary.light', display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'background.default' }}>
-              <Box sx={{ p: 1, bgcolor: 'primary.light', color: 'primary.main', borderRadius: 1, display: 'flex', alignItems: 'center' }}>
-                <Camera className="h-5 w-5" />
-              </Box>
-              <Box>
-                <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', tracking: 'tight' }}>R2R Studio</Typography>
-                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 500, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ERP & CRM</Typography>
+            <Box sx={{ height: 72, p: 1, borderBottom: '1px solid', borderColor: 'primary.light', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper', overflow: 'hidden' }}>
+              <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Image
+                  src="/r2r-logo.png"
+                  alt="R2R Story Arcs Logo"
+                  width={220}
+                  height={80}
+                  className="object-contain transition-transform duration-300"
+                  style={{ transform: 'scale(0.455)' }}
+                  priority
+                />
               </Box>
             </Box>
 
@@ -218,9 +223,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               flexShrink: 0
             }}>
               {/* Mobile Only Logo & Hamburger */}
-              <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1 }}>
-                <Camera className="h-5 w-5 text-primary-500" />
-                <Typography sx={{ fontWeight: 600, color: 'text.primary', letterSpacing: '-0.02em', fontSize: 14 }}>R2R ERP</Typography>
+              <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1, overflow: 'hidden', height: 44, width: 150 }}>
+                <Image
+                  src="/r2r-logo.png"
+                  alt="R2R Story Arcs Logo"
+                  width={150}
+                  height={44}
+                  className="object-contain"
+                  style={{ transform: 'scale(2.2)' }}
+                  priority
+                />
                 <IconButton
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   sx={{ bgcolor: 'background.default', borderRadius: 0.5, ml: 1 }}
@@ -237,8 +249,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   color="inherit"
                 >
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                    <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: 13, fontWeight: 'bold' }}>
-                      {user?.name?.charAt(0).toUpperCase()}
+                    <Avatar sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'primary.light', width: 36, height: 36, overflow: 'hidden', p: 0.25, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                      <Image 
+                        src="/r2r-logo.png" 
+                        alt="R2R Logo" 
+                        width={36} 
+                        height={36} 
+                        className="object-contain" 
+                        style={{ transform: 'scale(1.9)' }} 
+                        priority 
+                      />
                     </Avatar>
                     <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}>
                       <Typography variant="caption" sx={{ fontWeight: 500, color: 'text.primary', display: 'block', lineHeight: 1.2 }}>

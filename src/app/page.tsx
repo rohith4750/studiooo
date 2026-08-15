@@ -65,13 +65,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#f7f6f2] font-sans select-none overflow-hidden">
-      
+
       {/* LEFT COLUMN: Clean Animated Studio Showcase (60% Desktop) */}
       <div className="relative lg:w-3/5 min-h-[360px] lg:min-h-screen flex flex-col justify-between p-8 lg:p-14 overflow-hidden bg-gradient-to-br from-[#f2efe9] via-[#f7f6f2] to-[#ebe7de] border-b lg:border-b-0 lg:border-r border-neutral-200/80">
-        
+
         {/* Subtle Watermark Canvas (Ultra-faint background) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-          
+
           {/* Rotating Camera Lens Aperture Ring */}
           <div className="w-[450px] lg:w-[620px] h-[450px] lg:h-[620px] relative animate-spin-slow opacity-10">
             <svg viewBox="0 0 200 200" className="w-full h-full text-amber-600 fill-none stroke-current stroke-[1]">
@@ -87,12 +87,12 @@ export default function LoginPage() {
 
           {/* Ultra-faint Faded Watermark R2R Logo */}
           <div className="w-[400px] lg:w-[580px] h-[400px] lg:h-[580px] absolute animate-float-glow opacity-[0.05] grayscale">
-            <Image 
-              src="/r2r-logo.png" 
-              alt="R2R Faded Watermark" 
-              fill 
-              className="object-contain" 
-              priority 
+            <Image
+              src="/r2r-logo.png"
+              alt="R2R Faded Watermark"
+              fill
+              className="object-contain"
+              priority
             />
           </div>
         </div>
@@ -102,12 +102,8 @@ export default function LoginPage() {
 
         {/* Top Branding Header */}
         <div className="relative z-10 flex items-center space-x-3">
-          <div className="p-2 bg-white/90 backdrop-blur-md rounded-xl border border-neutral-200/80 shadow-xs">
-            <Image src="/r2r-logo.png" alt="R2R Logo" width={38} height={38} className="object-contain" priority />
-          </div>
-          <div>
-            <span className="font-extrabold text-sm text-neutral-900 tracking-wider uppercase block">R2R STORY ARCS</span>
-            <span className="text-[10px] text-neutral-500 font-medium">Photography & Cinema ERP</span>
+          <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-neutral-200/80 shadow-xs overflow-hidden h-14 w-52 flex items-center justify-center">
+            <Image src="/r2r-logo.png" alt="R2R Story Arcs Logo" width={200} height={60} className="object-contain" style={{ transform: 'scale(0.452)' }} priority />
           </div>
         </div>
 
@@ -117,12 +113,12 @@ export default function LoginPage() {
             <Sparkles className="h-3 w-3 text-amber-600" />
             <span>Studio Operations Command</span>
           </div>
-          
+
           <h2 className="text-2xl lg:text-3xl font-bold text-neutral-900 tracking-tight leading-tight">
             Capturing Timeless Moments <br />
             <span className="text-amber-600 font-normal">Streamlining Studio Workflows</span>
           </h2>
-          
+
           <p className="text-xs text-neutral-500 max-w-md font-normal leading-relaxed">
             All-in-one studio management platform for client inquiries, shoot bookings, multi-event schedules, post-production editing, equipment tracking, and financial ledgers.
           </p>
@@ -153,10 +149,10 @@ export default function LoginPage() {
 
       {/* RIGHT COLUMN: Right-Aligned Sign-In Card Section (40% Desktop) */}
       <div className="lg:w-2/5 min-h-screen flex items-center justify-center p-6 lg:p-12 relative z-10 bg-white/40 backdrop-blur-xs">
-        
+
         <div className="w-full max-w-[360px] animate-scaleIn">
           <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-neutral-900/5 border border-neutral-200/80 p-6 sm:p-7 space-y-5">
-            
+
             {/* Header */}
             <div className="text-center space-y-1">
               <h1 className="text-xl font-bold text-neutral-900 tracking-tight">

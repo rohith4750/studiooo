@@ -4,24 +4,24 @@ export const muiTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#d97706', // Gold Orange
+      main: '#c5963b', // Gold Amber matching R2R logo
       contrastText: '#ffffff',
-      light: '#faebd7',
-      dark: '#b45309',
+      light: '#f7eed8',
+      dark: '#8c4e1e', // Rich Warm Bronze
     },
     secondary: {
-      main: '#5d80b2', // Calming Periwinkle Slate Blue
+      main: '#8c4e1e', // Rich Warm Bronze
       contrastText: '#ffffff',
-      light: '#eaeef5',
-      dark: '#3d5178',
+      light: '#f9f0e8',
+      dark: '#5c3212',
     },
     background: {
       default: '#faf9f6', // Soft Warm White
       paper: '#ffffff', // Pure White Cards
     },
     text: {
-      primary: '#3d3b32', // Soft Charcoal
-      secondary: '#655f4d',
+      primary: '#2d241c', // Soft Dark Bronze Charcoal
+      secondary: '#6e5d4f',
     },
     error: {
       main: '#d98880',
