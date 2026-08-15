@@ -236,23 +236,33 @@ export default function LoginPage() {
       {/* RIGHT COLUMN: Right-Aligned Sign-In Card Section (40% Desktop) */}
       <div className="lg:w-2/5 min-h-screen flex items-center justify-center p-6 lg:p-12 relative z-10 bg-white/40 backdrop-blur-xs">
 
-        <div className="w-full max-w-[360px] animate-scaleIn">
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl shadow-neutral-900/5 border border-neutral-200/80 p-6 sm:p-7 space-y-5">
+        <div className="w-full max-w-[370px] animate-scaleIn">
+          <div className="bg-white/95 backdrop-blur-md rounded-[5px] shadow-xl shadow-neutral-900/5 border border-neutral-200/80 p-6 sm:p-7 space-y-5">
 
-            {/* Header */}
-            <div className="text-center space-y-1">
-              <h1 className="text-xl font-bold text-neutral-900 tracking-tight">
-                Sign In to R2R
+            {/* Header with Logo */}
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-1">
+                <Image
+                  src="/r2r-logo.png"
+                  alt="R2R Story Arcs"
+                  width={130}
+                  height={42}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <h1 className="text-lg font-bold text-neutral-900 tracking-tight">
+                Sign In to Studio Portal
               </h1>
               <p className="text-[11px] text-neutral-500 font-normal">
-                Enter your credentials to access studio portal
+                Enter your credentials to access workspace
               </p>
             </div>
 
             {/* Form */}
             <form className="space-y-4" onSubmit={handleLogin}>
               {error && (
-                <div className="rounded-lg bg-red-50 border border-red-200 p-2.5 text-red-700 flex items-start space-x-2 text-xs animate-shake">
+                <div className="rounded-[5px] bg-red-50 border border-red-200 p-2.5 text-red-700 flex items-start space-x-2 text-xs animate-shake">
                   <ShieldAlert className="h-4 w-4 flex-shrink-0 text-red-500 mt-0.5" />
                   <span className="font-medium text-[11px]">{error}</span>
                 </div>
@@ -274,7 +284,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@r2r.com"
-                    className="w-full pl-9 pr-3 py-2.5 bg-neutral-50/80 hover:bg-neutral-100/60 focus:bg-white text-neutral-900 text-xs rounded-lg border border-neutral-200 focus:border-neutral-800 focus:ring-1 focus:ring-neutral-800/10 outline-none transition-all font-medium placeholder:text-neutral-400"
+                    className="w-full pl-9 pr-3 py-2.5 bg-neutral-50/80 hover:bg-neutral-100/60 focus:bg-white text-neutral-900 text-xs rounded-[5px] border border-neutral-200 focus:border-neutral-800 focus:ring-1 focus:ring-neutral-800/10 outline-none transition-all font-medium placeholder:text-neutral-400"
                   />
                 </div>
               </div>
@@ -304,7 +314,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-9 py-2.5 bg-neutral-50/80 hover:bg-neutral-100/60 focus:bg-white text-neutral-900 text-xs rounded-lg border border-neutral-200 focus:border-neutral-800 focus:ring-1 focus:ring-neutral-800/10 outline-none transition-all font-medium placeholder:text-neutral-400"
+                    className="w-full pl-9 pr-9 py-2.5 bg-neutral-50/80 hover:bg-neutral-100/60 focus:bg-white text-neutral-900 text-xs rounded-[5px] border border-neutral-200 focus:border-neutral-800 focus:ring-1 focus:ring-neutral-800/10 outline-none transition-all font-medium placeholder:text-neutral-400"
                   />
                   <button
                     type="button"
@@ -321,7 +331,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 group"
+                  className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-[5px] shadow-sm transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 group"
                 >
                   <span>{loading ? 'Signing In...' : 'Sign In'}</span>
                   {!loading && <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />}
@@ -337,9 +347,9 @@ export default function LoginPage() {
       {/* Forgot Password Modal (On-Screen OTP Verification & Reset) */}
       {forgotOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200 w-full max-w-sm p-6 space-y-4 animate-scaleIn">
+          <div className="bg-white rounded-[5px] shadow-2xl border border-neutral-200 w-full max-w-sm p-6 space-y-4 animate-scaleIn">
             <div className="text-center space-y-1">
-              <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-[5px] flex items-center justify-center mx-auto mb-2">
                 <Lock className="h-5 w-5" />
               </div>
               <h3 className="text-base font-bold text-neutral-900">
@@ -353,13 +363,13 @@ export default function LoginPage() {
             </div>
 
             {forgotError && (
-              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg font-medium">
+              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[5px] font-medium">
                 {forgotError}
               </div>
             )}
 
             {forgotSuccess && (
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg font-medium">
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-[5px] font-medium">
                 {forgotSuccess}
               </div>
             )}
@@ -377,7 +387,7 @@ export default function LoginPage() {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="e.g. rahul@r2r.com"
-                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-[5px] text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
                     autoFocus
                   />
                 </div>
@@ -386,14 +396,14 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => { setForgotOpen(false); setForgotStep(1); }}
-                    className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                    className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-[5px] transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="flex-1 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                    className="flex-1 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-[5px] transition disabled:opacity-50 cursor-pointer"
                   >
                     {forgotLoading ? 'Sending OTP...' : 'Send OTP'}
                   </button>
@@ -413,7 +423,7 @@ export default function LoginPage() {
                     value={forgotOtp}
                     onChange={(e) => setForgotOtp(e.target.value)}
                     placeholder="123456"
-                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-center tracking-widest font-bold text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-[5px] text-sm text-center tracking-widest font-bold text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
                     autoFocus
                   />
                 </div>
@@ -429,7 +439,7 @@ export default function LoginPage() {
                     value={forgotNewPass}
                     onChange={(e) => setForgotNewPass(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-[5px] text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
                   />
                 </div>
 
@@ -444,7 +454,7 @@ export default function LoginPage() {
                     value={forgotConfirmPass}
                     onChange={(e) => setForgotConfirmPass(e.target.value)}
                     placeholder="Re-enter new password"
-                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-[5px] text-xs text-neutral-900 focus:bg-white focus:border-neutral-800 outline-none"
                   />
                 </div>
 
@@ -452,14 +462,14 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => { setForgotStep(1); setForgotError(''); setForgotSuccess(''); }}
-                    className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                    className="flex-1 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-[5px] transition cursor-pointer"
                   >
                     Back
                   </button>
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="flex-1 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                    className="flex-1 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-[5px] transition disabled:opacity-50 cursor-pointer"
                   >
                     {forgotLoading ? 'Updating...' : 'Save & Log In'}
                   </button>
