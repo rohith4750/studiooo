@@ -42,39 +42,45 @@ export async function POST(req: NextRequest) {
       role: user.role,
     });
 
-    // Auto-mark Attendance for Employee on Login
-    const localDateStr = new Date().toLocaleDateString('en-CA');
-    const localTimeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+    // Safely auto-mark Attendance for Employee on Login without blocking login if table query fails
+    try {
+      const localDateStr = new Date().toLocaleDateString('en-CA');
+      const localTimeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    const employee = await prisma.employee.findUnique({
-      where: { email: user.email.toLowerCase() },
-    });
-
-    if (employee) {
-      // Check if attendance already exists for today
-      const existingAttendance = await (prisma as any).attendance.findFirst({
-        where: { employeeId: employee.id, date: localDateStr },
+      const employee = await prisma.employee.findUnique({
+        where: { email: user.email.toLowerCase() },
       });
 
-      if (!existingAttendance) {
-        await (prisma as any).attendance.create({
-          data: {
-            employeeId: employee.id,
-            date: localDateStr,
-            status: 'PRESENT',
-            workDescription: `Auto-Logged at Studio Portal Login (${localTimeStr})`,
-          },
+      if (employee) {
+        const existingAttendance = await (prisma as any).attendance.findFirst({
+          where: { employeeId: employee.id, date: localDateStr },
         });
+
+        if (!existingAttendance) {
+          await (prisma as any).attendance.create({
+            data: {
+              employeeId: employee.id,
+              date: localDateStr,
+              status: 'PRESENT',
+              workDescription: `Auto-Logged at Studio Portal Login (${localTimeStr})`,
+            },
+          });
+        }
       }
+    } catch (attendanceErr) {
+      console.warn('Non-blocking attendance log warning:', attendanceErr);
     }
 
-
-    // Create Audit Log
-    await createAuditLog(user.id, 'LOGIN', `User ${user.email} successfully logged in.`);
+    // Safely create Audit Log
+    try {
+      await createAuditLog(user.id, 'LOGIN', `User ${user.email} successfully logged in.`);
+    } catch (auditErr) {
+      console.warn('Non-blocking audit log warning:', auditErr);
+    }
 
     return response;
   } catch (error: any) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Login failed' }, { status: 500 });
   }
 }
