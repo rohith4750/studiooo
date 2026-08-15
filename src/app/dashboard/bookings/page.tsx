@@ -344,14 +344,14 @@ function BookingsContent() {
 
   const handleGenerateQuotation = async (booking: any) => {
     try {
-      await createRecord('quotations', {
+      const q = await createRecord('quotations', {
         bookingId: booking.id,
         version: 1,
-        terms: 'Payment schedule: 50% advance, 40% on shoot completion, 10% on album delivery.',
+        terms: 'Payment schedule: 30% advance, 50% on event, 20% on album delivery.',
         status: 'SENT',
       });
-      toast(`Quotation generated successfully! Redirecting to Billing...`, 'success');
-      router.push('/dashboard/billing');
+      toast(`Quotation generated successfully! Redirecting to Quotation Studio...`, 'success');
+      router.push(`/dashboard/quotations?id=${q.id || booking.id}`);
     } catch (e) {
       toast('Quotation generation failed: ' + e, 'error');
     }

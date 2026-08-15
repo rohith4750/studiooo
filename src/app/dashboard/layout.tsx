@@ -7,7 +7,7 @@ import {
   Camera, LayoutDashboard, Users, UserSquare2, CalendarDays,
   FileText, ClipboardList, PenTool, HardDrive, Receipt,
   Settings, LogOut, BarChart3, Menu, X, ShieldAlert, Box as BoxIcon, Flame,
-  CheckCircle2
+  CheckCircle2, Sparkles
 } from 'lucide-react';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider } from '@mui/material/styles';
@@ -33,6 +33,7 @@ const MENU_GROUPS = [
       { name: 'Bookings', path: '/dashboard/bookings', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Track Status', path: '/dashboard/bookings/status', icon: CheckCircle2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST'] },
+      { name: 'Quotation Studio', path: '/dashboard/quotations', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST'] },
     ]
   },
   {
