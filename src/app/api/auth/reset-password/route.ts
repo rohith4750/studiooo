@@ -15,14 +15,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Find user with matching token that hasn't expired
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
-      },
-    });
+    const users: any[] = await prisma.$queryRawUnsafe(
+      `SELECT * FROM "public"."User" WHERE "resetToken" = $1 AND "resetTokenExpiry" > NOW() LIMIT 1`,
+      token
+    );
+
+    const user = users && users.length > 0 ? users[0] : null;
 
     if (!user) {
       return NextResponse.json(
@@ -32,14 +30,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user password and clear token
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: newPassword,
-        resetToken: null,
-        resetTokenExpiry: null,
-      },
-    });
+    await prisma.$executeRawUnsafe(
+      `UPDATE "public"."User" SET "password" = $1, "resetToken" = NULL, "resetTokenExpiry" = NULL, "updatedAt" = NOW() WHERE "id" = $2`,
+      newPassword,
+      user.id
+    );
 
     // Create security audit log
     await createAuditLog({

@@ -28,13 +28,13 @@ export async function POST(req: NextRequest) {
     const token = crypto.randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetToken: token,
-        resetTokenExpiry: expiry,
-      },
-    });
+    // Update reset token & expiry
+    await prisma.$executeRawUnsafe(
+      `UPDATE "public"."User" SET "resetToken" = $1, "resetTokenExpiry" = $2, "updatedAt" = NOW() WHERE "id" = $3`,
+      token,
+      expiry,
+      user.id
+    );
 
     const host = req.headers.get('host') || 'localhost:3000';
     const protocol = req.headers.get('x-forwarded-proto') || 'http';
