@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import { Select, MenuItem, FormControl } from '@mui/material';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 const EXPENSE_CATEGORIES = ['FUEL', 'SALARY', 'PRINTING', 'EQUIPMENT', 'MARKETING', 'FOOD', 'MISCELLANEOUS'];
 const COLORS = ['#e0a96d', '#8294c4', '#5c8f7a', '#8ea8c3', '#a78bfa', '#f48fb1', '#4db6ac'];
 
@@ -21,6 +23,7 @@ export default function ExpensesPage() {
   const { toast, confirm: confirmAction } = useToast();
   const [loading, setLoading] = useState(true);
   const [filterCategory, setFilterCategory] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   useEffect(() => { fetchData('expenses').finally(() => setLoading(false)); }, [fetchData]);
 
@@ -32,20 +35,29 @@ export default function ExpensesPage() {
     }
   };
 
-  const filteredExpenses = expenses.filter(exp => filterCategory === 'ALL' || exp.category === filterCategory);
-  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const filteredExpenses = expenses.filter(exp => {
+    const matchesCat = filterCategory === 'ALL' || exp.category === filterCategory;
+    const matchesDate = matchesDateFilter(exp.date || exp.createdAt, dateFilter);
+    return matchesCat && matchesDate;
+  });
+
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
   const currentDay = new Date().toISOString().slice(0, 10);
-  const dailyExpenses = expenses.filter(e => e.date === currentDay).reduce((sum, e) => sum + e.amount, 0);
-  const monthlyExpenses = expenses.filter(e => e.date.startsWith(currentMonth)).reduce((sum, e) => sum + e.amount, 0);
+  const dailyExpenses = filteredExpenses.filter(e => e.date === currentDay).reduce((sum, e) => sum + e.amount, 0);
+  const monthlyExpenses = filteredExpenses.filter(e => (e.date || '').startsWith(currentMonth)).reduce((sum, e) => sum + e.amount, 0);
 
   const categorySumMap: Record<string, number> = {};
   EXPENSE_CATEGORIES.forEach(cat => { categorySumMap[cat] = 0; });
-  expenses.forEach(exp => { categorySumMap[exp.category] = (categorySumMap[exp.category] || 0) + (exp.amount || 0); });
+  filteredExpenses.forEach(exp => { categorySumMap[exp.category] = (categorySumMap[exp.category] || 0) + (exp.amount || 0); });
   const chartData = Object.keys(categorySumMap).map(key => ({ name: key, Amount: categorySumMap[key] }));
 
   return (
     <div className="space-y-4 animate-fadeIn font-sans text-xs text-neutral-700">
+      
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
         <div>
           <h1 className="text-lg font-bold tracking-tight text-neutral-800">Operational Expenses</h1>

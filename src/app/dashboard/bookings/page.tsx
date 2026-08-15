@@ -15,6 +15,8 @@ import {
   MapPin, Calendar, Clock, Sparkles, Calculator, Eye
 } from 'lucide-react';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 const numberToWordsIndian = (num: number): string => {
   if (num === 0) return 'Zero';
   const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
@@ -56,6 +58,7 @@ function BookingsContent() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   // Booking details popup state
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
@@ -402,7 +405,8 @@ function BookingsContent() {
       b.bookingNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.client && b.client.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus = filterStatus === 'ALL' || b.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const getStatusChipColor = (status: string) => {
@@ -418,6 +422,9 @@ function BookingsContent() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
 
       {/* Top Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>

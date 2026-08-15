@@ -7,6 +7,7 @@ import {
   Trash2, X, ClipboardCheck, Sparkles, MapPin, Clock, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Select, MenuItem, FormControl } from '@mui/material';
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import Link from 'next/link';
 
 const STAFF_ROLES = ['LEAD_PHOTOGRAPHER', 'CINEMATOGRAPHER', 'DRONE_OPERATOR', 'ASSISTANT'];
@@ -20,6 +21,7 @@ export default function AssignmentsPage() {
 
   const [loading, setLoading] = useState(true);
   const [filterClientId, setFilterClientId] = useState('');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   // Calendar State
   const today = new Date();
@@ -89,6 +91,10 @@ export default function AssignmentsPage() {
 
   return (
     <div className="space-y-4 animate-fadeIn">
+      
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-neutral-800">Staff Assignments & Calendar</h2>

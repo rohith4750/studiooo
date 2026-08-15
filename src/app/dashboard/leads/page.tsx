@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { TextField, Select, MenuItem, InputAdornment, FormControl } from '@mui/material';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 const SOURCES = ['INSTAGRAM', 'FACEBOOK', 'WHATSAPP', 'WEBSITE', 'WALK_IN', 'REFERRAL', 'GOOGLE_ADS'];
 const STATUSES = ['NEW', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CONVERTED', 'LOST'];
 
@@ -21,6 +23,7 @@ export default function LeadsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSource, setFilterSource] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   useEffect(() => {
     fetchData('leads').finally(() => setLoading(false));
@@ -53,7 +56,8 @@ export default function LeadsPage() {
     const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || lead.phone.includes(searchQuery);
     const matchesSource = filterSource === 'ALL' || lead.source === filterSource;
     const matchesStatus = filterStatus === 'ALL' || lead.status === filterStatus;
-    return matchesSearch && matchesSource && matchesStatus;
+    const matchesDate = matchesDateFilter(lead.eventDate || lead.createdAt, dateFilter);
+    return matchesSearch && matchesSource && matchesStatus && matchesDate;
   });
 
   const getStatusBadgeColor = (status: string) => {
@@ -70,6 +74,10 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-4 animate-fadeIn font-sans text-xs text-neutral-700">
+      
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
         <div>
           <h1 className="text-lg font-bold tracking-tight text-neutral-800">Inquiries & Lead Pipeline</h1>

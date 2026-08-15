@@ -8,6 +8,7 @@ import {
   ArrowLeft, Download, Send, CreditCard, Sparkles, Building, QrCode, X 
 } from 'lucide-react';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import { useRouter } from 'next/navigation';
 
 export default function BillingPage() {
@@ -18,6 +19,7 @@ export default function BillingPage() {
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'INVOICES' | 'QUOTATIONS'>('INVOICES');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
   
   // Document preview state
   const [previewDoc, setPreviewDoc] = useState<any>(null);
@@ -109,6 +111,9 @@ export default function BillingPage() {
   const handleDirectDownload = (doc: any, type: 'INVOICE' | 'QUOTATION') => {
     handleDownloadPDF(doc, type);
   };
+
+  const filteredInvoices = invoices.filter((inv: any) => matchesDateFilter(inv.createdAt || inv.booking?.createdAt, dateFilter));
+  const filteredQuotations = quotations.filter((q: any) => matchesDateFilter(q.createdAt || q.booking?.createdAt, dateFilter));
 
   return (
     <div className="space-y-4">
@@ -211,7 +216,7 @@ export default function BillingPage() {
                     </div>
                     <div className="text-right">
                       <p className="italic font-bold text-neutral-500">Digitally Authorized</p>
-                      <p className="font-bold text-neutral-800 mt-6">R2R Authorized Signatory</p>
+                      <p className="font-bold text-neutral-800 mt-2">R2R Authorized Signatory</p>
                     </div>
                   </div>
                 </div>
@@ -223,20 +228,34 @@ export default function BillingPage() {
 
       {/* Screen Interface (Only shown in browser screen) */}
       <div className="print:hidden space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-neutral-800">Billing Center</h2>
-            <p className="text-xs text-neutral-500 mt-0.5">Track invoices, invoice balances, and version-controlled quotations.</p>
-          </div>
+        
+        {/* Date & Year Filter */}
+        <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
 
-          <div className="flex items-center space-x-1.5 p-1 bg-neutral-100 rounded">
+      {/* Top Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
+        <div>
+          <h1 className="text-lg font-bold tracking-tight text-neutral-800">
+            Invoices & Quotations Studio
+          </h1>
+          <p className="text-xs text-neutral-500 font-medium mt-0.5">
+            Official GST Tax Invoices, Quotation PDFs, and Digital Signatures.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Ledger Section */}
+      <div className="space-y-3">
+        {/* Tab Navigation */}
+        <div className="flex items-center justify-between border-b border-neutral-200/80 pb-2">
+          <div className="flex items-center space-x-1 bg-neutral-100 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('INVOICES')}
               className={`px-4 py-1.5 rounded text-xs font-semibold cursor-pointer transition ${
                 activeTab === 'INVOICES' ? 'bg-white text-neutral-800 shadow-xs' : 'text-neutral-500 hover:text-neutral-800'
               }`}
             >
-              Invoices
+              Invoices ({filteredInvoices.length})
             </button>
             <button
               onClick={() => setActiveTab('QUOTATIONS')}
@@ -244,7 +263,7 @@ export default function BillingPage() {
                 activeTab === 'QUOTATIONS' ? 'bg-white text-neutral-800 shadow-xs' : 'text-neutral-500 hover:text-neutral-800'
               }`}
             >
-              Quotations
+              Quotations ({filteredQuotations.length})
             </button>
           </div>
         </div>
@@ -255,8 +274,8 @@ export default function BillingPage() {
             <div className="p-12 text-center text-xs font-semibold text-neutral-400">Loading ledger files...</div>
           ) : activeTab === 'INVOICES' ? (
             /* Invoices list */
-            invoices.length === 0 ? (
-              <div className="p-12 text-center text-xs text-neutral-400">No generated invoices found. Create one from the Bookings page.</div>
+            filteredInvoices.length === 0 ? (
+              <div className="p-12 text-center text-xs text-neutral-400">No generated invoices found for selected period.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -271,7 +290,7 @@ export default function BillingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 text-neutral-700">
-                    {invoices.map((inv) => (
+                    {filteredInvoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-neutral-50/40 transition">
                         <td className="py-3 px-4">
                           <p className="font-bold text-neutral-800">{inv.invoiceNumber}</p>
@@ -572,5 +591,6 @@ export default function BillingPage() {
       )}
 
     </div>
+  </div>
   );
 }

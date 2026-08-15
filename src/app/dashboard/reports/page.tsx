@@ -13,7 +13,9 @@ import {
 } from 'recharts';
 import { Select, MenuItem, FormControl } from '@mui/material';
 
-const CATEGORY_COLORS = ['#d97706', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#64748b'];
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
+const CATEGORY_COLORS = ['#c5963b', '#8c4e1e', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#64748b'];
 
 export default function ReportsPage() {
   const { 
@@ -22,6 +24,7 @@ export default function ReportsPage() {
 
   const [loading, setLoading] = useState(true);
   const [filterAction, setFilterAction] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   useEffect(() => {
     setLoading(true);
@@ -32,10 +35,15 @@ export default function ReportsPage() {
     ]).finally(() => setLoading(false));
   }, [fetchData]);
 
+  // Filtered collections
+  const filteredBookings = bookings.filter(b => matchesDateFilter(b.createdAt, dateFilter));
+  const filteredExpenses = expenses.filter(e => matchesDateFilter(e.date || e.createdAt, dateFilter));
+  const filteredLogs = auditLogs.filter(l => matchesDateFilter(l.timestamp, dateFilter));
+
   // Real-time financial calculations
-  const grossBookingsValue = bookings.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
-  const paidSales = bookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const grossBookingsValue = filteredBookings.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const paidSales = filteredBookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const netProfit = paidSales - totalExpenses;
 
   // Compute monthly breakdown dynamically (last 6 months)
@@ -119,14 +127,18 @@ export default function ReportsPage() {
   };
 
   // Filtered audit logs
-  const filteredLogs = auditLogs.filter(log => 
-    filterAction === 'ALL' || log.action === filterAction
-  );
+  const displayLogs = auditLogs.filter(log => {
+    const matchesAct = filterAction === 'ALL' || log.action === filterAction;
+    const matchesDate = matchesDateFilter(log.timestamp, dateFilter);
+    return matchesAct && matchesDate;
+  });
 
   return (
     <div className="space-y-6 animate-fadeIn text-xs text-neutral-700 font-sans">
 
-      
+      {/* Period Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       {/* Header Banner */}
       <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs">
         <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">
@@ -281,12 +293,12 @@ export default function ReportsPage() {
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-neutral-400 font-medium">Loading system audit logs...</td>
                 </tr>
-              ) : filteredLogs.length === 0 ? (
+              ) : displayLogs.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-neutral-400 font-medium">No matching audit logs found.</td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
+                displayLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-neutral-50/60 transition">
                     <td className="py-3 px-4">
                       <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-wide border ${

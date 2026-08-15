@@ -12,6 +12,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar 
 } from 'recharts';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 export default function DashboardPage() {
   const router = useRouter();
   const { 
@@ -21,6 +23,7 @@ export default function DashboardPage() {
 
   const [mounted, setMounted] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   useEffect(() => {
     setMounted(true);
@@ -37,42 +40,44 @@ export default function DashboardPage() {
 
   if (!mounted) return null;
 
+  // Filtered collections based on DateYearFilter
+  const filteredBookings = bookings.filter(b => matchesDateFilter(b.createdAt, dateFilter));
+  const filteredExpenses = expenses.filter(e => matchesDateFilter(e.date || e.createdAt, dateFilter));
+  const filteredLeads = leads.filter(l => matchesDateFilter(l.createdAt, dateFilter));
+  const filteredBookingEvents = bookingEvents.filter(be => matchesDateFilter(be.eventDate, dateFilter));
+
   // Real-time calculations
   const localTodayStr = new Date().toLocaleDateString('en-CA');
   
-  const totalRevenue = bookings.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
-  const paidRevenue = bookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
+  const totalRevenue = filteredBookings.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const paidRevenue = filteredBookings.reduce((sum, b) => sum + (b.paidAmount || 0), 0);
   const pendingRevenue = totalRevenue - paidRevenue;
-  const convertedLeads = leads.filter(l => l.status === 'CONVERTED').length;
-  const totalLeads = leads.length;
+  const convertedLeads = filteredLeads.filter(l => l.status === 'CONVERTED').length;
+  const totalLeads = filteredLeads.length;
   const conversionRate = totalLeads ? Math.round((convertedLeads / totalLeads) * 100) : 0;
   
-  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const netProfit = paidRevenue - totalExpenses;
 
   // Active shoots today & upcoming
-  const todayShoots = bookingEvents.filter(be => be.eventDate === localTodayStr);
-  const upcomingShoots = bookingEvents.filter(be => be.eventDate > localTodayStr);
+  const todayShoots = filteredBookingEvents.filter(be => be.eventDate === localTodayStr);
+  const upcomingShoots = filteredBookingEvents.filter(be => be.eventDate > localTodayStr);
 
-  const pendingDeliveries = bookings.filter(b => 
+  const pendingDeliveries = filteredBookings.filter(b => 
     ['IN_PROGRESS', 'EDITING', 'ALBUM_DESIGNING', 'PRINTING', 'READY_FOR_DELIVERY'].includes(b.status)
   ).length;
 
-  // Build last 6 months trend data dynamically
+  // Build dynamic monthly trend chart
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyTrends: Record<string, { month: string; Revenue: number; Expenses: number; Profit: number }> = {};
   
-  const currentMonthIdx = new Date().getMonth();
-  const currentYearVal = new Date().getFullYear();
-
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(currentYearVal, currentMonthIdx - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = `${monthNames[d.getMonth()]}`;
-    monthlyTrends[key] = { month: label, Revenue: 0, Expenses: 0, Profit: 0 };
+  for (let m = 1; m <= 12; m++) {
+    const mStr = m < 10 ? `0${m}` : `${m}`;
+    const key = `2026-${mStr}`;
+    monthlyTrends[key] = { month: monthNames[m - 1], Revenue: 0, Expenses: 0, Profit: 0 };
   }
 
-  bookings.forEach(b => {
+  filteredBookings.forEach(b => {
     if (b.createdAt) {
       const key = b.createdAt.substring(0, 7);
       if (monthlyTrends[key]) {
@@ -81,9 +86,10 @@ export default function DashboardPage() {
     }
   });
 
-  expenses.forEach(e => {
-    if (e.date) {
-      const key = e.date.substring(0, 7);
+  filteredExpenses.forEach(e => {
+    const dStr = e.date || e.createdAt;
+    if (dStr) {
+      const key = dStr.substring(0, 7);
       if (monthlyTrends[key]) {
         monthlyTrends[key].Expenses += (e.amount || 0);
       }
@@ -98,6 +104,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 animate-fadeIn font-sans text-xs text-neutral-700">
       
+      {/* Date & Year Filter Bar */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200/80 shadow-2xs">
         <div>

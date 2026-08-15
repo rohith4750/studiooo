@@ -13,6 +13,8 @@ import {
   Trash2, X, ClipboardList, Clock, ArrowRight, Eye 
 } from 'lucide-react';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 const COLUMNS = [
   { key: 'IN_PROGRESS', label: 'Shoot started', color: 'primary' },
   { key: 'EDITING', label: 'In Editing Queue', color: 'warning' },
@@ -36,6 +38,7 @@ export default function WorkflowsPage() {
 
   const [loading, setLoading] = useState(true);
   const [activeBooking, setActiveBooking] = useState<any>(null);
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   // Form open states (inline right pane)
   const [formOpen, setFormOpen] = useState(false);
@@ -128,6 +131,10 @@ export default function WorkflowsPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       <div>
         <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>
           Production Pipeline
@@ -160,6 +167,8 @@ export default function WorkflowsPage() {
             >
               {COLUMNS.map((col) => {
                 const colBookings = bookings.filter(b => {
+                  const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
+                  if (!matchesDate) return false;
                   if (col.key === 'IN_PROGRESS') {
                     return b.status === 'IN_PROGRESS' || b.status === 'CONFIRMED' || b.status === 'PENDING';
                   }

@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { TextField, Select, MenuItem, FormControl } from '@mui/material';
 
+import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+
 const PIPELINE_STAGES = [
   { key: 'CONFIRMED', label: '1. Confirmed' },
   { key: 'IN_PROGRESS', label: '2. Shoot On-Site' },
@@ -25,6 +27,7 @@ export default function StatusRosterPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStage, setFilterStage] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
 
   useEffect(() => {
     setLoading(true);
@@ -40,8 +43,9 @@ export default function StatusRosterPage() {
       (b.venue && b.venue.toLowerCase().includes(term));
 
     const matchesStage = filterStage === 'ALL' || b.status === filterStage;
+    const matchesDate = matchesDateFilter(b.createdAt, dateFilter);
 
-    return matchesSearch && matchesStage;
+    return matchesSearch && matchesStage && matchesDate;
   });
 
   // Calculations for summary stats
@@ -72,6 +76,9 @@ export default function StatusRosterPage() {
   return (
     <div className="space-y-6 animate-fadeIn font-sans">
       
+      {/* Date & Year Filter */}
+      <DateYearFilter filter={dateFilter} onChange={setDateFilter} />
+
       {/* Title Header Banner */}
       <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
