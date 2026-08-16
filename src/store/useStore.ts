@@ -107,6 +107,9 @@ export const useStore = create<StoreState>((set, get) => ({
       console.error('Session fetch failed', e);
     }
     set({ user: null });
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')) {
+      window.location.href = '/';
+    }
     return null;
   },
 
@@ -129,6 +132,13 @@ export const useStore = create<StoreState>((set, get) => ({
 
     try {
       const res = await fetch(`/api/data/${modelKey}${queryParams}`);
+      if (res.status === 401) {
+        set({ user: null });
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')) {
+          window.location.href = '/';
+        }
+        return [];
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to fetch ${model}`);
@@ -172,6 +182,13 @@ export const useStore = create<StoreState>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      if (res.status === 401) {
+        set({ user: null });
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')) {
+          window.location.href = '/';
+        }
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to create in ${model}`);
@@ -211,6 +228,13 @@ export const useStore = create<StoreState>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      if (res.status === 401) {
+        set({ user: null });
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')) {
+          window.location.href = '/';
+        }
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to update in ${model}`);
@@ -242,6 +266,13 @@ export const useStore = create<StoreState>((set, get) => ({
       const res = await fetch(`/api/data/${modelKey}?id=${id}`, {
         method: 'DELETE',
       });
+      if (res.status === 401) {
+        set({ user: null });
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard')) {
+          window.location.href = '/';
+        }
+        throw new Error('Unauthorized');
+      }
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || `Failed to delete from ${model}`);

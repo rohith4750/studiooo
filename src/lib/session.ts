@@ -37,5 +37,13 @@ export function setSession(res: NextResponse, user: SessionUser) {
 }
 
 export function clearSession(res: NextResponse) {
+  res.cookies.set(COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    expires: new Date(0),
+    path: '/',
+  });
   res.cookies.delete(COOKIE_NAME);
 }

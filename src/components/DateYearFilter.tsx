@@ -364,7 +364,7 @@ export default function DateYearFilter({
               <Filter className="h-4 w-4" />
             </Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.825rem' }}>
-              Material UI Date & Period Filters
+              Date & Period Filters
             </Typography>
           </Stack>
 

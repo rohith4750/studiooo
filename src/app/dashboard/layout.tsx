@@ -79,21 +79,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
-    fetchSession().then((session) => {
+    let mounted = true;
+
+    const verifySession = async () => {
+      const session = await fetchSession();
+      if (!mounted) return;
       if (!session) {
-        router.push('/');
+        setLoading(true);
+        window.location.href = '/';
       } else {
         setLoading(false);
       }
-    });
-  }, [fetchSession, router]);
+    };
+
+    verifySession();
+
+    // Heartbeat check every 5 seconds to redirect immediately if session cookie expires or is removed
+    const interval = setInterval(() => {
+      verifySession();
+    }, 5000);
+
+    // Re-verify session when returning to tab
+    const handleFocus = () => {
+      verifySession();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [fetchSession]);
 
   // Auto-close mobile menu on path changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-neutral-50 text-neutral-800">
         <div className="text-center space-y-4">
