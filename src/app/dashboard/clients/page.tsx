@@ -127,6 +127,27 @@ export default function ClientsPage() {
     reader.readAsText(file);
   };
 
+  const handleClearAllClients = async () => {
+    const ok = await confirmAction(
+      `Are you sure you want to delete ALL ${clients.length} client profiles from the database? This action cannot be undone.`,
+      { title: 'Confirm Delete All Clients' }
+    );
+    if (ok) {
+      try {
+        setLoading(true);
+        for (const c of clients) {
+          await deleteRecord('clients', c.id);
+        }
+        await fetchData('clients');
+        toast('All client records cleared successfully!', 'success');
+      } catch (err) {
+        toast('Failed to clear clients: ' + err, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -171,6 +192,16 @@ export default function ClientsPage() {
             startIcon={<Download className="h-4 w-4" />}
           >
             Export CSV
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleClearAllClients}
+            disabled={clients.length === 0}
+            startIcon={<Trash2 className="h-4 w-4" />}
+          >
+            Clear All
           </Button>
 
           <Button

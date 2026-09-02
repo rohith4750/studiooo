@@ -219,9 +219,9 @@ export async function DELETE(
     return NextResponse.json({ error: `Model '${model}' not found` }, { status: 404 });
   }
 
-  // Only Admin/Manager can delete
-  if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
-    return NextResponse.json({ error: 'Only Admin or Manager can delete records' }, { status: 403 });
+  // Allow authenticated staff roles (ADMIN, MANAGER, RECEPTIONIST, ACCOUNTANT, PHOTOGRAPHER, EDITOR) to delete records
+  if (!user.role) {
+    return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
   }
 
   try {
