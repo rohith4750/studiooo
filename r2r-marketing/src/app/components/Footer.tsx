@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Camera, Phone, Mail, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { Phone, Mail, MapPin } from 'lucide-react';
 
 export default function MarketingFooter() {
   return (
@@ -10,11 +11,17 @@ export default function MarketingFooter() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Col 1: Brand */}
+          {/* Col 1: Brand Logo */}
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white font-bold">
-                <Camera className="w-4 h-4" />
+              <div className="relative w-14 h-12 flex items-center justify-center p-1 rounded-xl bg-neutral-800 border border-neutral-700">
+                <Image
+                  src="/r2r-logo.png"
+                  alt="R2R Studio Logo"
+                  width={120}
+                  height={50}
+                  className="object-contain max-h-10 w-auto"
+                />
               </div>
               <span className="font-black text-base text-white tracking-wider">
                 R2R STUDIO

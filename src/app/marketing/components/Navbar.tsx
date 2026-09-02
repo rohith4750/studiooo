@@ -2,33 +2,41 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Camera, Sparkles, UserCheck, PhoneCall } from 'lucide-react';
+import Image from 'next/image';
+import { Sparkles, UserCheck } from 'lucide-react';
 
 export default function MarketingNavbar() {
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-amber-100 text-neutral-800 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-amber-100/80 text-neutral-800 shadow-xs transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
-        {/* Brand Logo */}
+        {/* Brand Logo with Official R2R Logo Image */}
         <Link href="/marketing" className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-amber-400 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-            <Camera className="w-5 h-5 text-white" />
+          <div className="relative w-14 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+            <Image
+              src="/r2r-logo.png"
+              alt="R2R Studio Logo"
+              width={160}
+              height={60}
+              className="object-contain max-h-12 w-auto drop-shadow-sm"
+              priority
+            />
           </div>
-          <div>
-            <span className="font-extrabold text-lg tracking-wider bg-gradient-to-r from-amber-700 via-rose-700 to-amber-600 bg-clip-text text-transparent">
+          <div className="hidden sm:block border-l border-amber-200/80 pl-3">
+            <span className="font-black text-base tracking-wider bg-gradient-to-r from-amber-700 via-rose-700 to-amber-600 bg-clip-text text-transparent block">
               R2R STUDIO
             </span>
-            <span className="block text-[10px] text-amber-600 font-bold tracking-widest uppercase">
-              Luxury Photography & Films
+            <span className="block text-[9px] text-amber-700 font-extrabold tracking-widest uppercase">
+              Films & Photography
             </span>
           </div>
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-8 text-xs font-semibold text-neutral-600">
+        <nav className="hidden md:flex items-center space-x-8 text-xs font-bold text-neutral-700">
           <a href="#about" className="hover:text-amber-600 transition-colors">About R2R</a>
           <a href="#packages" className="hover:text-amber-600 transition-colors">Packages & Pricing</a>
-          <a href="#portfolio" className="hover:text-amber-600 transition-colors">Portfolio</a>
+          <a href="#portfolio" className="hover:text-amber-600 transition-colors">Portfolio Showcase</a>
           <a href="#inquiry" className="hover:text-amber-600 transition-colors">Contact Us</a>
         </nav>
 
@@ -36,7 +44,7 @@ export default function MarketingNavbar() {
         <div className="flex items-center space-x-3">
           <a
             href="#inquiry"
-            className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] cursor-pointer"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-extrabold shadow-md shadow-amber-500/20 transition-all hover:scale-[1.03] cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Book Inquiry</span>
@@ -44,7 +52,7 @@ export default function MarketingNavbar() {
 
           <Link
             href="/"
-            className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100/80 text-amber-800 text-xs font-semibold border border-amber-200/60 transition-colors"
+            className="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/80 transition-colors"
           >
             <UserCheck className="w-3.5 h-3.5" />
             <span>Staff Portal</span>

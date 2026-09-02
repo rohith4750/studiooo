@@ -1,15 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 
+const dbUrl = process.env.PROD_DATABASE_URL || process.argv[2] || process.env.DATABASE_URL;
+
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
+      url: dbUrl
     }
   }
 });
 
 async function main() {
-  console.log('Connecting to production DB to clear data (except Users)...');
+  const maskedUrl = dbUrl ? dbUrl.replace(/:[^:@]+@/, ':****@') : 'undefined';
+  console.log(`Connecting to DB target (${maskedUrl}) to clear data (except Users)...`);
 
   // Deleting bottom-up to respect foreign keys, though some have Cascade
   await prisma.auditLog.deleteMany();
