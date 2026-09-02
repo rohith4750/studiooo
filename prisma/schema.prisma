@@ -287,3 +287,15 @@ model Attendance {
 
   @@unique([employeeId, date])
 }
+
+model MarketingContent {
+  id                String   @id @default("default")
+  heroBadge         String   @default("Premium Wedding & Event Cinematography")
+  heroTitle         String   @default("Preserving Your Most Precious Love Stories")
+  heroSubtitle      String   @default("Welcome to R2R Studio. We craft timeless wedding films, candid portraits, pre-wedding concept shoots, and aerial drone cinematography with unmatched artistry.")
+  promoBannerText   String?  @default("✨ Special Season Offer: Book Your Wedding Cinematography Package & Get Complimentary Pre-Wedding Shoot!")
+  promoBannerActive Boolean  @default(true)
+  ctaText           String   @default("Request Custom Quote")
+  updatedAt         DateTime @updatedAt
+}
+

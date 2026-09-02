@@ -8,7 +8,7 @@ import {
   Camera, LayoutDashboard, Users, UserSquare2, CalendarDays,
   FileText, ClipboardList, PenTool, HardDrive, Receipt,
   Settings, LogOut, BarChart3, Menu, X, ShieldAlert, Box as BoxIcon, Flame,
-  CheckCircle2, Sparkles
+  CheckCircle2, Sparkles, Globe
 } from 'lucide-react';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider } from '@mui/material/styles';
@@ -30,6 +30,7 @@ const MENU_GROUPS = [
     title: 'Sales & Customers',
     items: [
       { name: 'Inquiries', path: '/dashboard/leads', icon: UserSquare2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
+      { name: 'Marketing Studio', path: '/dashboard/marketing', icon: Globe, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Clients', path: '/dashboard/clients', icon: Users, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Bookings', path: '/dashboard/bookings', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
       { name: 'Track Status', path: '/dashboard/bookings/status', icon: CheckCircle2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
