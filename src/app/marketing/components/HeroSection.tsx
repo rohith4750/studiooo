@@ -72,19 +72,19 @@ export default function MarketingHero() {
 
           </div>
 
-          {/* Right Column: Luxury Card Visual with Official R2R Logo */}
+          {/* Right Column: Luxury Card Visual with Prominent R2R Logo */}
           <div className="lg:col-span-5">
             <div className="relative rounded-3xl bg-white/90 backdrop-blur-xl border border-amber-200/80 p-6 sm:p-8 shadow-xl space-y-6">
               
               <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="relative w-14 h-12 flex items-center justify-center p-1 rounded-xl bg-gradient-to-tr from-amber-50 to-rose-50 border border-amber-200/60 shadow-xs">
+                  <div className="relative w-28 sm:w-36 h-14 flex items-center justify-center p-1.5 rounded-2xl bg-gradient-to-tr from-amber-50 to-rose-50 border border-amber-200/60 shadow-xs">
                     <Image
                       src="/r2r-logo.png"
                       alt="R2R Logo"
-                      width={120}
-                      height={50}
-                      className="object-contain max-h-10 w-auto"
+                      width={180}
+                      height={70}
+                      className="object-contain max-h-12 w-auto"
                     />
                   </div>
                   <div>

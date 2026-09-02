@@ -8,27 +8,19 @@ import { Sparkles, UserCheck } from 'lucide-react';
 export default function MarketingNavbar() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-amber-100/80 text-neutral-800 shadow-xs transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-22 flex items-center justify-between">
         
-        {/* Brand Logo with Official R2R Logo Image */}
-        <Link href="/marketing" className="flex items-center space-x-3 group">
-          <div className="relative w-14 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+        {/* Prominent Official R2R Logo Image */}
+        <Link href="/marketing" className="flex items-center space-x-4 group">
+          <div className="relative w-32 sm:w-44 h-14 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <Image
               src="/r2r-logo.png"
               alt="R2R Studio Logo"
-              width={160}
-              height={60}
-              className="object-contain max-h-12 w-auto drop-shadow-sm"
+              width={240}
+              height={90}
+              className="object-contain max-h-14 w-auto drop-shadow-sm"
               priority
             />
-          </div>
-          <div className="hidden sm:block border-l border-amber-200/80 pl-3">
-            <span className="font-black text-base tracking-wider bg-gradient-to-r from-amber-700 via-rose-700 to-amber-600 bg-clip-text text-transparent block">
-              R2R STUDIO
-            </span>
-            <span className="block text-[9px] text-amber-700 font-extrabold tracking-widest uppercase">
-              Films & Photography
-            </span>
           </div>
         </Link>
 
