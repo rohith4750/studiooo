@@ -226,13 +226,13 @@ async function main() {
             data: {
               bookingId: createdBooking.id,
               eventId: evRow.event.id,
-              category: evRow.category,
+              ...(evRow.category ? { category: evRow.category } : {}),
               eventDate: evRow.date,
               eventTime: evRow.time,
               venue: sb.venue,
               price: 0,
               status: 'ASSIGNED',
-            },
+            } as any,
           });
         }
 

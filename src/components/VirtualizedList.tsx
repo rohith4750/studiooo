@@ -66,7 +66,7 @@ export function VirtualizedList<T>({
           position: 'relative',
         }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        {rowVirtualizer.getVirtualItems().map((virtualRow: any) => {
           const item = items[virtualRow.index];
           const key = getItemKey ? getItemKey(item, virtualRow.index) : virtualRow.index;
 

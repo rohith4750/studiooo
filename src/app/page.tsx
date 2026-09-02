@@ -339,6 +339,16 @@ export default function LoginPage() {
               </div>
             </form>
 
+            <div className="text-center pt-3 border-t border-neutral-100">
+              <a
+                href="/marketing"
+                className="text-[11px] text-neutral-500 hover:text-amber-600 font-medium inline-flex items-center space-x-1 transition-colors"
+              >
+                <span>Looking for R2R Photography Website?</span>
+                <span className="font-bold underline">Visit Public Site &rarr;</span>
+              </a>
+            </div>
+
           </div>
         </div>
 
