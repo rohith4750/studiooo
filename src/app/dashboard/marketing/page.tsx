@@ -6,10 +6,10 @@ import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
 import {
   Box, Card, CardContent, Button, TextField, Typography,
-  Stack, Switch, FormControlLabel, Divider, Paper, Chip, Avatar
+  Stack, Switch, FormControlLabel, Paper, Chip, Avatar
 } from '@mui/material';
 import {
-  Sparkles, Globe, Send, RefreshCw, Eye, CheckCircle2,
+  Sparkles, Globe, Send, Eye,
   Megaphone, Layout, Tag, ArrowUpRight, UserCheck, Calendar
 } from 'lucide-react';
 
@@ -99,7 +99,7 @@ export default function ReceptionistMarketingStudio() {
         }}
       >
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
             <Chip
               icon={<Sparkles className="h-3.5 w-3.5 text-amber-300" />}
               label="Live Marketing CMS Engine"
@@ -114,7 +114,7 @@ export default function ReceptionistMarketingStudio() {
             />
           </Stack>
 
-          <Typography variant="h5" sx={{ fontWeight: 800, tracking: '-0.02em' }}>
+          <Typography variant="h5" sx={{ fontWeight: 800 }}>
             Receptionist Marketing Studio & Dynamic Content Engine
           </Typography>
 
@@ -163,8 +163,8 @@ export default function ReceptionistMarketingStudio() {
           {/* Card 1: Live Campaign Banner & Announcements */}
           <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                   <Avatar sx={{ bgcolor: 'amber.50', color: 'amber.600', width: 36, height: 36 }}>
                     <Megaphone className="h-4 w-4" />
                   </Avatar>
@@ -212,7 +212,7 @@ export default function ReceptionistMarketingStudio() {
           {/* Card 2: Main Hero Section Content Editor */}
           <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
             <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: 'rose.50', color: 'rose.600', width: 36, height: 36 }}>
                   <Layout className="h-4 w-4" />
                 </Avatar>
@@ -282,7 +282,7 @@ export default function ReceptionistMarketingStudio() {
           
           {/* Real-time Website Lead Counter */}
           <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'amber.200', bgcolor: 'amber.50/30' }}>
-            <CardContent sx={{ p: 3, spaceY: 2 }}>
+            <CardContent sx={{ p: 3 }}>
               <Typography variant="caption" sx={{ fontWeight: 800, color: 'amber.700', textTransform: 'uppercase', tracking: 'wider' }}>
                 Website Marketing Inquiries
               </Typography>
@@ -316,7 +316,6 @@ export default function ReceptionistMarketingStudio() {
                 <Button
                   variant="text"
                   fullWidth
-                  justifyContent="flex-start"
                   onClick={() => router.push('/dashboard/packages')}
                   startIcon={<Tag className="h-4 w-4 text-amber-600" />}
                   sx={{ justifyContent: 'flex-start', color: 'text.primary', textTransform: 'none', fontWeight: 600 }}
