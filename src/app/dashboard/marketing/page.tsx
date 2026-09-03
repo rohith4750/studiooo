@@ -30,15 +30,17 @@ export default function ReceptionistMarketingStudio() {
     ctaText: 'Request Custom Quote',
   });
 
-  // Load existing live content & website leads
+  // Load existing live content & website leads on mount
   useEffect(() => {
+    let mounted = true;
     setLoading(true);
+
     Promise.all([
       fetch('/api/marketing/content').then((res) => res.json()),
       fetchData('leads'),
     ])
       .then(([contentData]) => {
-        if (contentData && !contentData.error) {
+        if (mounted && contentData && !contentData.error) {
           setMarketingContent({
             heroBadge: contentData.heroBadge || '',
             heroTitle: contentData.heroTitle || '',
@@ -49,9 +51,17 @@ export default function ReceptionistMarketingStudio() {
           });
         }
       })
-      .catch((err) => toast('Failed to load live marketing content: ' + err, 'error'))
-      .finally(() => setLoading(false));
-  }, [fetchData, toast]);
+      .catch((err) => {
+        if (mounted) console.error('Failed to load live marketing content:', err);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const websiteLeads = leads.filter((l) => l.source === 'WEBSITE');
 
