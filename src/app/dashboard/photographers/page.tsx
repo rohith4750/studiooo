@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/components/ToastProvider';
-import { Camera, Plus, Trash2, Edit3, Mail, Phone, Banknote, UserCheck } from 'lucide-react';
+import { Camera, Plus, Trash2, Edit3, Mail, Phone, Banknote, UserCheck, Zap } from 'lucide-react';
+import { FinancialAmount } from '@/lib/permissions';
 
 export default function PhotographersPage() {
   const router = useRouter();
@@ -17,6 +18,8 @@ export default function PhotographersPage() {
   }, [fetchData]);
 
   const photographers = employees.filter(e => e.role === 'PHOTOGRAPHER');
+  const fullTimeCount = photographers.filter(e => (e.employmentType || 'FULL_TIME') === 'FULL_TIME').length;
+  const freelancerCount = photographers.filter(e => e.employmentType === 'FREELANCER').length;
 
   const handleDelete = async (id: string) => {
     const ok = await confirmAction('Are you sure you want to remove this photographer from the studio roster?', { title: 'Confirm Removal' });
@@ -32,8 +35,8 @@ export default function PhotographersPage() {
     <div className="space-y-4 animate-fadeIn">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-neutral-800">Studio Photographers</h2>
-          <p className="text-xs text-neutral-500 mt-0.5">Manage your dynamic roster of internal and freelance photographers.</p>
+          <h2 className="text-xl font-bold tracking-tight text-neutral-800">Studio Photographers Roster</h2>
+          <p className="text-xs text-neutral-500 mt-0.5">Manage full-time lead photographers & daily freelance crew.</p>
         </div>
         <button onClick={() => router.push('/dashboard/photographers/create')} className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded cursor-pointer shadow-xs transition duration-150">
           <Plus className="h-4 w-4" /><span>Add Photographer</span>
@@ -41,18 +44,22 @@ export default function PhotographersPage() {
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
           <div className="p-3 bg-primary-50 text-primary-600 rounded"><Camera className="h-6 w-6" /></div>
           <div><span className="text-[10px] uppercase font-bold text-neutral-400">Total Photographers</span><p className="text-xl font-extrabold text-neutral-700">{photographers.length}</p></div>
         </div>
         <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
-          <div className="p-3 bg-primary-50 text-primary-600 rounded"><UserCheck className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Active Roster</span><p className="text-xl font-extrabold text-neutral-700">{photographers.filter(e => e.status === 'ACTIVE').length}</p></div>
+          <div className="p-3 bg-blue-50 text-blue-600 rounded"><UserCheck className="h-6 w-6" /></div>
+          <div><span className="text-[10px] uppercase font-bold text-neutral-400">💼 Full-Time Staff</span><p className="text-xl font-extrabold text-blue-700">{fullTimeCount}</p></div>
         </div>
         <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
-          <div className="p-3 bg-primary-50 text-primary-600 rounded"><Banknote className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Total Base Payroll</span><p className="text-xl font-extrabold text-neutral-700">₹{monthlyPayroll.toLocaleString()}</p></div>
+          <div className="p-3 bg-purple-50 text-purple-600 rounded"><Zap className="h-6 w-6" /></div>
+          <div><span className="text-[10px] uppercase font-bold text-neutral-400">⚡ Freelancers</span><p className="text-xl font-extrabold text-purple-700">{freelancerCount}</p></div>
+        </div>
+        <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded"><Banknote className="h-6 w-6" /></div>
+          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Monthly Base Payroll</span><p className="text-xl font-extrabold text-neutral-700"><FinancialAmount value={monthlyPayroll} /></p></div>
         </div>
       </div>
 
@@ -68,7 +75,8 @@ export default function PhotographersPage() {
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-4">Photographer Name</th>
-                  <th className="py-3 px-4">Base Salary</th>
+                  <th className="py-3 px-4">Classification</th>
+                  <th className="py-3 px-4">Rate / Salary</th>
                   <th className="py-3 px-4">Contact Details</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -78,7 +86,27 @@ export default function PhotographersPage() {
                 {photographers.map((emp) => (
                   <tr key={emp.id} className="hover:bg-neutral-50/40 transition">
                     <td className="py-3.5 px-4 font-bold text-neutral-800">{emp.name}</td>
-                    <td className="py-3.5 px-4 font-semibold text-neutral-800">₹{emp.salary.toLocaleString('en-IN')}</td>
+                    <td className="py-3.5 px-4">
+                      {emp.employmentType === 'FREELANCER' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-bold">
+                          ⚡ Freelancer
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold">
+                          💼 Full-Time
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-neutral-800">
+                      {emp.employmentType === 'FREELANCER' ? (
+                        <div>
+                          <p className="text-purple-700 font-bold"><FinancialAmount value={emp.dailyRate || 0} /> / day</p>
+                          {emp.salary > 0 && <p className="text-[10px] text-neutral-400 font-normal">+ <FinancialAmount value={emp.salary} /> monthly</p>}
+                        </div>
+                      ) : (
+                        <FinancialAmount value={emp.salary} />
+                      )}
+                    </td>
                     <td className="py-3.5 px-4 space-y-0.5">
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-500"><Phone className="h-3 w-3" /><span>{emp.phone}</span></p>
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-400"><Mail className="h-3 w-3" /><span>{emp.email}</span></p>

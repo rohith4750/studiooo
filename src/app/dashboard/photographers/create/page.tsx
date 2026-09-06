@@ -20,6 +20,8 @@ function PhotographerForm() {
     email: '',
     phone: '',
     role: 'PHOTOGRAPHER', // Hardcoded for this specific portal
+    employmentType: 'FULL_TIME',
+    dailyRate: 0,
     status: 'ACTIVE',
     salary: 0
   });
@@ -33,6 +35,8 @@ function PhotographerForm() {
           email: existing.email,
           phone: existing.phone,
           role: 'PHOTOGRAPHER',
+          employmentType: existing.employmentType || 'FULL_TIME',
+          dailyRate: existing.dailyRate || 0,
           status: existing.status,
           salary: existing.salary
         });
@@ -44,7 +48,7 @@ function PhotographerForm() {
     const { name, value } = e.target;
     setFormData(prev => ({ 
       ...prev, 
-      [name]: name === 'salary' ? parseFloat(value) || 0 : value 
+      [name]: name === 'salary' || name === 'dailyRate' ? parseFloat(value) || 0 : value 
     }));
   };
 
@@ -122,17 +126,49 @@ function PhotographerForm() {
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: '4px' } }}
           />
 
-          <TextField
-            fullWidth
-            label="Base Salary (Monthly)"
-            name="salary"
-            type="number"
-            value={formData.salary || ''}
-            onChange={handleChange}
-            required
-            size="small"
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '4px' } }}
-          />
+          <FormControl fullWidth size="small">
+            <InputLabel id="employmentType-label">Employment Classification</InputLabel>
+            <Select
+              labelId="employmentType-label"
+              id="employmentType"
+              name="employmentType"
+              value={formData.employmentType}
+              label="Employment Classification"
+              onChange={handleChange}
+              sx={{ borderRadius: '4px' }}
+            >
+              <MenuItem value="FULL_TIME">💼 Full-Time Staff (Monthly Payroll)</MenuItem>
+              <MenuItem value="FREELANCER">⚡ Freelancer (Daily / Per-Shoot Pay)</MenuItem>
+            </Select>
+          </FormControl>
+
+          {formData.employmentType === 'FREELANCER' ? (
+            <TextField
+              fullWidth
+              label="Daily Rate / Per-Shoot Pay (₹) *"
+              name="dailyRate"
+              type="number"
+              value={formData.dailyRate || ''}
+              onChange={handleChange}
+              required
+              size="small"
+              placeholder="e.g. 3500"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '4px' } }}
+            />
+          ) : (
+            <TextField
+              fullWidth
+              label="Monthly Basic Salary (₹) *"
+              name="salary"
+              type="number"
+              value={formData.salary || ''}
+              onChange={handleChange}
+              required
+              size="small"
+              placeholder="e.g. 35000"
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '4px' } }}
+            />
+          )}
 
           <FormControl fullWidth size="small">
             <InputLabel id="status-label">Roster Status</InputLabel>

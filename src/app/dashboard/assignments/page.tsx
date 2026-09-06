@@ -198,9 +198,20 @@ export default function AssignmentsPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <p className="font-bold text-neutral-800">{a.employee?.name}</p>
-                          <span className="inline-block mt-1 text-[9px] uppercase tracking-wide px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-100 rounded font-bold">
-                            {a.role.replace('_', ' ')}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <span className="inline-block text-[9px] uppercase tracking-wide px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-100 rounded font-bold">
+                              {a.role.replace('_', ' ')}
+                            </span>
+                            {a.employee?.employmentType === 'FREELANCER' ? (
+                              <span className="inline-block text-[9px] px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded font-bold">
+                                ⚡ ₹{a.employee?.dailyRate || 0}/day
+                              </span>
+                            ) : (
+                              <span className="inline-block text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold">
+                                💼 Full-Time
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <button
                           onClick={() => handleDeleteAssignment(a.id)}

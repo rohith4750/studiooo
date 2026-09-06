@@ -4,12 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
 import { 
-  Calendar, Users, AlertTriangle, Sparkles, MapPin, Clock, ArrowLeft, CheckCircle, Info
+  Calendar, Users, AlertTriangle, Sparkles, MapPin, ArrowLeft, CheckCircle, Info
 } from 'lucide-react';
 import { TextField, Select, MenuItem, FormControl, ListSubheader, Checkbox, ListItemText } from '@mui/material';
 
 const STAFF_ROLES = ['LEAD_PHOTOGRAPHER', 'CINEMATOGRAPHER', 'DRONE_OPERATOR', 'ASSISTANT'];
-const ATTENDANCE_STATUSES = ['PENDING', 'PRESENT', 'ABSENT'];
 
 export default function CreateAssignmentPage() {
   const router = useRouter();
@@ -19,6 +18,7 @@ export default function CreateAssignmentPage() {
   } = useStore();
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Form states
   const [formClientId, setFormClientId] = useState('');
@@ -77,6 +77,7 @@ export default function CreateAssignmentPage() {
       return;
     }
 
+    setSaving(true);
     try {
       const payloads: any[] = [];
       formBookingEventIds.forEach(eventId => {
@@ -95,6 +96,8 @@ export default function CreateAssignmentPage() {
       router.push('/dashboard/assignments');
     } catch (e) {
       alert('Failed to assign employee: ' + e);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -115,7 +118,7 @@ export default function CreateAssignmentPage() {
             <Sparkles className="h-5 w-5 text-primary-500" />
             <span>Create Staff Assignment</span>
           </h2>
-          <p className="text-xs text-neutral-500 mt-0.5">Allocate photographers and crew to upcoming shoots.</p>
+          <p className="text-xs text-neutral-500 mt-0.5">Allocate full-time staff & freelancers to upcoming shoots.</p>
         </div>
       </div>
 
@@ -207,7 +210,7 @@ export default function CreateAssignmentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-neutral-100 pt-5 mt-5">
               {/* Select Staff Employee */}
               <div>
-                <label className="block font-bold text-neutral-600 mb-1.5 text-xs uppercase tracking-wide">Select Staff Members (Multi-Select) *</label>
+                <label className="block font-bold text-neutral-600 mb-1.5 text-xs uppercase tracking-wide">Select Crew / Freelancers *</label>
                 <FormControl fullWidth size="small">
                   <Select
                     required
@@ -221,17 +224,21 @@ export default function CreateAssignmentPage() {
                     displayEmpty
                     renderValue={(selected) => {
                       if (selected.length === 0) {
-                        return <em>-- Choose Staff --</em>;
+                        return <em>-- Choose Crew / Freelancers --</em>;
                       }
-                      return `${selected.length} staff selected`;
+                      return `${selected.length} crew selected`;
                     }}
                   >
-                    <MenuItem value="" disabled><em>-- Choose Staff --</em></MenuItem>
-                    {employees.filter(emp => emp.role === 'PHOTOGRAPHER' || emp.role === 'EDITOR').map(emp => (
+                    <MenuItem value="" disabled><em>-- Choose Crew / Freelancers --</em></MenuItem>
+                    {employees.map(emp => (
                       <MenuItem key={emp.id} value={emp.id} sx={{ ml: 0.5 }}>
                         <Checkbox checked={formEmployeeIds.includes(emp.id)} size="small" sx={{ p: 0.5, mr: 1 }} />
                         <ListItemText 
-                          primary={<span style={{ fontSize: '0.8rem' }}>{emp.name} ({emp.role})</span>}
+                          primary={
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                              {emp.name} ({emp.role}) • {emp.employmentType === 'FREELANCER' ? `⚡ Freelancer (₹${emp.dailyRate || 0}/day)` : '💼 Full-Time'}
+                            </span>
+                          }
                         />
                       </MenuItem>
                     ))}
@@ -239,7 +246,7 @@ export default function CreateAssignmentPage() {
                 </FormControl>
               </div>
 
-              {/* Assignment Role */}
+              {/* Duty / Role */}
               <div>
                 <label className="block font-bold text-neutral-600 mb-1.5 text-xs uppercase tracking-wide">Duty / Role *</label>
                 <FormControl fullWidth size="small">
@@ -248,7 +255,7 @@ export default function CreateAssignmentPage() {
                     onChange={(e) => setFormRole(e.target.value as string)}
                   >
                     {STAFF_ROLES.map(role => (
-                      <MenuItem key={role} value={role}>{role.replace('_', ' ')}</MenuItem>
+                      <MenuItem key={role} value={role} sx={{ fontSize: '0.8rem' }}>{role.replace('_', ' ')}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -270,21 +277,28 @@ export default function CreateAssignmentPage() {
               </div>
             </div>
 
-            <div className="pt-8 flex justify-end">
+            <div className="pt-4 flex justify-end gap-3 border-t border-neutral-100 mt-5">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/assignments')}
+                className="px-4 py-2 border border-neutral-300 rounded text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
-                className="px-8 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold rounded cursor-pointer shadow-sm transition duration-150 flex items-center space-x-2"
+                disabled={saving}
+                className="inline-flex items-center space-x-2 px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white text-xs font-bold rounded shadow-xs transition cursor-pointer"
               >
-                <CheckCircle className="h-4 w-4" />
-                <span>Confirm Assignment</span>
+                {saving ? <div className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                <span>Assign Staff Members</span>
               </button>
             </div>
           </form>
         </div>
 
         {/* Right Column: Dynamic Preview / Warnings */}
-        <div className="space-y-4">
-          
+        <div className="space-y-6">
           {conflictWarning && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start space-x-3 shadow-xs animate-shake">
               <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -296,38 +310,36 @@ export default function CreateAssignmentPage() {
           )}
 
           {selectedEventInfos.length === 0 && selectedEmployeeInfos.length === 0 && (
-            <div className="glass-card p-6 rounded border border-neutral-200/50 bg-neutral-50/50 text-center flex flex-col items-center justify-center min-h-[250px]">
-              <div className="h-12 w-12 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center mb-3">
-                <Info className="h-5 w-5 text-neutral-400" />
+            <div className="glass-card p-8 rounded-lg border border-neutral-200/50 text-center space-y-3">
+              <div className="mx-auto w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center text-neutral-400">
+                <Info className="h-5 w-5" />
               </div>
-              <h3 className="text-sm font-bold text-neutral-700">Assignment Preview</h3>
-              <p className="text-xs text-neutral-500 mt-2 max-w-[220px]">Select events and a staff member to see their assignment summary and potential schedule conflicts.</p>
+              <p className="text-xs font-medium text-neutral-500">Select target shoot events and staff crew to preview assignment allocation.</p>
             </div>
           )}
 
           {selectedEventInfos.length > 0 && (
-            <div className="glass-card p-5 rounded-lg border border-primary-200/60 bg-primary-50/30 shadow-xs relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-primary-400"></div>
-              <h4 className="text-[10px] font-extrabold text-primary-600 uppercase tracking-wider mb-3">Target Event Details ({selectedEventInfos.length})</h4>
+            <div className="glass-card p-5 rounded-lg border border-rose-200/60 bg-rose-50/30 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-rose-400"></div>
+              <h4 className="text-[10px] font-extrabold text-rose-600 uppercase tracking-wider mb-3">Selected Target Shoots ({selectedEventInfos.length})</h4>
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 {selectedEventInfos.map((selectedEventInfo, idx) => (
-                  <div key={idx} className="space-y-3 text-sm pb-4 border-b border-primary-100/50 last:border-0 last:pb-0">
-                    <div>
-                      <p className="text-xs text-neutral-500 font-semibold mb-0.5">Booking Contract</p>
-                      <p className="font-bold text-neutral-800">{selectedEventInfo.booking?.client?.name}</p>
-                      <p className="text-[11px] font-medium text-neutral-500">{selectedEventInfo.booking?.name}</p>
+                  <div key={idx} className="pb-4 border-b border-rose-100/50 last:border-0 last:pb-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-neutral-800">{selectedEventInfo.event?.name}</p>
+                      <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">₹{selectedEventInfo.price}</span>
                     </div>
-                    <div className="pt-2 border-t border-primary-100/50">
-                      <p className="text-xs text-neutral-500 font-semibold mb-0.5">Event Session</p>
-                      <p className="font-bold text-neutral-700">{selectedEventInfo.event?.name}</p>
-                      <div className="flex items-center space-x-1.5 text-xs text-neutral-600 mt-1.5 font-medium">
+                    <p className="text-[10px] text-neutral-500 mt-0.5">Booking Ref: {selectedEventInfo.booking?.bookingNumber} • {selectedEventInfo.booking?.client?.name}</p>
+                    
+                    <div className="mt-3 pt-3 border-t border-rose-100/50 space-y-1.5 text-xs text-neutral-600 font-medium">
+                      <div className="flex items-center space-x-2">
                         <Calendar className="h-3.5 w-3.5 text-neutral-400" />
-                        <span>{selectedEventInfo.eventDate} at {selectedEventInfo.eventTime || '09:00 AM'}</span>
+                        <span>Date: {selectedEventInfo.eventDate} at {selectedEventInfo.eventTime || '09:00 AM'}</span>
                       </div>
                       {selectedEventInfo.venue && (
-                        <div className="flex items-center space-x-1.5 text-xs text-neutral-600 mt-1 font-medium">
+                        <div className="flex items-center space-x-2">
                           <MapPin className="h-3.5 w-3.5 text-neutral-400" />
-                          <span>{selectedEventInfo.venue}</span>
+                          <span className="truncate">Location: {selectedEventInfo.venue}</span>
                         </div>
                       )}
                     </div>
@@ -344,7 +356,18 @@ export default function CreateAssignmentPage() {
               <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                 {selectedEmployeeInfos.map((selectedEmployeeInfo, idx) => (
                   <div key={idx} className="pb-4 border-b border-indigo-100/50 last:border-0 last:pb-0">
-                    <p className="font-bold text-neutral-800">{selectedEmployeeInfo.name}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-neutral-800">{selectedEmployeeInfo.name}</p>
+                      {selectedEmployeeInfo.employmentType === 'FREELANCER' ? (
+                        <span className="text-[10px] bg-purple-100 text-purple-800 border border-purple-200 font-bold px-2 py-0.5 rounded-full">
+                          ⚡ Freelancer (₹{selectedEmployeeInfo.dailyRate || 0}/day)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-blue-100 text-blue-800 border border-blue-200 font-bold px-2 py-0.5 rounded-full">
+                          💼 Full-Time Staff
+                        </span>
+                      )}
+                    </div>
                     <span className="inline-block mt-1 text-[9px] uppercase tracking-wide px-1.5 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-200 rounded font-bold">
                       {selectedEmployeeInfo.role}
                     </span>

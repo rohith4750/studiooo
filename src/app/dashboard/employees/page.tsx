@@ -43,14 +43,18 @@ export default function EmployeesPage() {
       </div>
 
       {/* Roster KPI stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
           <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Users className="h-5 w-5" /></div>
           <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Total Staff</span><p className="text-lg font-bold text-neutral-800 mt-0.5">{employees.length}</p></div>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
           <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><UserCheck className="h-5 w-5" /></div>
-          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Active Staff</span><p className="text-lg font-bold text-neutral-800 mt-0.5">{employees.filter(e => e.status === 'ACTIVE').length}</p></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Full-Time Staff</span><p className="text-lg font-bold text-neutral-800 mt-0.5">{employees.filter(e => (e.employmentType || 'FULL_TIME') === 'FULL_TIME').length}</p></div>
+        </div>
+        <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
+          <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Users className="h-5 w-5" /></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Active Freelancers</span><p className="text-lg font-bold text-purple-700 mt-0.5">{employees.filter(e => e.employmentType === 'FREELANCER').length}</p></div>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
           <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Banknote className="h-5 w-5" /></div>
@@ -70,10 +74,14 @@ export default function EmployeesPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">Employee Name</th><th className="py-3 px-4">Functional Role</th>
-                  <th className="py-3 px-4">Salary (Monthly)</th><th className="py-3 px-4">Contact Details</th>
+                  <th className="py-3 px-4">Employee Name</th>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4">Functional Role</th>
+                  <th className="py-3 px-4">Pay Rate / Salary</th>
+                  <th className="py-3 px-4">Contact Details</th>
                   <th className="py-3 px-4 text-center">Leave Bal.</th>
-                  <th className="py-3 px-4">Roster Status</th><th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4">Roster Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 text-neutral-700">
@@ -81,11 +89,31 @@ export default function EmployeesPage() {
                   <tr key={emp.id} className="hover:bg-neutral-50/40 transition">
                     <td className="py-3.5 px-4 font-bold text-neutral-800">{emp.name}</td>
                     <td className="py-3.5 px-4">
+                      {emp.employmentType === 'FREELANCER' ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-bold">
+                          ⚡ Freelancer
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold">
+                          💼 Full-Time
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4">
                       <span className="text-[10px] bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded font-semibold flex items-center space-x-1.5 w-fit uppercase">
                         <Shield className="h-3 w-3 text-neutral-400" /><span>{emp.role}</span>
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-neutral-800"><FinancialAmount value={emp.salary} /></td>
+                    <td className="py-3.5 px-4 font-semibold text-neutral-800">
+                      {emp.employmentType === 'FREELANCER' ? (
+                        <div>
+                          <p className="text-purple-700 font-bold"><FinancialAmount value={emp.dailyRate || 0} /> / day</p>
+                          {emp.salary > 0 && <p className="text-[10px] text-neutral-400 font-normal">+ <FinancialAmount value={emp.salary} /> monthly</p>}
+                        </div>
+                      ) : (
+                        <FinancialAmount value={emp.salary} />
+                      )}
+                    </td>
                     <td className="py-3.5 px-4 space-y-0.5">
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-500"><Phone className="h-3 w-3" /><span>{emp.phone}</span></p>
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-400"><Mail className="h-3 w-3" /><span>{emp.email}</span></p>

@@ -143,23 +143,25 @@ model Assignment {
 }
 
 model Employee {
-  id          String       @id @default(uuid())
-  name        String
-  email       String       @unique
-  phone       String
-  role        String       // PHOTOGRAPHER, VIDEOGRAPHER, EDITOR, MANAGER, ACCOUNTANT, RECEPTIONIST, HR, ASSISTANT
-  status      String       // ACTIVE, INACTIVE
-  salary      Float
-  joinedAt    DateTime     @default(now())
+  id             String       @id @default(uuid())
+  name           String
+  email          String       @unique
+  phone          String
+  role           String       // PHOTOGRAPHER, VIDEOGRAPHER, EDITOR, MANAGER, ACCOUNTANT, RECEPTIONIST, HR, ASSISTANT
+  employmentType String       @default("FULL_TIME") // FULL_TIME, FREELANCER
+  dailyRate      Float        @default(0)
+  status         String       // ACTIVE, INACTIVE
+  salary         Float
+  joinedAt       DateTime     @default(now())
   
-  managerId   String?
-  manager     User?        @relation("ManagerToEmployee", fields: [managerId], references: [id], onDelete: SetNull)
-  leaveBalance Float       @default(0)
+  managerId      String?
+  manager        User?        @relation("ManagerToEmployee", fields: [managerId], references: [id], onDelete: SetNull)
+  leaveBalance   Float        @default(0)
 
-  assignments Assignment[]
-  albumEditor Album[]      @relation("AlbumEditor")
-  attendances Attendance[]
-  workUpdates WorkUpdate[]
+  assignments    Assignment[]
+  albumEditor    Album[]      @relation("AlbumEditor")
+  attendances    Attendance[]
+  workUpdates    WorkUpdate[]
 }
 
 model Payment {

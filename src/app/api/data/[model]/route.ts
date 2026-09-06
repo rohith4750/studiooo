@@ -219,7 +219,6 @@ export async function DELETE(
     return NextResponse.json({ error: `Model '${model}' not found` }, { status: 404 });
   }
 
-  // Allow authenticated staff roles (ADMIN, MANAGER, RECEPTIONIST, ACCOUNTANT, PHOTOGRAPHER, EDITOR) to delete records
   if (!user.role) {
     return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
   }
@@ -227,21 +226,37 @@ export async function DELETE(
   try {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Record ID is required for deletions' }, { status: 400 });
-    }
+    const bookingId = url.searchParams.get('bookingId');
+    const filterParam = url.searchParams.get('filter');
 
     const delegate = prisma[modelName] as any;
-    const deleted = await delegate.delete({
-      where: { id },
-    });
 
-    // Log the audit record
-    await createAuditLog(user.id, 'DELETE', `Deleted ${String(modelName)} (ID: ${id})`);
+    if (id) {
+      const deleted = await delegate.delete({
+        where: { id },
+      });
+      await createAuditLog(user.id, 'DELETE', `Deleted ${String(modelName)} (ID: ${id})`);
+      return NextResponse.json(deleted);
+    }
 
+    if (bookingId) {
+      const deletedMany = await delegate.deleteMany({
+        where: { bookingId },
+      });
+      await createAuditLog(user.id, 'DELETE', `Deleted records of ${String(modelName)} for booking ${bookingId}`);
+      return NextResponse.json(deletedMany);
+    }
 
-    return NextResponse.json(deleted);
+    if (filterParam) {
+      const whereFilter = JSON.parse(filterParam);
+      const deletedMany = await delegate.deleteMany({
+        where: whereFilter,
+      });
+      await createAuditLog(user.id, 'DELETE', `Deleted records of ${String(modelName)} with filter`);
+      return NextResponse.json(deletedMany);
+    }
+
+    return NextResponse.json({ error: 'Record ID or filter criteria is required for deletion' }, { status: 400 });
   } catch (error: any) {
     console.error(`Error deleting ${String(modelName)}:`, error);
     return NextResponse.json({ error: error.message }, { status: 500 });

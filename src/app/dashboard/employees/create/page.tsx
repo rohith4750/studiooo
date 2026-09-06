@@ -30,6 +30,8 @@ function EmployeeCreateContent() {
   const [formStatus, setFormStatus] = useState('ACTIVE');
   const [formPassword, setFormPassword] = useState('');
   const [formSalary, setFormSalary] = useState('');
+  const [formEmploymentType, setFormEmploymentType] = useState('FULL_TIME');
+  const [formDailyRate, setFormDailyRate] = useState('0');
   const [formManagerId, setFormManagerId] = useState('');
   const [formLeaveBalance, setFormLeaveBalance] = useState('0');
 
@@ -52,6 +54,8 @@ function EmployeeCreateContent() {
       setFormRole(employee.role);
       setFormStatus(employee.status);
       setFormSalary(employee.salary.toString());
+      setFormEmploymentType(employee.employmentType || 'FULL_TIME');
+      setFormDailyRate((employee.dailyRate || 0).toString());
       setFormManagerId(employee.managerId || '');
       setFormLeaveBalance((employee.leaveBalance || 0).toString());
     }
@@ -75,6 +79,8 @@ function EmployeeCreateContent() {
       const payload = {
         name: formName, email: formEmail.toLowerCase(), phone: formPhone,
         role: formRole, status: formStatus, salary: parseFloat(formSalary) || 0,
+        employmentType: formEmploymentType,
+        dailyRate: parseFloat(formDailyRate) || 0,
         managerId: formManagerId || null,
         leaveBalance: parseFloat(formLeaveBalance) || 0,
       };
@@ -142,8 +148,34 @@ function EmployeeCreateContent() {
                 <TextField label="Phone Number *" required fullWidth size="small" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="+91 99008 87766" />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField label="Monthly Basic Salary (₹) *" required type="number" fullWidth size="small" value={formSalary} onChange={(e) => setFormSalary(e.target.value)} placeholder="e.g. 35000" />
+                <FormControl fullWidth size="small">
+                  <InputLabel>Employment Classification</InputLabel>
+                  <Select value={formEmploymentType} label="Employment Classification" onChange={(e) => setFormEmploymentType(e.target.value)}>
+                    <MenuItem value="FULL_TIME">💼 Full-Time Staff (Monthly Payroll)</MenuItem>
+                    <MenuItem value="FREELANCER">⚡ Freelancer (Daily / Per-Shoot Pay)</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField 
+                  label={formEmploymentType === 'FREELANCER' ? "Daily Rate / Per-Shoot Pay (₹) *" : "Monthly Basic Salary (₹) *"} 
+                  required 
+                  type="number" 
+                  fullWidth 
+                  size="small" 
+                  value={formEmploymentType === 'FREELANCER' ? formDailyRate : formSalary} 
+                  onChange={(e) => {
+                    if (formEmploymentType === 'FREELANCER') setFormDailyRate(e.target.value);
+                    else setFormSalary(e.target.value);
+                  }} 
+                  placeholder={formEmploymentType === 'FREELANCER' ? "e.g. 3500 per day" : "e.g. 35000 per month"} 
+                />
+              </Grid>
+              {formEmploymentType === 'FREELANCER' && (
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField label="Monthly Retainer / Base Salary (₹) (Optional)" type="number" fullWidth size="small" value={formSalary} onChange={(e) => setFormSalary(e.target.value)} placeholder="0" />
+                </Grid>
+              )}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>System Access Role</InputLabel>
