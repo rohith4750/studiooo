@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Edit2, Check, Sparkles, Printer, Download, 
   Phone, Camera, MapPin, Calendar, CheckCircle2, ShieldCheck, QrCode,
-  Palette, FileText, Send, DollarSign, Percent, RefreshCw, Mail,
-  BookOpen, HardDrive, Shield, Lock, Cpu, Film
+  Palette, FileText, DollarSign, Percent, RefreshCw, Mail,
+  BookOpen, HardDrive, Shield, Lock, Cpu, Film, Star, HelpCircle
 } from 'lucide-react';
 import { FinancialAmount } from '@/lib/permissions';
 
@@ -22,7 +22,19 @@ interface EventItem {
   deliverables: string[];
 }
 
-export type QuotationTheme = 'ROYAL_GOLD' | 'CINEMATIC_DARK' | 'MINIMAL_EDITORIAL' | 'ROSE_ROMANCE';
+interface DynamicSectionItem {
+  title?: string;
+  content: string;
+}
+
+interface DynamicSection {
+  id: string;
+  title: string;
+  badge?: string;
+  items: DynamicSectionItem[];
+}
+
+export type QuotationTheme = 'ROYAL_GOLD' | 'ELEGANT_IVORY' | 'MINIMAL_EDITORIAL' | 'ROSE_ROMANCE';
 
 const TERMS_PRESETS = {
   WEDDING: [
@@ -130,27 +142,39 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
   const [gstRate, setGstRate] = useState<number>(18);
 
   const [eventItems, setEventItems] = useState<EventItem[]>(buildInitialEvents());
+  
+  // Payment Schedule & Terms State
   const [paymentSchedule, setPaymentSchedule] = useState<string[]>([
     'Advance Booking Deposit: 30%',
     'On Main Event Shoot Date: 50%',
     'Upon Final Album & Video Delivery: 20%'
   ]);
-  
-  const [termsPreset, setTermsPreset] = useState<'WEDDING' | 'PREWEDDING' | 'CORPORATE'>('WEDDING');
   const [terms, setTerms] = useState<string[]>(TERMS_PRESETS.WEDDING);
 
-  // Dynamic Album Specs & Security Details state
-  const [albumCountMain, setAlbumCountMain] = useState('1 Master Royal Photobook (40-50 Sheets / 100 Pages)');
-  const [albumPaperQuality, setPaperQuality] = useState('Premium Non-Tearable Velvet Matte / Silk Finish with Handcrafted Leatherette Presentation Box');
-  const [albumFamilyMiniCount, setFamilyMiniCount] = useState('2 Mini Replica Parent Albums (20 Sheets each)');
-  const [wallCanvasPrint, setWallCanvasPrint] = useState('1 Luxury 24" x 36" Enlarged Acrylic Wall Frame');
-  
-  const [videoFormatSpec, setVideoFormatSpec] = useState('4K Ultra HD Cinematic Teaser + Full Length HD Edited Film (60-90 min)');
-  const [storageDeliverySpec, setStorageDeliverySpec] = useState('1 Custom Engraved 128GB USB 3.2 Flash Drive + 1 Year Cloud Gallery Cloud Access');
-
-  const [dualCardBackup, setDualCardBackup] = useState('Dual Card Slot Redundant Camera Recording enabled for 100% data safety');
-  const [nasCloudBackup, setNasCloudBackup] = useState('Triple RAID Local NAS & Offsite Cloud Backup kept active for 12 months');
-  const [redundantEquipment, setRedundantEquipment] = useState('Standby backup camera bodies, prime lenses & audio recorders present on site');
+  // Dynamic Custom Sections
+  const [dynamicSections, setDynamicSections] = useState<DynamicSection[]>([
+    {
+      id: 'sec-album-specs',
+      title: 'Detailed Album Printing & Physical Specifications',
+      badge: 'Handcrafted Quality',
+      items: [
+        { title: '📖 Primary Royal Photobook Album', content: '1 Master Royal Photobook (40-50 Sheets / 100 Pages) in Premium Non-Tearable Velvet Matte / Silk Finish with Handcrafted Leatherette Case.' },
+        { title: '🖼️ Family Albums & Wall Canvas Prints', content: '2 Mini Replica Parent Albums (20 Sheets each) + 1 Luxury 24" x 36" Enlarged Acrylic Wall Frame.' },
+        { title: '🎬 Cinematic Video & Teasers', content: '4K Ultra HD Cinematic Teaser + Full Length HD Edited Film (60-90 min).' },
+        { title: '💾 Data Drive & Cloud Gallery', content: '1 Custom Engraved 128GB USB 3.2 Flash Drive + 1 Year Cloud Gallery Access.' }
+      ]
+    },
+    {
+      id: 'sec-security-safeguards',
+      title: 'Studio Data Security, Backup & Privacy Safeguards',
+      badge: '100% Data Safety',
+      items: [
+        { title: '📷 Dual Card Slot Redundant Recording', content: 'Every camera shot with real-time dual card recording to eliminate memory card failure risks.' },
+        { title: '💾 Triple RAID NAS & Cloud Vault', content: 'Raw data backed up across dual RAID local NAS servers + offsite encrypted cloud storage.' },
+        { title: '⚡ On-Site Equipment Redundancy', content: 'Backup camera bodies, prime lenses & wireless microphones brought standby to every event.' }
+      ]
+    }
+  ]);
 
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState('');
@@ -171,7 +195,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
   const calculatedGst = showGst ? Math.round((amountAfterDiscount * (gstRate || 18)) / 100) : 0;
   const calculatedGrandTotal = amountAfterDiscount + calculatedGst;
 
-  // Handlers for event items
+  // Event Handlers
   const handleUpdateEventName = (idx: number, name: string) => {
     const updated = [...eventItems];
     updated[idx].name = name;
@@ -213,9 +237,60 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     setEventItems(eventItems.filter((_, i) => i !== idx));
   };
 
-  const handleApplyTermsPreset = (presetKey: 'WEDDING' | 'PREWEDDING' | 'CORPORATE') => {
-    setTermsPreset(presetKey);
-    setTerms(TERMS_PRESETS[presetKey]);
+  // Dynamic Section Handlers
+  const handleAddDynamicSection = () => {
+    const newSec: DynamicSection = {
+      id: `sec-${Date.now()}`,
+      title: 'Custom Studio Policy / Add-on Section',
+      badge: 'Custom Note',
+      items: [
+        { title: 'Itemized Clause 1', content: 'Specify details for travel, drone permissions, or extra deliverables here.' }
+      ]
+    };
+    setDynamicSections([...dynamicSections, newSec]);
+  };
+
+  const handleRemoveDynamicSection = (secId: string) => {
+    setDynamicSections(dynamicSections.filter(s => s.id !== secId));
+  };
+
+  const handleUpdateSectionTitle = (secId: string, newTitle: string) => {
+    setDynamicSections(dynamicSections.map(s => s.id === secId ? { ...s, title: newTitle } : s));
+  };
+
+  const handleUpdateSectionItem = (secId: string, itemIdx: number, field: 'title' | 'content', val: string) => {
+    setDynamicSections(dynamicSections.map(s => {
+      if (s.id === secId) {
+        const newItems = [...s.items];
+        newItems[itemIdx] = { ...newItems[itemIdx], [field]: val };
+        return { ...s, items: newItems };
+      }
+      return s;
+    }));
+  };
+
+  const handleAddSectionItem = (secId: string) => {
+    setDynamicSections(dynamicSections.map(s => {
+      if (s.id === secId) {
+        return {
+          ...s,
+          items: [...s.items, { title: 'New Item Clause', content: 'Description content here...' }]
+        };
+      }
+      return s;
+    }));
+  };
+
+  const handleRemoveSectionItem = (secId: string, itemIdx: number) => {
+    setDynamicSections(dynamicSections.map(s => {
+      if (s.id === secId) {
+        return {
+          ...s,
+          items: s.items.filter((_, i) => i !== itemIdx)
+        };
+      }
+      return s;
+    }));
   };
 
   // Dispatch Email Handler
@@ -286,7 +361,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     }
   };
 
-  // Theme Styling Map
+  // Theme Styling Map (ALL BRIGHT & LIGHT - ZERO BLACK BOXES ON CANVAS)
   const themeStyles = {
     ROYAL_GOLD: {
       cardBg: 'bg-white text-neutral-900 border-l-[12px] border-amber-500 shadow-2xl border-y border-r border-neutral-200/80',
@@ -295,26 +370,24 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
       iconColor: 'text-amber-600',
       clientBanner: 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/80',
       eventCard: 'bg-white border border-neutral-200 hover:border-amber-400',
-      totalBanner: 'bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-white border border-amber-600',
-      totalHighlight: 'text-amber-200',
-      scheduleCard: 'bg-amber-50/40 border border-amber-200/60',
-      specCard: 'bg-gradient-to-br from-amber-50/70 to-orange-50/40 border border-amber-200/80',
-      securityCard: 'bg-neutral-900 text-amber-100 border border-neutral-800',
+      totalBanner: 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500 shadow-md',
+      totalHighlight: 'text-amber-100',
+      scheduleCard: 'bg-amber-50/40 border border-amber-200/60 text-neutral-800',
+      sectionCard: 'bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-200/80 text-neutral-900 shadow-2xs',
       bulletDot: 'bg-amber-500'
     },
-    CINEMATIC_DARK: {
-      cardBg: 'bg-neutral-950 text-neutral-100 border-l-[12px] border-amber-400 shadow-2xl border-y border-r border-neutral-800',
-      headerBanner: 'border-b border-neutral-800',
-      tagBadge: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
-      iconColor: 'text-amber-400',
-      clientBanner: 'bg-neutral-900/90 border border-amber-500/30 text-neutral-100',
-      eventCard: 'bg-neutral-900 border border-neutral-800 hover:border-amber-400',
-      totalBanner: 'bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-amber-300 border border-amber-500/40',
-      totalHighlight: 'text-amber-400',
-      scheduleCard: 'bg-neutral-900/60 border border-neutral-800',
-      specCard: 'bg-neutral-900 border border-neutral-800 text-neutral-100',
-      securityCard: 'bg-neutral-900 text-amber-300 border border-amber-500/30',
-      bulletDot: 'bg-amber-400'
+    ELEGANT_IVORY: {
+      cardBg: 'bg-amber-50/20 text-neutral-900 border-l-[12px] border-amber-600 shadow-2xl border-y border-r border-amber-200/60',
+      headerBanner: 'border-b-2 border-amber-200',
+      tagBadge: 'bg-amber-200/60 text-amber-900 border border-amber-300',
+      iconColor: 'text-amber-700',
+      clientBanner: 'bg-amber-100/40 border border-amber-200 text-neutral-900',
+      eventCard: 'bg-white border border-amber-200 hover:border-amber-500',
+      totalBanner: 'bg-gradient-to-r from-amber-700 to-amber-900 text-white border border-amber-600',
+      totalHighlight: 'text-amber-200',
+      scheduleCard: 'bg-white border border-amber-200 text-neutral-900',
+      sectionCard: 'bg-amber-100/30 border border-amber-200 text-neutral-900',
+      bulletDot: 'bg-amber-600'
     },
     MINIMAL_EDITORIAL: {
       cardBg: 'bg-white text-neutral-900 border-l-[12px] border-neutral-900 shadow-2xl border-y border-r border-neutral-300',
@@ -325,9 +398,8 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
       eventCard: 'bg-neutral-50 border border-neutral-200 hover:border-neutral-900',
       totalBanner: 'bg-neutral-900 text-white border border-neutral-900',
       totalHighlight: 'text-neutral-100',
-      scheduleCard: 'bg-neutral-50 border border-neutral-200',
-      specCard: 'bg-neutral-100 border border-neutral-300 text-neutral-900',
-      securityCard: 'bg-neutral-900 text-white border border-neutral-900',
+      scheduleCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900',
+      sectionCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900',
       bulletDot: 'bg-neutral-900'
     },
     ROSE_ROMANCE: {
@@ -339,9 +411,8 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
       eventCard: 'bg-white border border-rose-200 hover:border-rose-400',
       totalBanner: 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white border border-rose-500',
       totalHighlight: 'text-rose-100',
-      scheduleCard: 'bg-rose-50/50 border border-rose-200',
-      specCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200',
-      securityCard: 'bg-neutral-900 text-rose-200 border border-rose-900',
+      scheduleCard: 'bg-rose-50/50 border border-rose-200 text-neutral-900',
+      sectionCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 text-neutral-900',
       bulletDot: 'bg-rose-500'
     }
   };
@@ -432,7 +503,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                 className="w-full bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-400"
               >
                 <option value="ROYAL_GOLD">👑 Royal Gold (Luxury Wedding)</option>
-                <option value="CINEMATIC_DARK">🎬 Cinematic Dark (Obsidian Gold)</option>
+                <option value="ELEGANT_IVORY">✨ Elegant Ivory (Warm Cream)</option>
                 <option value="MINIMAL_EDITORIAL">📰 Minimal Editorial (High-End Clean)</option>
                 <option value="ROSE_ROMANCE">🌸 Rose Romance (Pastel Wedding)</option>
               </select>
@@ -493,7 +564,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         </div>
       )}
 
-      {/* Main Quotation Sheet Canvas */}
+      {/* Main Quotation Sheet Canvas (ALWAYS PISTINE LIGHT & BLACK-FREE) */}
       <div 
         id="pdf-document"
         className={`relative p-6 sm:p-10 min-h-[1050px] w-full max-w-[780px] text-left rounded-r-2xl space-y-6 transition-all duration-300 ${currentStyle.cardBg}`}
@@ -517,7 +588,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                     type="text"
                     value={studioTagline}
                     onChange={(e) => setStudioTagline(e.target.value)}
-                    className="text-[10px] font-bold text-amber-500 bg-transparent border-b border-amber-300 focus:outline-none w-full"
+                    className="text-[10px] font-bold text-amber-600 bg-transparent border-b border-amber-300 focus:outline-none w-full"
                   />
                 </div>
               ) : (
@@ -528,7 +599,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                       OFFICIAL QUOTATION
                     </span>
                   </h1>
-                  <p className="text-[10px] font-extrabold tracking-widest uppercase mt-0.5 text-amber-500">
+                  <p className="text-[10px] font-extrabold tracking-widest uppercase mt-0.5 text-amber-600">
                     {studioTagline}
                   </p>
                 </>
@@ -600,7 +671,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         {/* Client & Quotation Metadata Banner */}
         <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${currentStyle.clientBanner}`}>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500 block">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 block">
               QUOTATION PREPARED FOR
             </span>
             {isEditing ? (
@@ -656,7 +727,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             <h3 className="text-xs font-extrabold uppercase tracking-widest opacity-60">
               Covered Events & Deliverables Package
             </h3>
-            <span className="text-[10px] font-bold text-amber-500">
+            <span className="text-[10px] font-bold text-amber-600">
               {eventItems.length} Event Block(s)
             </span>
           </div>
@@ -733,7 +804,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                             key={pIdx}
                             type="button"
                             onClick={() => handleAddPresetDeliverable(idx, preset)}
-                            className="px-2 py-0.5 bg-neutral-200/30 hover:bg-amber-400 hover:text-neutral-950 rounded text-[9px] font-semibold transition"
+                            className="px-2 py-0.5 bg-amber-100 hover:bg-amber-400 hover:text-neutral-950 rounded text-[9px] font-semibold transition"
                           >
                             + {preset}
                           </button>
@@ -758,7 +829,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {isEditing && (
             <button
               onClick={handleAddEvent}
-              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-2 cursor-pointer transition"
+              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-2 cursor-pointer transition"
             >
               <Plus className="h-4 w-4" />
               <span>Add Custom Event Package Block</span>
@@ -777,7 +848,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             </div>
 
             {calculatedDiscount > 0 && (
-              <div className="flex justify-between text-emerald-500 font-bold">
+              <div className="flex justify-between text-emerald-600 font-bold">
                 <span>Special Discount ({discountType === 'PERCENT' ? `${discountValue}%` : 'Flat'}):</span>
                 <span>- <FinancialAmount value={calculatedDiscount} /></span>
               </div>
@@ -792,7 +863,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           </div>
 
           {/* Grand Total Banner */}
-          <div className={`rounded-2xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${currentStyle.totalBanner}`}>
+          <div className={`rounded-2xl p-5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${currentStyle.totalBanner}`}>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-80">
                 ESTIMATED PACKAGE INVESTMENT
@@ -818,7 +889,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           
           {/* Milestone Payment Schedule */}
           <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5 text-amber-700">
               <ShieldCheck className={`h-4 w-4 ${currentStyle.iconColor}`} />
               <span>Payment Milestone Schedule</span>
             </h4>
@@ -845,7 +916,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {/* Terms and Conditions */}
           <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-700">
                 Terms & Conditions
               </h4>
 
@@ -853,15 +924,15 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                 <div className="flex items-center space-x-1">
                   <button
                     type="button"
-                    onClick={() => handleApplyTermsPreset('WEDDING')}
-                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-500 rounded font-bold"
+                    onClick={() => setTerms(TERMS_PRESETS.WEDDING)}
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded font-bold"
                   >
                     Wedding
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleApplyTermsPreset('PREWEDDING')}
-                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-500 rounded font-bold"
+                    onClick={() => setTerms(TERMS_PRESETS.PREWEDDING)}
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded font-bold"
                   >
                     Pre-Wedding
                   </button>
@@ -890,186 +961,113 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
         </div>
 
-        {/* 🌟 DYNAMIC DETAILED ALBUM & DELIVERABLE SPECIFICATIONS CARD (Below Terms & Conditions) */}
-        <div className={`rounded-2xl p-5 shadow-sm space-y-3.5 transition-all ${currentStyle.specCard}`}>
-          <div className="flex items-center justify-between border-b border-neutral-300/40 pb-2">
-            <h4 className="text-xs font-black uppercase tracking-wider flex items-center space-x-2 text-amber-600">
-              <BookOpen className="h-4 w-4 text-amber-500" />
-              <span>Detailed Album Printing & Physical Deliverable Specifications</span>
-            </h4>
-            <span className="text-[9px] font-extrabold uppercase bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded border border-amber-400/30">
-              Handcrafted Quality Guarantee
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium">
-            
-            {/* Main Photobook Specs */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
-                📖 Primary Royal Photobook Album:
-              </span>
-              {isEditing ? (
-                <div className="space-y-1">
+        {/* 🌟 DYNAMIC CUSTOM SECTIONS BUILDER (ALBUMS, SECURITY, POLICIES, CUSTOM NOTES) */}
+        <div className="space-y-4 pt-2">
+          {dynamicSections.map((sec) => (
+            <div 
+              key={sec.id} 
+              className={`rounded-2xl p-5 shadow-2xs space-y-3.5 transition-all relative ${currentStyle.sectionCard}`}
+            >
+              <div className="flex items-center justify-between border-b border-amber-200/80 pb-2 gap-2">
+                {isEditing ? (
                   <input
                     type="text"
-                    value={albumCountMain}
-                    onChange={(e) => setAlbumCountMain(e.target.value)}
-                    className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
+                    value={sec.title}
+                    onChange={(e) => handleUpdateSectionTitle(sec.id, e.target.value)}
+                    className="text-xs font-black uppercase tracking-wider bg-transparent border-b border-amber-400 focus:outline-none w-full text-amber-800"
                   />
-                  <input
-                    type="text"
-                    value={albumPaperQuality}
-                    onChange={(e) => setPaperQuality(e.target.value)}
-                    className="w-full text-[10px] bg-transparent border-b border-amber-300 focus:outline-none"
-                  />
+                ) : (
+                  <h4 className="text-xs font-black uppercase tracking-wider flex items-center space-x-2 text-amber-700">
+                    <BookOpen className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                    <span>{sec.title}</span>
+                  </h4>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  {sec.badge && (
+                    <span className="text-[9px] font-extrabold uppercase bg-amber-200/50 text-amber-900 px-2 py-0.5 rounded border border-amber-300/80">
+                      {sec.badge}
+                    </span>
+                  )}
+                  {isEditing && (
+                    <button
+                      onClick={() => handleRemoveDynamicSection(sec.id)}
+                      className="text-red-500 hover:bg-red-50 p-1 rounded transition"
+                      title="Delete Dynamic Section Block"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-1 opacity-90">
-                  <p className="font-bold text-neutral-900 dark:text-neutral-100">{albumCountMain}</p>
-                  <p className="text-[10px] leading-relaxed opacity-75">{albumPaperQuality}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Parent Mini Albums & Wall Canvas */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
-                🖼️ Family Albums & Wall Canvas Prints:
-              </span>
-              {isEditing ? (
-                <div className="space-y-1">
-                  <input
-                    type="text"
-                    value={albumFamilyMiniCount}
-                    onChange={(e) => setFamilyMiniCount(e.target.value)}
-                    className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
-                  />
-                  <input
-                    type="text"
-                    value={wallCanvasPrint}
-                    onChange={(e) => setWallCanvasPrint(e.target.value)}
-                    className="w-full text-[10px] bg-transparent border-b border-amber-300 focus:outline-none"
-                  />
-                </div>
-              ) : (
-                <div className="space-y-1 opacity-90">
-                  <p className="font-bold text-neutral-900 dark:text-neutral-100">{albumFamilyMiniCount}</p>
-                  <p className="text-[10px] leading-relaxed opacity-75">{wallCanvasPrint}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Film & Video Specs */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
-                🎬 Cinematic Video & Teasers:
-              </span>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={videoFormatSpec}
-                  onChange={(e) => setVideoFormatSpec(e.target.value)}
-                  className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
-                />
-              ) : (
-                <p className="font-bold text-neutral-900 dark:text-neutral-100 opacity-90">{videoFormatSpec}</p>
-              )}
-            </div>
-
-            {/* Storage Drive Specs */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
-                💾 Data Drive & Cloud Gallery:
-              </span>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={storageDeliverySpec}
-                  onChange={(e) => setStorageDeliverySpec(e.target.value)}
-                  className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
-                />
-              ) : (
-                <p className="font-bold text-neutral-900 dark:text-neutral-100 opacity-90">{storageDeliverySpec}</p>
-              )}
-            </div>
-
-          </div>
-        </div>
-
-        {/* 🛡️ STUDIO DATA SECURITY, DUAL-CARD BACKUP & CONFIDENTIALITY CARD */}
-        <div className={`rounded-2xl p-5 shadow-sm space-y-3 transition-all ${currentStyle.securityCard}`}>
-          <div className="flex items-center justify-between border-b border-neutral-700/60 pb-2">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-2 text-amber-400">
-              <Shield className="h-4 w-4 text-amber-400" />
-              <span>Studio Data Security, Backup & Privacy Safeguards</span>
-            </h4>
-            <span className="text-[9px] font-black uppercase bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/40">
-              Zero Data Loss Guarantee
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[10px] leading-relaxed">
-            
-            {/* Dual Card Recording */}
-            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
-              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
-                <Cpu className="h-3.5 w-3.5 text-amber-400" />
-                <span>Dual Card Slot Recording</span>
               </div>
-              {isEditing ? (
-                <textarea
-                  rows={2}
-                  value={dualCardBackup}
-                  onChange={(e) => setDualCardBackup(e.target.value)}
-                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
-                />
-              ) : (
-                <p className="opacity-80 font-normal">{dualCardBackup}</p>
-              )}
-            </div>
 
-            {/* NAS Cloud Vault */}
-            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
-              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
-                <HardDrive className="h-3.5 w-3.5 text-amber-400" />
-                <span>Triple RAID & Cloud Vault</span>
+              {/* Items Grid inside Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-medium">
+                {sec.items.map((item, itemIdx) => (
+                  <div key={itemIdx} className="space-y-1 bg-white/70 p-3 rounded-xl border border-amber-200/70 shadow-2xs">
+                    {isEditing ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <input
+                            type="text"
+                            value={item.title || ''}
+                            onChange={(e) => handleUpdateSectionItem(sec.id, itemIdx, 'title', e.target.value)}
+                            className="w-full text-[11px] font-extrabold text-amber-800 bg-transparent border-b border-amber-400 focus:outline-none"
+                            placeholder="Clause Title"
+                          />
+                          <button
+                            onClick={() => handleRemoveSectionItem(sec.id, itemIdx)}
+                            className="text-red-500 p-0.5 ml-1"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={item.content}
+                          onChange={(e) => handleUpdateSectionItem(sec.id, itemIdx, 'content', e.target.value)}
+                          className="w-full text-[10px] bg-transparent border border-amber-300 rounded p-1 font-normal"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {item.title && (
+                          <p className="text-[11px] font-bold text-amber-900">{item.title}</p>
+                        )}
+                        <p className="text-[10px] leading-relaxed opacity-85 text-neutral-800">{item.content}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-              {isEditing ? (
-                <textarea
-                  rows={2}
-                  value={nasCloudBackup}
-                  onChange={(e) => setNasCloudBackup(e.target.value)}
-                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
-                />
-              ) : (
-                <p className="opacity-80 font-normal">{nasCloudBackup}</p>
+
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => handleAddSectionItem(sec.id)}
+                  className="text-[10px] font-bold text-amber-700 hover:text-amber-900 flex items-center space-x-1 pt-1"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Add Clause Item to "{sec.title}"</span>
+                </button>
               )}
             </div>
+          ))}
 
-            {/* Redundant Equipment */}
-            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
-              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
-                <Lock className="h-3.5 w-3.5 text-amber-400" />
-                <span>Equipment Redundancy</span>
-              </div>
-              {isEditing ? (
-                <textarea
-                  rows={2}
-                  value={redundantEquipment}
-                  onChange={(e) => setRedundantEquipment(e.target.value)}
-                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
-                />
-              ) : (
-                <p className="opacity-80 font-normal">{redundantEquipment}</p>
-              )}
-            </div>
-
-          </div>
+          {isEditing && (
+            <button
+              type="button"
+              onClick={handleAddDynamicSection}
+              className="w-full py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-1.5 cursor-pointer transition"
+            >
+              <Plus className="h-4 w-4" />
+              <span>➕ Add Custom Dynamic Section Block</span>
+            </button>
+          )}
         </div>
 
         {/* Footer Signature & Branding Note */}
-        <div className="pt-6 border-t border-neutral-300/30 flex items-center justify-between text-[10px] opacity-60 font-medium">
+        <div className="pt-6 border-t border-neutral-300/40 flex items-center justify-between text-[10px] opacity-70 font-medium text-neutral-600">
           <p>Thank you for choosing {studioName} for your memorable occasions!</p>
           <p className="font-bold">{studioName} Official Quotation Document</p>
         </div>
