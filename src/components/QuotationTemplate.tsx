@@ -3,13 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Edit2, Check, Sparkles, Printer, Download, 
-  Phone, Camera, MapPin, Calendar, CheckCircle2, ShieldCheck, QrCode
+  Phone, Camera, MapPin, Calendar, CheckCircle2, ShieldCheck, QrCode,
+  Palette, FileText, Send, DollarSign, Percent, RefreshCw, Mail,
+  BookOpen, HardDrive, Shield, Lock, Cpu, Film
 } from 'lucide-react';
 import { FinancialAmount } from '@/lib/permissions';
 
 interface QuotationTemplateProps {
-  doc: any;
+  doc?: any;
   showControls?: boolean;
+  onSendEmail?: () => void;
 }
 
 interface EventItem {
@@ -19,154 +22,156 @@ interface EventItem {
   deliverables: string[];
 }
 
-export default function QuotationTemplate({ doc, showControls = true }: QuotationTemplateProps) {
+export type QuotationTheme = 'ROYAL_GOLD' | 'CINEMATIC_DARK' | 'MINIMAL_EDITORIAL' | 'ROSE_ROMANCE';
+
+const TERMS_PRESETS = {
+  WEDDING: [
+    'Travel & luxury accommodation for outstation events to be provided by the client.',
+    'Includes 1 master premium flush-mount album (40 sheets). Additional sheets charged at ₹650/sheet.',
+    'High-resolution edited RAW photos delivered via private Cloud Gallery link.',
+    'Deliverable timeline: 30-45 business days post client photo selection.',
+    '50% advance non-refundable deposit required to lock studio booking dates.'
+  ],
+  PREWEDDING: [
+    'All location entry fees, permissions, and local transportation are client responsibility.',
+    'Includes up to 8 hours of shoot coverage across up to 3 outfit changes.',
+    'Includes 1 Teaser video (60s Reel format) + 1 Full Length Pre-wedding Film (3-5 mins).',
+    'Raw video footage provided on Client USB Drive.',
+    'In case of rain/inclement weather, reschedule subject to studio slot availability.'
+  ],
+  CORPORATE: [
+    'Full commercial usage rights granted for digital media, web, and marketing.',
+    'On-site backup crew and dual card slot redundant recording enabled.',
+    'Edited high-res image deliverables within 7 business days post event.',
+    'Includes color-graded highlight video (1080p / 4K resolution).',
+    'Payment terms: 50% advance, balance 50% upon final deliverable hand-over.'
+  ]
+};
+
+const COMMON_DELIVERABLE_PRESETS = [
+  '1 Candid Photographer',
+  '1 Traditional Photographer',
+  '1 Cinematic Videographer',
+  '1 Traditional Videographer',
+  '4K Aerial Drone Coverage',
+  '1 Instagram Same-Day Teaser Reel',
+  '40 Sheets Premium Flush-Mount Album',
+  'Full HD Edited Long Film (60-90 min)',
+  'Complete RAW Data on High-Speed Pendrive'
+];
+
+export default function QuotationTemplate({ doc, showControls = true, onSendEmail }: QuotationTemplateProps) {
   const booking = doc?.booking || {};
   const client = booking?.client || {};
   const initialEventsFromDoc = booking?.bookingEvents || [];
   const initialGrandTotal = doc?.grandTotal || doc?.amount || booking?.grandTotal || 0;
 
-  // Helper to resolve default deliverables for an event name
+  // Helper for initial deliverables
   const getDefaultDeliverables = (eventName: string): string[] => {
     const nameLower = (eventName || '').toLowerCase();
-    if (nameLower.includes('pre') || nameLower.includes('pre-wedding') || nameLower.includes('pre wedding')) {
-      return [
-        '1 Candid Photographer',
-        '1 Candid Videographer',
-        '20 Sheets Luxury Album',
-        'Cinematic Trailer Video'
-      ];
+    if (nameLower.includes('pre') || nameLower.includes('pre-wedding')) {
+      return ['1 Candid Photographer', '1 Cinematic Videographer', '20 Sheets Luxury Album', 'Cinematic Trailer Video'];
     }
     if (nameLower.includes('engagement') || nameLower.includes('ring')) {
-      return [
-        '1 Candid Photographer',
-        '1 Candid Videographer',
-        '1 Traditional Photographer',
-        '1 Traditional Videographer',
-        '30-35 Sheets Premium Album',
-        'Cinematic Trailer Video',
-        'Full Length HD Film',
-        '1 Instagram Reel'
-      ];
+      return ['1 Candid Photographer', '1 Cinematic Videographer', '1 Traditional Photographer', '30 Sheets Premium Album', '1 Instagram Reel'];
     }
     if (nameLower.includes('haldi') || nameLower.includes('sangeet')) {
-      return [
-        '1 Candid Photographer',
-        '1 Candid Videographer',
-        '1 Traditional Photographer',
-        '1 Traditional Videographer',
-        '20 Sheets Premium Album',
-        'Cinematic Trailer Video',
-        'Full Length HD Film'
-      ];
-    }
-    if (nameLower.includes('pellikuthuru') || nameLower.includes('mehendi')) {
-      return [
-        '1 Traditional Photographer',
-        '1 Traditional Videographer',
-        'Full Length HD Film'
-      ];
+      return ['1 Candid Photographer', '1 Traditional Photographer', '1 Traditional Videographer', '20 Sheets Album', 'Full HD Film'];
     }
     if (nameLower.includes('wedding') || nameLower.includes('marriage')) {
-      return [
-        '1 Candid Photographer',
-        '1 Candid Videographer',
-        '1 Traditional Photographer',
-        '1 Traditional Videographer',
-        '50 Sheets Royal Album',
-        'Cinematic Teaser & Trailer',
-        'Full Length 4K Film',
-        '2 Instagram Reels'
-      ];
+      return ['1 Candid Photographer', '1 Cinematic Videographer', '1 Traditional Photographer', '1 Traditional Videographer', '50 Sheets Royal Album', '4K Teaser & Film', '2 Instagram Reels'];
     }
-    if (nameLower.includes('reception')) {
-      return [
-        '1 Candid Photographer',
-        '1 Candid Videographer',
-        '1 Traditional Photographer',
-        '1 Traditional Videographer',
-        '30-35 Sheets Premium Album',
-        'Cinematic Trailer Video',
-        'Full Length HD Film'
-      ];
-    }
-
-    return [
-      '1 Candid Photographer',
-      '1 Traditional Photographer',
-      '1 Traditional Videographer',
-      'Full Length HD Film & Edited Album'
-    ];
+    return ['1 Candid Photographer', '1 Traditional Photographer', '1 Traditional Videographer', 'Edited HD Album & Film'];
   };
 
-  // Build initial events array
   const buildInitialEvents = (): EventItem[] => {
     if (initialEventsFromDoc.length > 0) {
-      return initialEventsFromDoc.map((be: any, idx: number) => {
-        const eventName = be.event?.name || `Event ${idx + 1}`;
-        const price = be.price || Math.round((initialGrandTotal || 333000) / initialEventsFromDoc.length);
-        const delivs = be.deliverables 
+      return initialEventsFromDoc.map((be: any, idx: number) => ({
+        id: be.id || `evt-${idx}`,
+        name: be.event?.name || `Event ${idx + 1}`,
+        price: be.price || Math.round((initialGrandTotal || 300000) / initialEventsFromDoc.length),
+        deliverables: be.deliverables 
           ? (Array.isArray(be.deliverables) ? be.deliverables : be.deliverables.split('\n'))
-          : getDefaultDeliverables(eventName);
-
-        return {
-          id: be.id || `evt-${idx}`,
-          name: eventName,
-          price: price,
-          deliverables: delivs
-        };
-      });
+          : getDefaultDeliverables(be.event?.name || '')
+      }));
     }
 
-    // Default sample template items matching studio packages
     return [
       { name: 'Pre-Wedding Shoot', price: 38000, deliverables: getDefaultDeliverables('Pre-Wedding') },
       { name: 'Engagement Ceremony', price: 70000, deliverables: getDefaultDeliverables('Engagement') },
-      { name: 'Haldi Ceremony', price: 59000, deliverables: getDefaultDeliverables('Haldi') },
-      { name: 'Pellikuthuru Rituals', price: 19000, deliverables: getDefaultDeliverables('Pellikuthuru') },
-      { name: 'Wedding Ceremony', price: 78000, deliverables: getDefaultDeliverables('Wedding') },
-      { name: 'Grand Reception', price: 69000, deliverables: getDefaultDeliverables('Reception') }
+      { name: 'Haldi & Sangeet', price: 59000, deliverables: getDefaultDeliverables('Haldi') },
+      { name: 'Wedding Ceremony', price: 88000, deliverables: getDefaultDeliverables('Wedding') },
+      { name: 'Grand Reception', price: 65000, deliverables: getDefaultDeliverables('Reception') }
     ];
   };
 
-  // Editable template states
+  // State
+  const [theme, setTheme] = useState<QuotationTheme>('ROYAL_GOLD');
   const [isEditing, setIsEditing] = useState(false);
   const [clientName, setClientName] = useState(client.name || booking.name || 'Rohith Telidevara');
+  const [clientEmail, setClientEmail] = useState(client.email || 'client@example.com');
+  const [clientPhone, setClientPhone] = useState(client.phone || '+91 98765 43210');
   const [quoteDate, setQuoteDate] = useState(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [quoteRef, setQuoteRef] = useState(doc?.id ? `R2R-QT-${doc.id.substring(0, 6).toUpperCase()}` : 'R2R-QT-2026-001');
-  const [studioLogoUrl, setStudioLogoUrl] = useState('/r2r-logo.png');
-  const [studioHandle, setStudioHandle] = useState('@R2RSTUDIOPHOTOGRAPHY');
+
+  // Studio info
+  const [studioName, setStudioName] = useState('R2R STUDIO');
+  const [studioTagline, setStudioTagline] = useState('CREATIVE PHOTOGRAPHY & CINEMATIC FILMS');
   const [studioMobile, setStudioMobile] = useState('+91 9398534380');
+  const [studioEmail, setStudioEmail] = useState('contact@r2rstudio.com');
+  const [studioHandle, setStudioHandle] = useState('@R2RSTUDIOPHOTOGRAPHY');
   const [studioAddress, setStudioAddress] = useState('Office: Road No 3A, HNo: 12-5-149/12/2/A, Vijayapuri Colony, Tarnaka, Hyderabad.');
-  const [imageError, setImageError] = useState(false);
+  const [studioGst, setStudioGst] = useState('36AAAAA0000A1Z5');
+
+  // Financial state
+  const [discountType, setDiscountType] = useState<'FLAT' | 'PERCENT'>('FLAT');
+  const [discountValue, setDiscountValue] = useState<number>(0);
+  const [showGst, setShowGst] = useState<boolean>(false);
+  const [gstRate, setGstRate] = useState<number>(18);
 
   const [eventItems, setEventItems] = useState<EventItem[]>(buildInitialEvents());
   const [paymentSchedule, setPaymentSchedule] = useState<string[]>([
-    'Advance Booking Confirmation: 30%',
+    'Advance Booking Deposit: 30%',
     'On Main Event Shoot Date: 50%',
-    'Upon Album & Video Final Delivery: 20%'
+    'Upon Final Album & Video Delivery: 20%'
   ]);
-  const [terms, setTerms] = useState<string[]>([
-    'Travel and Accommodation for any outstation events covered must be provided by the client.',
-    'From our studio, we will provide one set of premium album. Extra album copies are charged separately.',
-    'Additional album sheets beyond agreed count are charged at Rs. 600/- per extra sheet.',
-    'Deliverables timeline depends on timely client selection of raw photographs.',
-    'If an event is rescheduled from client side, dates will be subject to studio slot availability.'
-  ]);
+  
+  const [termsPreset, setTermsPreset] = useState<'WEDDING' | 'PREWEDDING' | 'CORPORATE'>('WEDDING');
+  const [terms, setTerms] = useState<string[]>(TERMS_PRESETS.WEDDING);
+
+  // Dynamic Album Specs & Security Details state
+  const [albumCountMain, setAlbumCountMain] = useState('1 Master Royal Photobook (40-50 Sheets / 100 Pages)');
+  const [albumPaperQuality, setPaperQuality] = useState('Premium Non-Tearable Velvet Matte / Silk Finish with Handcrafted Leatherette Presentation Box');
+  const [albumFamilyMiniCount, setFamilyMiniCount] = useState('2 Mini Replica Parent Albums (20 Sheets each)');
+  const [wallCanvasPrint, setWallCanvasPrint] = useState('1 Luxury 24" x 36" Enlarged Acrylic Wall Frame');
+  
+  const [videoFormatSpec, setVideoFormatSpec] = useState('4K Ultra HD Cinematic Teaser + Full Length HD Edited Film (60-90 min)');
+  const [storageDeliverySpec, setStorageDeliverySpec] = useState('1 Custom Engraved 128GB USB 3.2 Flash Drive + 1 Year Cloud Gallery Cloud Access');
+
+  const [dualCardBackup, setDualCardBackup] = useState('Dual Card Slot Redundant Camera Recording enabled for 100% data safety');
+  const [nasCloudBackup, setNasCloudBackup] = useState('Triple RAID Local NAS & Offsite Cloud Backup kept active for 12 months');
+  const [redundantEquipment, setRedundantEquipment] = useState('Standby backup camera bodies, prime lenses & audio recorders present on site');
+
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('');
 
   // Sync state if doc props change
   useEffect(() => {
     if (client.name || booking.name) setClientName(client.name || booking.name);
+    if (client.email) setClientEmail(client.email);
+    if (client.phone) setClientPhone(client.phone);
     if (doc?.id) setQuoteRef(`R2R-QT-${doc.id.substring(0, 6).toUpperCase()}`);
     setEventItems(buildInitialEvents());
   }, [doc]);
 
-  const calculatedGrandTotal = eventItems.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0);
+  // Financial calculations
+  const subtotal = eventItems.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0);
+  const calculatedDiscount = discountType === 'PERCENT' ? Math.round((subtotal * (discountValue || 0)) / 100) : (discountValue || 0);
+  const amountAfterDiscount = Math.max(0, subtotal - calculatedDiscount);
+  const calculatedGst = showGst ? Math.round((amountAfterDiscount * (gstRate || 18)) / 100) : 0;
+  const calculatedGrandTotal = amountAfterDiscount + calculatedGst;
 
-  const formatAmount = (num: number) => {
-    return (num || 0).toLocaleString('en-IN') + '/-';
-  };
-
-  // Handlers for live editing
+  // Handlers for event items
   const handleUpdateEventName = (idx: number, name: string) => {
     const updated = [...eventItems];
     updated[idx].name = name;
@@ -185,13 +190,21 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
     setEventItems(updated);
   };
 
+  const handleAddPresetDeliverable = (idx: number, presetText: string) => {
+    const updated = [...eventItems];
+    if (!updated[idx].deliverables.includes(presetText)) {
+      updated[idx].deliverables.push(presetText);
+      setEventItems(updated);
+    }
+  };
+
   const handleAddEvent = () => {
     setEventItems([
       ...eventItems,
       {
-        name: 'Custom Shoot Event',
+        name: 'Custom Event Package',
         price: 25000,
-        deliverables: ['1 Candid Photographer', '1 Traditional Videographer', 'Edited Album & Video']
+        deliverables: ['1 Candid Photographer', '1 Traditional Videographer', 'Edited HD Album & Video']
       }
     ]);
   };
@@ -200,24 +213,55 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
     setEventItems(eventItems.filter((_, i) => i !== idx));
   };
 
-  // Print handler that ensures preview mode before printing
-  const handlePrintDocument = () => {
-    setIsEditing(false);
-    setTimeout(() => {
-      window.print();
-    }, 150);
+  const handleApplyTermsPreset = (presetKey: 'WEDDING' | 'PREWEDDING' | 'CORPORATE') => {
+    setTermsPreset(presetKey);
+    setTerms(TERMS_PRESETS[presetKey]);
   };
 
-  // Download PDF handler
+  // Dispatch Email Handler
+  const handleSendEmailToClient = async () => {
+    setSendingEmail(true);
+    setEmailStatus('Sending quotation email to client...');
+    try {
+      if (onSendEmail) {
+        await onSendEmail();
+      } else {
+        const res = await fetch('/api/data/quotations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: booking?.id || doc?.id || 'temp-id',
+            clientEmail: clientEmail,
+            clientName: clientName,
+            quoteRef: quoteRef,
+            grandTotal: calculatedGrandTotal,
+            status: 'SENT'
+          })
+        });
+        if (!res.ok) throw new Error('Failed to dispatch email');
+      }
+      setEmailStatus('✅ Quotation Email sent successfully to client!');
+      setTimeout(() => setEmailStatus(''), 4000);
+    } catch (e: any) {
+      setEmailStatus('❌ Sending failed: ' + e.message);
+      setTimeout(() => setEmailStatus(''), 4000);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  // Print & PDF
+  const handlePrintDocument = () => {
+    setIsEditing(false);
+    setTimeout(() => window.print(), 150);
+  };
+
   const handleDownloadPDFDocument = async () => {
     setIsEditing(false);
     await new Promise((res) => setTimeout(res, 200));
 
     const element = document.getElementById('pdf-document');
-    if (!element) {
-      alert('Document canvas not found.');
-      return;
-    }
+    if (!element) return;
 
     try {
       const { toPng } = await import('html-to-image');
@@ -226,153 +270,280 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
       const dataUrl = await toPng(element, { 
         quality: 1, 
         pixelRatio: 2,
-        filter: (node: any) => {
-          if (node?.classList?.contains('print:hidden')) return false;
-          return true;
-        }
+        filter: (node: any) => node?.classList?.contains('print:hidden') ? false : true
       });
 
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4'
-      });
-
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-      const fileName = `Quotation_${clientName.replace(/\s+/g, '_')}_R2R.pdf`;
+      const fileName = `Quotation_${clientName.replace(/\s+/g, '_')}_${quoteRef}.pdf`;
       pdf.save(fileName);
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      alert('Failed to generate PDF download: ' + err);
+      alert('PDF Generation failed: ' + err);
     }
   };
 
+  // Theme Styling Map
+  const themeStyles = {
+    ROYAL_GOLD: {
+      cardBg: 'bg-white text-neutral-900 border-l-[12px] border-amber-500 shadow-2xl border-y border-r border-neutral-200/80',
+      headerBanner: 'border-b-2 border-amber-100',
+      tagBadge: 'bg-amber-100 text-amber-900 border border-amber-200',
+      iconColor: 'text-amber-600',
+      clientBanner: 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/80',
+      eventCard: 'bg-white border border-neutral-200 hover:border-amber-400',
+      totalBanner: 'bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-white border border-amber-600',
+      totalHighlight: 'text-amber-200',
+      scheduleCard: 'bg-amber-50/40 border border-amber-200/60',
+      specCard: 'bg-gradient-to-br from-amber-50/70 to-orange-50/40 border border-amber-200/80',
+      securityCard: 'bg-neutral-900 text-amber-100 border border-neutral-800',
+      bulletDot: 'bg-amber-500'
+    },
+    CINEMATIC_DARK: {
+      cardBg: 'bg-neutral-950 text-neutral-100 border-l-[12px] border-amber-400 shadow-2xl border-y border-r border-neutral-800',
+      headerBanner: 'border-b border-neutral-800',
+      tagBadge: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+      iconColor: 'text-amber-400',
+      clientBanner: 'bg-neutral-900/90 border border-amber-500/30 text-neutral-100',
+      eventCard: 'bg-neutral-900 border border-neutral-800 hover:border-amber-400',
+      totalBanner: 'bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-amber-300 border border-amber-500/40',
+      totalHighlight: 'text-amber-400',
+      scheduleCard: 'bg-neutral-900/60 border border-neutral-800',
+      specCard: 'bg-neutral-900 border border-neutral-800 text-neutral-100',
+      securityCard: 'bg-neutral-900 text-amber-300 border border-amber-500/30',
+      bulletDot: 'bg-amber-400'
+    },
+    MINIMAL_EDITORIAL: {
+      cardBg: 'bg-white text-neutral-900 border-l-[12px] border-neutral-900 shadow-2xl border-y border-r border-neutral-300',
+      headerBanner: 'border-b-2 border-neutral-900',
+      tagBadge: 'bg-neutral-900 text-white border border-neutral-900',
+      iconColor: 'text-neutral-900',
+      clientBanner: 'bg-neutral-100 border border-neutral-300 text-neutral-900',
+      eventCard: 'bg-neutral-50 border border-neutral-200 hover:border-neutral-900',
+      totalBanner: 'bg-neutral-900 text-white border border-neutral-900',
+      totalHighlight: 'text-neutral-100',
+      scheduleCard: 'bg-neutral-50 border border-neutral-200',
+      specCard: 'bg-neutral-100 border border-neutral-300 text-neutral-900',
+      securityCard: 'bg-neutral-900 text-white border border-neutral-900',
+      bulletDot: 'bg-neutral-900'
+    },
+    ROSE_ROMANCE: {
+      cardBg: 'bg-rose-50/20 text-neutral-900 border-l-[12px] border-rose-400 shadow-2xl border-y border-r border-rose-200',
+      headerBanner: 'border-b-2 border-rose-100',
+      tagBadge: 'bg-rose-100 text-rose-800 border border-rose-200',
+      iconColor: 'text-rose-500',
+      clientBanner: 'bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200',
+      eventCard: 'bg-white border border-rose-200 hover:border-rose-400',
+      totalBanner: 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white border border-rose-500',
+      totalHighlight: 'text-rose-100',
+      scheduleCard: 'bg-rose-50/50 border border-rose-200',
+      specCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200',
+      securityCard: 'bg-neutral-900 text-rose-200 border border-rose-900',
+      bulletDot: 'bg-rose-500'
+    }
+  };
+
+  const currentStyle = themeStyles[theme];
+
   return (
     <div className="w-full flex flex-col items-center font-sans">
-
-      {/* Global Print Media Rules to ensure ONLY the Quotation Sheet prints */}
+      
+      {/* Global Print Rules */}
       <style>{`
         @media print {
-          @page {
-            size: A4 portrait;
-            margin: 8mm;
-          }
-          body * {
-            visibility: hidden !important;
-          }
-          #pdf-document, #pdf-document * {
-            visibility: visible !important;
-          }
+          @page { size: A4 portrait; margin: 8mm; }
+          body * { visibility: hidden !important; }
+          #pdf-document, #pdf-document * { visibility: visible !important; }
           #pdf-document {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            width: 100% !important; max-width: 100% !important;
+            box-shadow: none !important; border-top: none !important; border-right: none !important; border-bottom: none !important;
+            padding: 0 !important; margin: 0 !important;
           }
-          .print\\:hidden {
-            display: none !important;
-          }
-          input, textarea {
-            border: none !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            resize: none !important;
-            outline: none !important;
-          }
+          .print\\:hidden { display: none !important; }
         }
       `}</style>
-      
-      {/* Interactive Customizer Bar (Hidden when printing) */}
+
+      {/* Interactive Quotation Customizer Toolbar */}
       {showControls && (
-        <div className="print:hidden w-full max-w-[760px] mb-4 p-3.5 bg-gradient-to-r from-amber-900 via-amber-950 to-amber-900 text-amber-50 rounded-2xl flex flex-wrap items-center justify-between shadow-xl border border-amber-800/80 gap-3">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
-            <span className="text-xs font-bold tracking-wide text-amber-100">PDF Template Customizer</span>
-            <span className="text-[10px] text-amber-300/80 hidden sm:inline">
-              ({isEditing ? 'Live Editing Mode' : 'Pristine Preview Mode'})
-            </span>
+        <div className="print:hidden w-full max-w-[780px] mb-4 p-4 bg-neutral-900 text-white rounded-2xl shadow-xl border border-neutral-800 space-y-3">
+          
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-3">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span className="text-xs font-extrabold tracking-wider uppercase text-amber-300">
+                Advanced Quotation Designer & Builder
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
+                  isEditing ? 'bg-amber-400 text-neutral-950 hover:bg-amber-300' : 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+                }`}
+              >
+                {isEditing ? <Check className="h-3.5 w-3.5" /> : <Edit2 className="h-3.5 w-3.5 text-amber-400" />}
+                <span>{isEditing ? 'Done Customizing' : 'Customize Fields'}</span>
+              </button>
+
+              <button
+                onClick={handleSendEmailToClient}
+                disabled={sendingEmail}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs disabled:opacity-50"
+              >
+                {sendingEmail ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+                <span>Email Client</span>
+              </button>
+
+              <button
+                onClick={handlePrintDocument}
+                className="inline-flex items-center space-x-1 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold cursor-pointer transition"
+              >
+                <Printer className="h-3.5 w-3.5 text-amber-400" />
+                <span>Print</span>
+              </button>
+
+              <button
+                onClick={handleDownloadPDFDocument}
+                className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-extrabold cursor-pointer transition"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>PDF Export</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
-                isEditing ? 'bg-amber-300 text-amber-950 font-bold hover:bg-amber-200' : 'bg-amber-800/90 text-amber-100 hover:bg-amber-800'
-              }`}
-            >
-              {isEditing ? (
-                <>
-                  <Check className="h-3.5 w-3.5" />
-                  <span>Done Editing & Lock</span>
-                </>
-              ) : (
-                <>
-                  <Edit2 className="h-3.5 w-3.5 text-amber-300" />
-                  <span>Edit Custom Fields</span>
-                </>
-              )}
-            </button>
+          {/* Theme & Controls Palette */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+            
+            {/* Theme Selector */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
+                <Palette className="h-3 w-3 text-amber-400" />
+                <span>Aesthetic Template Theme</span>
+              </label>
+              <select
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as QuotationTheme)}
+                className="w-full bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-400"
+              >
+                <option value="ROYAL_GOLD">👑 Royal Gold (Luxury Wedding)</option>
+                <option value="CINEMATIC_DARK">🎬 Cinematic Dark (Obsidian Gold)</option>
+                <option value="MINIMAL_EDITORIAL">📰 Minimal Editorial (High-End Clean)</option>
+                <option value="ROSE_ROMANCE">🌸 Rose Romance (Pastel Wedding)</option>
+              </select>
+            </div>
 
-            <button
-              onClick={handlePrintDocument}
-              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-amber-850 hover:bg-amber-800 text-amber-100 rounded-lg text-xs font-medium cursor-pointer transition border border-amber-700/60"
-            >
-              <Printer className="h-3.5 w-3.5 text-amber-300" />
-              <span>Print</span>
-            </button>
+            {/* Discount Options */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
+                <Percent className="h-3 w-3 text-amber-400" />
+                <span>Custom Discount</span>
+              </label>
+              <div className="flex items-center space-x-1.5">
+                <select
+                  value={discountType}
+                  onChange={(e) => setDiscountType(e.target.value as 'FLAT' | 'PERCENT')}
+                  className="bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                >
+                  <option value="FLAT">Flat ₹</option>
+                  <option value="PERCENT">% Off</option>
+                </select>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={discountValue || ''}
+                  onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2 py-1.5 text-xs font-bold focus:outline-none"
+                />
+              </div>
+            </div>
 
-            <button
-              onClick={handleDownloadPDFDocument}
-              className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-lg text-xs font-extrabold cursor-pointer transition shadow-xs"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Download PDF</span>
-            </button>
+            {/* GST Tax Toggle */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
+                <DollarSign className="h-3 w-3 text-amber-400" />
+                <span>GST Tax Breakdown</span>
+              </label>
+              <div className="flex items-center space-x-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setShowGst(!showGst)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                    showGst ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-800 text-neutral-400'
+                  }`}
+                >
+                  {showGst ? 'GST Included (18%)' : 'GST Exempt / Off'}
+                </button>
+              </div>
+            </div>
+
           </div>
+
+          {emailStatus && (
+            <div className="p-2 rounded-lg bg-neutral-800 text-amber-300 text-xs font-bold text-center animate-fadeIn">
+              {emailStatus}
+            </div>
+          )}
+
         </div>
       )}
 
-      {/* Main Quotation Sheet Container */}
+      {/* Main Quotation Sheet Canvas */}
       <div 
         id="pdf-document"
-        className="relative bg-white text-neutral-800 font-sans p-6 sm:p-10 border-l-[12px] border-amber-400 shadow-xl min-h-[1050px] w-full max-w-[760px] text-left border-y border-r border-neutral-200/80 rounded-r-xl space-y-6"
+        className={`relative p-6 sm:p-10 min-h-[1050px] w-full max-w-[780px] text-left rounded-r-2xl space-y-6 transition-all duration-300 ${currentStyle.cardBg}`}
       >
         
-        {/* Luxury Top Header Section */}
-        <div className="flex justify-between items-start pb-6 border-b-2 border-neutral-100 gap-4">
+        {/* Top Header Section */}
+        <div className={`flex justify-between items-start pb-6 gap-4 ${currentStyle.headerBanner}`}>
           
-          {/* Left Header: Studio Info & Branding */}
+          {/* Left Header: Studio Info */}
           <div className="space-y-2 max-w-md">
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 flex items-center gap-2">
-                <span>R2R STUDIO</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">
-                  OFFICIAL QUOTATION
-                </span>
-              </h1>
-              <p className="text-[11px] font-bold text-amber-600 tracking-wider uppercase mt-0.5">
-                CREATIVE PHOTOGRAPHY & CINEMATIC FILMS
-              </p>
+              {isEditing ? (
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    value={studioName}
+                    onChange={(e) => setStudioName(e.target.value)}
+                    className="text-xl font-black bg-transparent border-b border-amber-400 focus:outline-none w-full"
+                  />
+                  <input
+                    type="text"
+                    value={studioTagline}
+                    onChange={(e) => setStudioTagline(e.target.value)}
+                    className="text-[10px] font-bold text-amber-500 bg-transparent border-b border-amber-300 focus:outline-none w-full"
+                  />
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                    <span>{studioName}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${currentStyle.tagBadge}`}>
+                      OFFICIAL QUOTATION
+                    </span>
+                  </h1>
+                  <p className="text-[10px] font-extrabold tracking-widest uppercase mt-0.5 text-amber-500">
+                    {studioTagline}
+                  </p>
+                </>
+              )}
             </div>
 
-            <div className="space-y-1 text-[11px] text-neutral-600 font-medium pt-1">
+            <div className="space-y-1 text-[11px] opacity-80 font-medium pt-1">
               <div className="flex items-center space-x-2">
-                <Phone className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                <Phone className={`h-3.5 w-3.5 flex-shrink-0 ${currentStyle.iconColor}`} />
                 {isEditing ? (
                   <input
                     type="text"
                     value={studioMobile}
                     onChange={(e) => setStudioMobile(e.target.value)}
-                    className="border-b border-amber-300 text-[11px] focus:outline-none w-full"
+                    className="bg-transparent border-b border-amber-300 text-[11px] focus:outline-none w-full"
                   />
                 ) : (
                   <span>{studioMobile}</span>
@@ -380,30 +551,30 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
               </div>
 
               <div className="flex items-center space-x-2">
-                <Camera className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                <Camera className={`h-3.5 w-3.5 flex-shrink-0 ${currentStyle.iconColor}`} />
                 {isEditing ? (
                   <input
                     type="text"
                     value={studioHandle}
                     onChange={(e) => setStudioHandle(e.target.value)}
-                    className="border-b border-amber-300 text-[11px] focus:outline-none w-full"
+                    className="bg-transparent border-b border-amber-300 text-[11px] focus:outline-none w-full"
                   />
                 ) : (
-                  <span>{studioHandle} • <span className="text-neutral-400 font-normal">instagram.com/r2rstudiophotography</span></span>
+                  <span>{studioHandle}</span>
                 )}
               </div>
 
               <div className="flex items-start space-x-2 pt-0.5">
-                <MapPin className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <MapPin className={`h-3.5 w-3.5 flex-shrink-0 mt-0.5 ${currentStyle.iconColor}`} />
                 {isEditing ? (
                   <textarea
                     value={studioAddress}
                     onChange={(e) => setStudioAddress(e.target.value)}
                     rows={2}
-                    className="w-full text-[10px] border border-amber-300 rounded p-1"
+                    className="w-full text-[10px] bg-transparent border border-amber-300 rounded p-1"
                   />
                 ) : (
-                  <p className="text-[10px] text-neutral-500 leading-normal font-normal">
+                  <p className="text-[10px] leading-relaxed opacity-75">
                     {studioAddress}
                   </p>
                 )}
@@ -411,80 +582,69 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
             </div>
           </div>
 
-          {/* Right Header: Logo & Studio Badge */}
+          {/* Right Header: Studio Badge & QR */}
           <div className="text-right flex flex-col items-end space-y-2">
-            {!imageError ? (
-              <img
-                src={studioLogoUrl}
-                alt="R2R Studio Logo"
-                onError={() => setImageError(true)}
-                className="h-16 sm:h-20 w-auto object-contain max-w-[180px]"
-              />
-            ) : (
-              <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl text-center shadow-xs border border-amber-400">
-                <p className="font-black text-lg tracking-widest leading-none">R2R</p>
-                <p className="text-[8px] font-bold text-amber-100 uppercase tracking-widest mt-1">STUDIO FILMS</p>
-              </div>
-            )}
-
-            <div className="flex items-center space-x-1 bg-neutral-50 border border-neutral-200 px-2 py-1 rounded text-[9px] text-neutral-500 font-semibold">
-              <QrCode className="h-3.5 w-3.5 text-neutral-700" />
-              <span>Scan to view Portfolio</span>
+            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl text-center shadow-md border border-amber-400">
+              <p className="font-black text-xl tracking-widest leading-none">R2R</p>
+              <p className="text-[8px] font-extrabold text-amber-100 uppercase tracking-widest mt-1">CINEMATIC FILMS</p>
             </div>
 
-            {isEditing && (
-              <div className="pt-1">
-                <label className="text-[9px] text-neutral-400 block font-semibold">Logo Image Path:</label>
-                <input
-                  type="text"
-                  value={studioLogoUrl}
-                  onChange={(e) => {
-                    setStudioLogoUrl(e.target.value);
-                    setImageError(false);
-                  }}
-                  className="text-[10px] text-right border-b border-amber-300 focus:outline-none w-36"
-                />
-              </div>
-            )}
+            <div className="flex items-center space-x-1.5 opacity-80 border border-neutral-300/40 px-2 py-1 rounded-lg text-[9px] font-semibold">
+              <QrCode className="h-3.5 w-3.5" />
+              <span>Scan to view Portfolio</span>
+            </div>
           </div>
 
         </div>
 
         {/* Client & Quotation Metadata Banner */}
-        <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${currentStyle.clientBanner}`}>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-700">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500 block">
               QUOTATION PREPARED FOR
             </span>
             {isEditing ? (
-              <input
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="text-lg font-bold text-neutral-900 border-b border-amber-400 focus:outline-none w-full mt-0.5"
-              />
+              <div className="space-y-1">
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  className="text-lg font-bold bg-transparent border-b border-amber-400 focus:outline-none w-full"
+                  placeholder="Client Name"
+                />
+                <input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className="text-xs bg-transparent border-b border-amber-300 focus:outline-none w-full"
+                  placeholder="Client Email"
+                />
+              </div>
             ) : (
-              <h2 className="text-xl font-extrabold text-neutral-900 tracking-tight mt-0.5">
-                {clientName}
-              </h2>
+              <div>
+                <h2 className="text-xl font-extrabold tracking-tight">
+                  {clientName}
+                </h2>
+                <p className="text-xs opacity-75 font-medium">{clientEmail} • {clientPhone}</p>
+              </div>
             )}
           </div>
 
-          <div className="text-left sm:text-right space-y-0.5 text-xs text-neutral-600 font-medium border-t sm:border-t-0 border-amber-200/60 pt-2 sm:pt-0">
+          <div className="text-left sm:text-right space-y-0.5 text-xs font-medium border-t sm:border-t-0 border-neutral-300/40 pt-2 sm:pt-0">
             <div className="flex items-center sm:justify-end space-x-1.5">
-              <Calendar className="h-3.5 w-3.5 text-amber-600" />
+              <Calendar className={`h-3.5 w-3.5 ${currentStyle.iconColor}`} />
               {isEditing ? (
                 <input
                   type="text"
                   value={quoteDate}
                   onChange={(e) => setQuoteDate(e.target.value)}
-                  className="text-xs border-b border-amber-300 text-right w-24"
+                  className="text-xs bg-transparent border-b border-amber-300 text-right w-24"
                 />
               ) : (
                 <span>Date: {quoteDate}</span>
               )}
             </div>
-            <p className="text-[11px] font-bold text-neutral-700">
+            <p className="text-[11px] font-bold opacity-90">
               Ref No: {quoteRef}
             </p>
           </div>
@@ -492,50 +652,55 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
 
         {/* Per-Event Service Breakdown Cards */}
         <div className="space-y-4">
-          <h3 className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest pb-1 border-b border-neutral-100">
-            Covered Events & Deliverables Summary
-          </h3>
+          <div className="flex items-center justify-between border-b border-neutral-200/40 pb-1">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest opacity-60">
+              Covered Events & Deliverables Package
+            </h3>
+            <span className="text-[10px] font-bold text-amber-500">
+              {eventItems.length} Event Block(s)
+            </span>
+          </div>
 
           {eventItems.map((item, idx) => (
             <div 
               key={idx} 
-              className="bg-white rounded-xl border border-neutral-200/80 p-4 sm:p-5 shadow-2xs space-y-3 relative transition hover:border-amber-300"
+              className={`rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 transition ${currentStyle.eventCard}`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-100 pb-2.5 gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200/30 pb-2.5 gap-2">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                  <div className={`w-2.5 h-2.5 rounded-full ${currentStyle.bulletDot}`}></div>
                   {isEditing ? (
                     <input
                       type="text"
                       value={item.name}
                       onChange={(e) => handleUpdateEventName(idx, e.target.value)}
-                      className="text-base font-bold text-neutral-900 border-b border-amber-300 focus:outline-none"
+                      className="text-base font-bold bg-transparent border-b border-amber-300 focus:outline-none"
                     />
                   ) : (
-                    <h4 className="text-base font-extrabold text-neutral-900 tracking-wide">
+                    <h4 className="text-base font-extrabold tracking-wide">
                       {item.name}
                     </h4>
                   )}
                 </div>
 
                 <div className="flex items-center space-x-3 self-end sm:self-auto">
-                  <span className="text-xs font-semibold text-neutral-400">Event Total:</span>
+                  <span className="text-xs font-semibold opacity-60">Event Amount:</span>
                   {isEditing ? (
                     <input
                       type="number"
                       value={item.price}
                       onChange={(e) => handleUpdateEventPrice(idx, e.target.value)}
-                      className="w-28 text-right font-bold text-lg border-b border-amber-300 focus:outline-none text-neutral-900"
+                      className="w-28 text-right font-bold text-lg bg-transparent border-b border-amber-300 focus:outline-none"
                     />
                   ) : (
-                    <span className="text-lg font-extrabold text-neutral-900">
+                    <span className="text-lg font-extrabold">
                       <FinancialAmount value={item.price} />
                     </span>
                   )}
                   {isEditing && (
                     <button
                       onClick={() => handleRemoveEvent(idx)}
-                      className="text-red-500 hover:bg-red-50 p-1.5 rounded transition"
+                      className="text-red-500 hover:bg-red-50/20 p-1.5 rounded transition"
                       title="Remove Event"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -545,22 +710,41 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
               </div>
 
               {/* Deliverables Grid */}
-              <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1.5">
-                  Package Deliverables:
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 block">
+                  Package Deliverables & Crew Scope:
                 </span>
 
                 {isEditing ? (
-                  <textarea
-                    rows={item.deliverables.length || 3}
-                    value={item.deliverables.join('\n')}
-                    onChange={(e) => handleUpdateDeliverables(idx, e.target.value)}
-                    className="w-full text-xs text-neutral-700 p-2 border border-amber-300 rounded font-sans focus:outline-none"
-                  />
+                  <div className="space-y-2">
+                    <textarea
+                      rows={item.deliverables.length || 3}
+                      value={item.deliverables.join('\n')}
+                      onChange={(e) => handleUpdateDeliverables(idx, e.target.value)}
+                      className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded font-sans focus:outline-none"
+                    />
+                    
+                    {/* Quick Deliverable Presets */}
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-bold opacity-60 block">1-Click Preset Append:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {COMMON_DELIVERABLE_PRESETS.map((preset, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => handleAddPresetDeliverable(idx, preset)}
+                            className="px-2 py-0.5 bg-neutral-200/30 hover:bg-amber-400 hover:text-neutral-950 rounded text-[9px] font-semibold transition"
+                          >
+                            + {preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {item.deliverables.map((dItem, dIdx) => (
-                      <div key={dIdx} className="flex items-start space-x-2 text-xs text-neutral-700 font-medium">
+                      <div key={dIdx} className="flex items-start space-x-2 text-xs font-medium">
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                         <span>{dItem}</span>
                       </div>
@@ -568,19 +752,13 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                   </div>
                 )}
               </div>
-
-              <div className="text-right pt-1">
-                <span className="text-[9px] text-neutral-400 font-normal italic">
-                  * Note: Additional charges applicable for extra crew/sheets beyond agreed package
-                </span>
-              </div>
             </div>
           ))}
 
           {isEditing && (
             <button
               onClick={handleAddEvent}
-              className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded-xl border border-dashed border-amber-300 flex items-center justify-center space-x-2 cursor-pointer transition"
+              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-2 cursor-pointer transition"
             >
               <Plus className="h-4 w-4" />
               <span>Add Custom Event Package Block</span>
@@ -588,33 +766,60 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
           )}
         </div>
 
-        {/* Grand Total Highlight Banner */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white rounded-2xl p-5.5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-amber-500/80">
-          <div>
-            <p className="text-[10px] font-extrabold text-amber-200 uppercase tracking-widest">
-              ESTIMATED PACKAGE INVESTMENT
-            </p>
-            <h3 className="text-lg font-bold text-white mt-0.5">
-              Net All-Inclusive Grand Total
-            </h3>
+        {/* Financial Calculation Summary (Subtotal, Discount, GST, Grand Total) */}
+        <div className="space-y-3 pt-2">
+          
+          {/* Subtotal & Adjustments */}
+          <div className="space-y-1.5 text-xs border-t border-neutral-200/40 pt-3 opacity-90">
+            <div className="flex justify-between font-semibold">
+              <span>Package Subtotal ({eventItems.length} Events):</span>
+              <span><FinancialAmount value={subtotal} /></span>
+            </div>
+
+            {calculatedDiscount > 0 && (
+              <div className="flex justify-between text-emerald-500 font-bold">
+                <span>Special Discount ({discountType === 'PERCENT' ? `${discountValue}%` : 'Flat'}):</span>
+                <span>- <FinancialAmount value={calculatedDiscount} /></span>
+              </div>
+            )}
+
+            {showGst && (
+              <div className="flex justify-between font-medium">
+                <span>GST Tax ({gstRate}%):</span>
+                <span>+ <FinancialAmount value={calculatedGst} /></span>
+              </div>
+            )}
           </div>
-          <div className="text-left sm:text-right">
-            <span className="text-2xl sm:text-3xl font-black text-amber-100 tracking-tight">
-              <FinancialAmount value={calculatedGrandTotal} />
-            </span>
-            <p className="text-[9px] text-amber-200/80 font-normal mt-0.5">
-              Including equipment, post-production & editing charges
-            </p>
+
+          {/* Grand Total Banner */}
+          <div className={`rounded-2xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${currentStyle.totalBanner}`}>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-80">
+                ESTIMATED PACKAGE INVESTMENT
+              </p>
+              <h3 className="text-lg font-extrabold mt-0.5">
+                Net All-Inclusive Grand Total
+              </h3>
+            </div>
+            <div className="text-left sm:text-right">
+              <span className={`text-2xl sm:text-3xl font-black tracking-tight ${currentStyle.totalHighlight}`}>
+                <FinancialAmount value={calculatedGrandTotal} />
+              </span>
+              <p className="text-[9px] opacity-75 font-normal mt-0.5">
+                Includes shoot crew, post-production & cinematic color grading
+              </p>
+            </div>
           </div>
+
         </div>
 
-        {/* Payment Milestone Schedule & Terms Grid */}
+        {/* Payment Milestone & Terms Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
           
           {/* Milestone Payment Schedule */}
-          <div className="bg-neutral-50 rounded-xl border border-neutral-200/80 p-4 space-y-2">
-            <h4 className="text-xs font-extrabold text-neutral-800 uppercase tracking-wider flex items-center space-x-1.5">
-              <ShieldCheck className="h-4 w-4 text-amber-600" />
+          <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
+            <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5">
+              <ShieldCheck className={`h-4 w-4 ${currentStyle.iconColor}`} />
               <span>Payment Milestone Schedule</span>
             </h4>
 
@@ -623,13 +828,13 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                 rows={3}
                 value={paymentSchedule.join('\n')}
                 onChange={(e) => setPaymentSchedule(e.target.value.split('\n'))}
-                className="w-full text-xs p-2 border border-amber-300 rounded font-normal"
+                className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded font-normal"
               />
             ) : (
-              <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
+              <ul className="space-y-1.5 text-xs font-medium opacity-90">
                 {paymentSchedule.map((sched, sIdx) => (
                   <li key={sIdx} className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${currentStyle.bulletDot}`}></span>
                     <span>{sched}</span>
                   </li>
                 ))}
@@ -638,23 +843,44 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
           </div>
 
           {/* Terms and Conditions */}
-          <div className="bg-neutral-50 rounded-xl border border-neutral-200/80 p-4 space-y-2">
-            <h4 className="text-xs font-extrabold text-neutral-800 uppercase tracking-wider">
-              Terms & Conditions
-            </h4>
+          <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider">
+                Terms & Conditions
+              </h4>
+
+              {isEditing && (
+                <div className="flex items-center space-x-1">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTermsPreset('WEDDING')}
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-500 rounded font-bold"
+                  >
+                    Wedding
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTermsPreset('PREWEDDING')}
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-500 rounded font-bold"
+                  >
+                    Pre-Wedding
+                  </button>
+                </div>
+              )}
+            </div>
 
             {isEditing ? (
               <textarea
                 rows={4}
                 value={terms.join('\n')}
                 onChange={(e) => setTerms(e.target.value.split('\n'))}
-                className="w-full text-[10px] p-2 border border-amber-300 rounded font-normal"
+                className="w-full text-[10px] p-2 bg-transparent border border-amber-300 rounded font-normal"
               />
             ) : (
-              <ul className="space-y-1 text-[10px] text-neutral-600 leading-relaxed font-normal">
+              <ul className="space-y-1 text-[10px] opacity-80 leading-relaxed font-normal">
                 {terms.map((term, tIdx) => (
                   <li key={tIdx} className="flex items-start space-x-1.5">
-                    <span className="text-neutral-400 font-bold">•</span>
+                    <span className="font-bold">•</span>
                     <span>{term}</span>
                   </li>
                 ))}
@@ -664,10 +890,188 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
 
         </div>
 
+        {/* 🌟 DYNAMIC DETAILED ALBUM & DELIVERABLE SPECIFICATIONS CARD (Below Terms & Conditions) */}
+        <div className={`rounded-2xl p-5 shadow-sm space-y-3.5 transition-all ${currentStyle.specCard}`}>
+          <div className="flex items-center justify-between border-b border-neutral-300/40 pb-2">
+            <h4 className="text-xs font-black uppercase tracking-wider flex items-center space-x-2 text-amber-600">
+              <BookOpen className="h-4 w-4 text-amber-500" />
+              <span>Detailed Album Printing & Physical Deliverable Specifications</span>
+            </h4>
+            <span className="text-[9px] font-extrabold uppercase bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded border border-amber-400/30">
+              Handcrafted Quality Guarantee
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-medium">
+            
+            {/* Main Photobook Specs */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
+                📖 Primary Royal Photobook Album:
+              </span>
+              {isEditing ? (
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    value={albumCountMain}
+                    onChange={(e) => setAlbumCountMain(e.target.value)}
+                    className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
+                  />
+                  <input
+                    type="text"
+                    value={albumPaperQuality}
+                    onChange={(e) => setPaperQuality(e.target.value)}
+                    className="w-full text-[10px] bg-transparent border-b border-amber-300 focus:outline-none"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-1 opacity-90">
+                  <p className="font-bold text-neutral-900 dark:text-neutral-100">{albumCountMain}</p>
+                  <p className="text-[10px] leading-relaxed opacity-75">{albumPaperQuality}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Parent Mini Albums & Wall Canvas */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
+                🖼️ Family Albums & Wall Canvas Prints:
+              </span>
+              {isEditing ? (
+                <div className="space-y-1">
+                  <input
+                    type="text"
+                    value={albumFamilyMiniCount}
+                    onChange={(e) => setFamilyMiniCount(e.target.value)}
+                    className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
+                  />
+                  <input
+                    type="text"
+                    value={wallCanvasPrint}
+                    onChange={(e) => setWallCanvasPrint(e.target.value)}
+                    className="w-full text-[10px] bg-transparent border-b border-amber-300 focus:outline-none"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-1 opacity-90">
+                  <p className="font-bold text-neutral-900 dark:text-neutral-100">{albumFamilyMiniCount}</p>
+                  <p className="text-[10px] leading-relaxed opacity-75">{wallCanvasPrint}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Film & Video Specs */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
+                🎬 Cinematic Video & Teasers:
+              </span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={videoFormatSpec}
+                  onChange={(e) => setVideoFormatSpec(e.target.value)}
+                  className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
+                />
+              ) : (
+                <p className="font-bold text-neutral-900 dark:text-neutral-100 opacity-90">{videoFormatSpec}</p>
+              )}
+            </div>
+
+            {/* Storage Drive Specs */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">
+                💾 Data Drive & Cloud Gallery:
+              </span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={storageDeliverySpec}
+                  onChange={(e) => setStorageDeliverySpec(e.target.value)}
+                  className="w-full text-xs bg-transparent border-b border-amber-400 focus:outline-none font-bold"
+                />
+              ) : (
+                <p className="font-bold text-neutral-900 dark:text-neutral-100 opacity-90">{storageDeliverySpec}</p>
+              )}
+            </div>
+
+          </div>
+        </div>
+
+        {/* 🛡️ STUDIO DATA SECURITY, DUAL-CARD BACKUP & CONFIDENTIALITY CARD */}
+        <div className={`rounded-2xl p-5 shadow-sm space-y-3 transition-all ${currentStyle.securityCard}`}>
+          <div className="flex items-center justify-between border-b border-neutral-700/60 pb-2">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-2 text-amber-400">
+              <Shield className="h-4 w-4 text-amber-400" />
+              <span>Studio Data Security, Backup & Privacy Safeguards</span>
+            </h4>
+            <span className="text-[9px] font-black uppercase bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/40">
+              Zero Data Loss Guarantee
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[10px] leading-relaxed">
+            
+            {/* Dual Card Recording */}
+            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
+              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
+                <Cpu className="h-3.5 w-3.5 text-amber-400" />
+                <span>Dual Card Slot Recording</span>
+              </div>
+              {isEditing ? (
+                <textarea
+                  rows={2}
+                  value={dualCardBackup}
+                  onChange={(e) => setDualCardBackup(e.target.value)}
+                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
+                />
+              ) : (
+                <p className="opacity-80 font-normal">{dualCardBackup}</p>
+              )}
+            </div>
+
+            {/* NAS Cloud Vault */}
+            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
+              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
+                <HardDrive className="h-3.5 w-3.5 text-amber-400" />
+                <span>Triple RAID & Cloud Vault</span>
+              </div>
+              {isEditing ? (
+                <textarea
+                  rows={2}
+                  value={nasCloudBackup}
+                  onChange={(e) => setNasCloudBackup(e.target.value)}
+                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
+                />
+              ) : (
+                <p className="opacity-80 font-normal">{nasCloudBackup}</p>
+              )}
+            </div>
+
+            {/* Redundant Equipment */}
+            <div className="space-y-1 bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-800">
+              <div className="flex items-center space-x-1.5 text-amber-300 font-bold">
+                <Lock className="h-3.5 w-3.5 text-amber-400" />
+                <span>Equipment Redundancy</span>
+              </div>
+              {isEditing ? (
+                <textarea
+                  rows={2}
+                  value={redundantEquipment}
+                  onChange={(e) => setRedundantEquipment(e.target.value)}
+                  className="w-full bg-transparent border border-amber-400/40 rounded p-1 text-[10px]"
+                />
+              ) : (
+                <p className="opacity-80 font-normal">{redundantEquipment}</p>
+              )}
+            </div>
+
+          </div>
+        </div>
+
         {/* Footer Signature & Branding Note */}
-        <div className="pt-6 border-t border-neutral-200/80 flex items-center justify-between text-[10px] text-neutral-400 font-medium">
-          <p>Thank you for choosing R2R Studio Photography for your special occasions!</p>
-          <p className="font-bold text-neutral-600">R2R Studio Official Quotation</p>
+        <div className="pt-6 border-t border-neutral-300/30 flex items-center justify-between text-[10px] opacity-60 font-medium">
+          <p>Thank you for choosing {studioName} for your memorable occasions!</p>
+          <p className="font-bold">{studioName} Official Quotation Document</p>
         </div>
 
       </div>
