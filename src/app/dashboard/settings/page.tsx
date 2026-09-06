@@ -151,6 +151,60 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* SMTP Email Alert Settings */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-neutral-800 flex items-center space-x-1.5 border-b border-neutral-100 pb-2">
+                <Sparkles className="h-4.5 w-4.5 text-primary-500" />
+                <span>SMTP Email & Notification Alerts</span>
+              </h3>
+              <p className="text-[11px] text-neutral-500">
+                Automated email alerts for Quotations (PDF link), Bills/Invoices, and 1-Day Pre-Shoot Reminders (Client & Crew list).
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    label="SMTP Host"
+                    placeholder="smtp.gmail.com"
+                    defaultValue="smtp.gmail.com"
+                  />
+                </div>
+                <div>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    label="SMTP Port"
+                    placeholder="587"
+                    defaultValue="587"
+                  />
+                </div>
+                <div>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    label="SMTP Username / Email"
+                    placeholder="studio@example.com"
+                    defaultValue={studioEmail}
+                  />
+                </div>
+                <div>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    label="SMTP App Password"
+                    type="password"
+                    placeholder="••••••••••••"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-end pt-2 border-t border-neutral-100">
               <button
                 type="submit"
@@ -160,7 +214,6 @@ export default function SettingsPage() {
                 <span>Save ERP Settings</span>
               </button>
             </div>
-
           </form>
         </div>
 

@@ -10,18 +10,40 @@ import { Select, MenuItem, FormControl } from '@mui/material';
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import Link from 'next/link';
 
+import { useToast } from '@/components/ToastProvider';
+import { Send, Bell } from 'lucide-react';
+
 const STAFF_ROLES = ['LEAD_PHOTOGRAPHER', 'CINEMATOGRAPHER', 'DRONE_OPERATOR', 'ASSISTANT'];
 const ATTENDANCE_STATUSES = ['PENDING', 'PRESENT', 'ABSENT'];
 
 export default function AssignmentsPage() {
+  const { toast } = useToast();
   const { 
     assignments, employees, bookingEvents, bookings, 
     fetchData, deleteRecord, updateRecord 
   } = useStore();
 
   const [loading, setLoading] = useState(true);
+  const [sendingReminders, setSendingReminders] = useState(false);
   const [filterClientId, setFilterClientId] = useState('');
   const [dateFilter, setDateFilter] = useState<DateYearFilterState>(initialDateYearFilterState);
+
+  const handleSendTomorrowReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const res = await fetch('/api/cron/reminders', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        toast(`Sent ${data.clientEmailsSent} client & ${data.crewEmailsSent} crew reminders for tomorrow's shoots!`, 'success');
+      } else {
+        toast('Failed to send reminders: ' + (data.error || 'Unknown error'), 'error');
+      }
+    } catch (err: any) {
+      toast('Error sending reminders: ' + err.message, 'error');
+    } finally {
+      setSendingReminders(false);
+    }
+  };
 
   // Calendar State
   const today = new Date();
@@ -114,6 +136,16 @@ export default function AssignmentsPage() {
               ))}
             </Select>
           </FormControl>
+          <button
+            onClick={handleSendTomorrowReminders}
+            disabled={sendingReminders}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-neutral-950 text-xs font-bold rounded cursor-pointer shadow-xs transition"
+            title="Send 1-Day Pre-Shoot Email Reminders to Clients & Assigned Crew"
+          >
+            {sendingReminders ? <div className="h-4 w-4 border-2 border-neutral-950 border-t-transparent rounded-full animate-spin" /> : <Bell className="h-4 w-4" />}
+            <span>Send Tomorrow Reminders</span>
+          </button>
+
           <Link
             href="/dashboard/assignments/create"
             className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded cursor-pointer shadow-xs transition duration-150"

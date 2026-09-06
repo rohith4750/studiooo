@@ -2,6 +2,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { createAuditLog } from '@/lib/audit';
+import { sendQuotationEmail, sendInvoiceEmail } from '@/lib/email';
+
+async function triggerAutomatedSmtpEmails(modelName: string, record: any, action: 'CREATE' | 'UPDATE') {
+  try {
+    if (modelName === 'booking' || modelName === 'quotation' || modelName === 'invoice') {
+      const bookingId = record.bookingId || record.id;
+      if (!bookingId) return;
+
+      const fullBooking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          client: true,
+          bookingEvents: { include: { event: true } }
+        }
+      });
+
+      if (!fullBooking || !fullBooking.client || !fullBooking.client.email) return;
+
+      const status = record.status || fullBooking.status;
+
+      if (status === 'QUOTATION' || modelName === 'quotation') {
+        sendQuotationEmail({
+          to: fullBooking.client.email,
+          clientName: fullBooking.client.name,
+          bookingNumber: fullBooking.bookingNumber,
+          grandTotal: fullBooking.grandTotal,
+          events: fullBooking.bookingEvents,
+          quotationId: record.id
+        }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
+      } else if (modelName === 'invoice' || status === 'CONFIRMED' || status === 'INVOICE') {
+        sendInvoiceEmail({
+          to: fullBooking.client.email,
+          clientName: fullBooking.client.name,
+          invoiceNumber: record.invoiceNumber || `INV-${fullBooking.bookingNumber}`,
+          bookingNumber: fullBooking.bookingNumber,
+          subtotal: fullBooking.subtotal || 0,
+          gstAmount: fullBooking.gstAmount || 0,
+          grandTotal: fullBooking.grandTotal || 0,
+          paidAmount: fullBooking.paidAmount || 0,
+          balance: fullBooking.balance || 0
+        }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
+      }
+    }
+  } catch (err) {
+    console.error(`[SMTP Dispatch Error] Failed to process automated email:`, err);
+  }
+}
 
 // Map URL parameter names to Prisma model names
 const MODEL_MAPPING: Record<string, any> = {
@@ -140,6 +187,9 @@ export async function POST(
     const itemLabel = created.invoiceNumber || created.quotationNumber || created.bookingNumber || created.name || created.title || created.email || `ID: ${created.id}`;
     await createAuditLog(user.id, 'CREATE', `Created ${String(modelName)} (${itemLabel})`);
 
+    // Trigger automated email dispatch asynchronously
+    triggerAutomatedSmtpEmails(modelName, created, 'CREATE');
+
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {
     console.error(`Error creating ${String(modelName)}:`, error);
@@ -190,6 +240,9 @@ export async function PUT(
     // Format human-readable audit summary
     const itemLabel = updated.invoiceNumber || updated.quotationNumber || updated.bookingNumber || updated.name || updated.title || updated.email || `ID: ${id}`;
     await createAuditLog(user.id, 'UPDATE', `Updated ${String(modelName)} (${itemLabel})`);
+
+    // Trigger automated email dispatch asynchronously
+    triggerAutomatedSmtpEmails(modelName, updated, 'UPDATE');
 
     return NextResponse.json(updated);
   } catch (error: any) {
