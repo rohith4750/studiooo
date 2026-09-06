@@ -10,6 +10,7 @@ import {
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import { useRouter } from 'next/navigation';
+import { FinancialAmount } from '@/lib/permissions';
 
 export default function BillingPage() {
   const router = useRouter();
@@ -184,15 +185,15 @@ export default function BillingPage() {
                   <div className="space-y-1 text-[10px] text-neutral-600">
                     <div className="flex justify-between">
                       <span>Total Invoice Amount</span>
-                      <span>₹{previewDoc.grandTotal.toLocaleString()}</span>
+                      <FinancialAmount value={previewDoc.grandTotal} />
                     </div>
                     <div className="flex justify-between text-primary-700 font-bold">
                       <span>Paid to Date</span>
-                      <span>₹{previewDoc.paidAmount.toLocaleString()}</span>
+                      <FinancialAmount value={previewDoc.paidAmount} />
                     </div>
                     <div className="flex justify-between text-accent-500 font-bold border-t border-neutral-200 pt-1">
                       <span>Balance Outstanding</span>
-                      <span>₹{previewDoc.balance.toLocaleString()}</span>
+                      <FinancialAmount value={previewDoc.balance} />
                     </div>
                   </div>
                 </div>
@@ -300,11 +301,11 @@ export default function BillingPage() {
                           <p className="font-semibold text-neutral-700">{inv.booking?.client?.name}</p>
                         </td>
                         <td className="py-3 px-4 space-y-0.5">
-                          <p className="font-bold">₹{inv.grandTotal.toLocaleString()}</p>
+                          <p className="font-bold"><FinancialAmount value={inv.grandTotal} /></p>
                         </td>
                         <td className="py-3 px-4">
                           <span className="inline-block text-[10px] font-bold text-accent-500 bg-accent-50 px-1.5 py-0.5 rounded">
-                            ₹{inv.balance.toLocaleString()}
+                            <FinancialAmount value={inv.balance} />
                           </span>
                         </td>
                         <td className="py-3 px-4">

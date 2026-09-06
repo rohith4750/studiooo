@@ -14,6 +14,7 @@ import { Select, MenuItem, FormControl } from '@mui/material';
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import DataTablePagination from '@/components/DataTablePagination';
+import { FinancialAmount } from '@/lib/permissions';
 
 const EXPENSE_CATEGORIES = ['FUEL', 'SALARY', 'PRINTING', 'EQUIPMENT', 'MARKETING', 'FOOD', 'MISCELLANEOUS'];
 const COLORS = ['#e0a96d', '#8294c4', '#5c8f7a', '#8ea8c3', '#a78bfa', '#f48fb1', '#4db6ac'];
@@ -83,15 +84,15 @@ export default function ExpensesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
           <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Total Expenses</p>
-          <p className="text-2xl font-black text-neutral-900">₹{totalExpenses.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-black text-neutral-900"><FinancialAmount value={totalExpenses} /></p>
         </div>
         <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
           <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">This Month</p>
-          <p className="text-2xl font-black text-amber-600">₹{monthlyExpenses.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-black text-amber-600"><FinancialAmount value={monthlyExpenses} /></p>
         </div>
         <div className="p-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs space-y-1">
           <p className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Today's Spend</p>
-          <p className="text-2xl font-black text-neutral-800">₹{dailyExpenses.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-black text-neutral-800"><FinancialAmount value={dailyExpenses} /></p>
         </div>
       </div>
 
@@ -143,7 +144,7 @@ export default function ExpensesPage() {
               paginatedExpenses.map((exp) => (
                 <div key={exp.id} className="p-3 flex items-center justify-between hover:bg-neutral-50/40 transition">
                   <div className="space-y-0.5">
-                    <p className="font-bold text-neutral-800">₹{exp.amount.toLocaleString('en-IN')}</p>
+                    <p className="font-bold text-neutral-800"><FinancialAmount value={exp.amount} /></p>
                     <p className="text-[10px] text-neutral-500">{exp.category} • {exp.description}</p>
                     <span className="text-[9px] text-neutral-400 font-medium">{exp.date}</span>
                   </div>

@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
+import { FinancialAmount } from '@/lib/permissions';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -148,11 +149,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-lg font-bold text-neutral-800 mt-1.5">
-            ₹{user?.role === 'RECEPTIONIST' ? paidRevenue.toLocaleString('en-IN') : totalRevenue.toLocaleString('en-IN')}
+            <FinancialAmount value={user?.role === 'RECEPTIONIST' ? paidRevenue : totalRevenue} />
           </p>
           <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
-            <span className="text-neutral-500">Collected: <span className="font-semibold text-emerald-600">₹{paidRevenue.toLocaleString('en-IN')}</span></span>
-            <span className="text-neutral-500">Due: <span className="font-semibold text-amber-600">₹{pendingRevenue.toLocaleString('en-IN')}</span></span>
+            <span className="text-neutral-500">Collected: <span className="font-semibold text-emerald-600"><FinancialAmount value={paidRevenue} /></span></span>
+            <span className="text-neutral-500">Due: <span className="font-semibold text-amber-600"><FinancialAmount value={pendingRevenue} /></span></span>
           </div>
         </div>
 
@@ -198,10 +199,10 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className={`text-lg font-bold mt-1.5 ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              ₹{netProfit.toLocaleString('en-IN')}
+              <FinancialAmount value={netProfit} />
             </p>
             <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-neutral-100 font-normal">
-              <span className="text-neutral-500">Expenses: <span className="font-semibold text-neutral-700">₹{totalExpenses.toLocaleString('en-IN')}</span></span>
+              <span className="text-neutral-500">Expenses: <span className="font-semibold text-neutral-700"><FinancialAmount value={totalExpenses} /></span></span>
             </div>
           </div>
         )}
@@ -417,7 +418,7 @@ export default function DashboardPage() {
                     <p className="text-[9px] text-neutral-400">Ref: #{b.bookingNumber}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[11px] font-bold text-amber-700">₹{b.balance.toLocaleString('en-IN')}</p>
+                    <p className="text-[11px] font-bold text-amber-700"><FinancialAmount value={b.balance} /></p>
                     <span className="text-[8px] text-neutral-400 font-normal">Balance</span>
                   </div>
                 </div>

@@ -8,6 +8,8 @@ import {
   Users, Plus, Trash2, Edit3, Mail, Phone, Banknote, Shield, UserCheck
 } from 'lucide-react';
 
+import { FinancialAmount } from '@/lib/permissions';
+
 export default function EmployeesPage() {
   const router = useRouter();
   const { employees, fetchData, deleteRecord } = useStore();
@@ -52,7 +54,7 @@ export default function EmployeesPage() {
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-neutral-200/80 shadow-2xs flex items-center space-x-3">
           <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Banknote className="h-5 w-5" /></div>
-          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Monthly Roster Payroll</span><p className="text-lg font-bold text-neutral-800 mt-0.5">₹{monthlyPayroll.toLocaleString('en-IN')}</p></div>
+          <div><span className="text-[10px] uppercase font-semibold text-neutral-400">Monthly Roster Payroll</span><p className="text-lg font-bold text-neutral-800 mt-0.5"><FinancialAmount value={monthlyPayroll} /></p></div>
         </div>
       </div>
 
@@ -83,7 +85,7 @@ export default function EmployeesPage() {
                         <Shield className="h-3 w-3 text-neutral-400" /><span>{emp.role}</span>
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-neutral-800">₹{emp.salary.toLocaleString('en-IN')}</td>
+                    <td className="py-3.5 px-4 font-semibold text-neutral-800"><FinancialAmount value={emp.salary} /></td>
                     <td className="py-3.5 px-4 space-y-0.5">
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-500"><Phone className="h-3 w-3" /><span>{emp.phone}</span></p>
                       <p className="flex items-center space-x-1 text-[10px] text-neutral-400"><Mail className="h-3 w-3" /><span>{emp.email}</span></p>

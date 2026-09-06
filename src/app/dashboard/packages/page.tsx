@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import { Plus, Trash2, Edit3, Box as BoxIcon } from 'lucide-react';
 
+import { FinancialAmount } from '@/lib/permissions';
+
 export default function PackagesPage() {
   const router = useRouter();
   const { packages, fetchData, deleteRecord } = useStore();
@@ -42,6 +44,26 @@ export default function PackagesPage() {
         </Button>
       </Box>
 
+      {/* Navigation Tab Bar */}
+      <Stack direction="row" spacing={1} sx={{ bgcolor: 'background.paper', p: 0.5, borderRadius: 1.5, border: '1px solid rgba(227, 236, 231, 0.8)', width: 'fit-content' }}>
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          sx={{ textTransform: 'none', px: 2, fontWeight: 700 }}
+        >
+          Pricing Packages
+        </Button>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() => router.push('/dashboard/events')}
+          sx={{ textTransform: 'none', color: 'text.secondary', px: 2 }}
+        >
+          Event Types Master
+        </Button>
+      </Stack>
+
       {loading ? (
         <Typography variant="body2" sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>Loading catalog presets...</Typography>
       ) : packages.length === 0 ? (
@@ -66,7 +88,7 @@ export default function PackagesPage() {
                       </Box>
                       <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>{pkg.name}</Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>{pkg.description || 'No package details specified.'}</Typography>
-                      <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 800 }}>₹{pkg.price.toLocaleString('en-IN')}</Typography>
+                      <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 800 }}><FinancialAmount value={pkg.price} /></Typography>
                     </Stack>
                     <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid rgba(227, 236, 231, 0.6)' }}>
                       <Stack spacing={0.5}>

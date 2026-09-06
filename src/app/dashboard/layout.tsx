@@ -8,7 +8,7 @@ import {
   Camera, LayoutDashboard, Users, UserSquare2, CalendarDays,
   FileText, ClipboardList, PenTool, HardDrive, Receipt,
   Settings, LogOut, BarChart3, Menu, X, ShieldAlert, Box as BoxIcon, Flame,
-  CheckCircle2, Sparkles, Globe, Activity, ShieldCheck
+  CheckCircle2, Sparkles, Globe, Activity, ShieldCheck, Clock
 } from 'lucide-react';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider } from '@mui/material/styles';
@@ -26,13 +26,14 @@ const MENU_GROUPS = [
     title: 'Overview',
     items: [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: SYSTEM_ROLES },
-      { name: 'Reports', path: '/dashboard/reports', icon: BarChart3, roles: SYSTEM_ROLES },
+      { name: 'Reports & Analytics', path: '/dashboard/reports', icon: BarChart3, roles: SYSTEM_ROLES },
     ]
   },
   {
     title: 'Sales & Clients',
     items: [
       { name: 'Bookings & Contracts', path: '/dashboard/bookings', icon: CalendarDays, roles: SYSTEM_ROLES },
+      { name: 'Track Shoot Status', path: '/dashboard/bookings/status', icon: Clock, roles: SYSTEM_ROLES },
       { name: 'Inquiries & Leads', path: '/dashboard/leads', icon: UserSquare2, roles: SYSTEM_ROLES },
       { name: 'Clients Directory', path: '/dashboard/clients', icon: Users, roles: SYSTEM_ROLES },
       { name: 'Marketing Studio', path: '/dashboard/marketing', icon: Globe, roles: SYSTEM_ROLES },
@@ -44,13 +45,15 @@ const MENU_GROUPS = [
       { name: 'Shoot Schedule', path: '/dashboard/assignments', icon: ClipboardList, roles: SYSTEM_ROLES },
       { name: 'Work Updates', path: '/dashboard/work-updates', icon: Activity, roles: SYSTEM_ROLES },
       { name: 'Editing Tasks', path: '/dashboard/workflows', icon: PenTool, roles: SYSTEM_ROLES },
+      { name: 'Photographers Roster', path: '/dashboard/photographers', icon: Camera, roles: SYSTEM_ROLES },
       { name: 'Equipment & Gear', path: '/dashboard/inventory', icon: HardDrive, roles: SYSTEM_ROLES },
     ]
   },
   {
     title: 'Finance & Billing',
     items: [
-      { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: SYSTEM_ROLES },
+      { name: 'Invoices & Billing', path: '/dashboard/billing', icon: FileText, roles: SYSTEM_ROLES },
+      { name: 'Quotation Studio', path: '/dashboard/quotations', icon: Sparkles, roles: SYSTEM_ROLES },
       { name: 'Expense Ledger', path: '/dashboard/expenses', icon: Receipt, roles: SYSTEM_ROLES },
     ]
   },
@@ -58,7 +61,10 @@ const MENU_GROUPS = [
     title: 'Team & System Setup',
     items: [
       { name: 'Team & Staff', path: '/dashboard/employees', icon: Users, roles: SYSTEM_ROLES },
-      { name: 'Packages & Events', path: '/dashboard/packages', icon: BoxIcon, roles: SYSTEM_ROLES },
+      { name: 'Attendance & Payroll', path: '/dashboard/attendance', icon: CheckCircle2, roles: SYSTEM_ROLES },
+      { name: 'Pricing Packages', path: '/dashboard/packages', icon: BoxIcon, roles: SYSTEM_ROLES },
+      { name: 'Event Types Master', path: '/dashboard/events', icon: Sparkles, roles: SYSTEM_ROLES },
+      { name: 'User Accounts', path: '/dashboard/users', icon: UserSquare2, roles: SYSTEM_ROLES },
       { name: 'System Access & Roles', path: '/dashboard/roles', icon: ShieldCheck, roles: SYSTEM_ROLES },
       { name: 'Studio Settings', path: '/dashboard/settings', icon: Settings, roles: SYSTEM_ROLES },
     ]

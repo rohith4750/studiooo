@@ -12,12 +12,14 @@ import { TextField, Select, MenuItem, InputAdornment, FormControl } from '@mui/m
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import DataTablePagination from '@/components/DataTablePagination';
+import { usePermissions, FinancialAmount } from '@/lib/permissions';
 
 const SOURCES = ['INSTAGRAM', 'FACEBOOK', 'WHATSAPP', 'WEBSITE', 'WALK_IN', 'REFERRAL', 'GOOGLE_ADS'];
 const STATUSES = ['NEW', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CONVERTED', 'LOST'];
 
 export default function LeadsPage() {
   const router = useRouter();
+  const { hideFinancials } = usePermissions('/dashboard/leads');
   const { leads, fetchData, createRecord, updateRecord, deleteRecord, user } = useStore();
   const { toast, confirm: confirmAction } = useToast();
   const [loading, setLoading] = useState(true);
@@ -167,7 +169,7 @@ export default function LeadsPage() {
                 <tr className="bg-neutral-50 border-b border-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-4">Contact Profile</th>
                   <th className="py-3 px-4">Inquiry details</th>
-                  {user?.role !== 'RECEPTIONIST' && <th className="py-3 px-4">Est. Budget</th>}
+                  {!hideFinancials && <th className="py-3 px-4">Est. Budget</th>}
                   <th className="py-3 px-4">Lead Source</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -187,8 +189,8 @@ export default function LeadsPage() {
                       <span className="inline-flex px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-700 font-semibold text-[10px] uppercase">{lead.event}</span>
                       <p className="text-[10px] text-neutral-500 mt-1 flex items-center space-x-1"><Calendar className="h-3 w-3" /><span>Date: {lead.eventDate}</span></p>
                     </td>
-                    {user?.role !== 'RECEPTIONIST' && (
-                      <td className="py-3.5 px-4 font-semibold text-neutral-800">{lead.budget ? `₹${lead.budget.toLocaleString('en-IN')}` : 'TBA'}</td>
+                    {!hideFinancials && (
+                      <td className="py-3.5 px-4 font-semibold text-neutral-800">{lead.budget ? <FinancialAmount value={lead.budget} /> : 'TBA'}</td>
                     )}
                     <td className="py-3.5 px-4">
                       <span className="text-[10px] bg-neutral-100/70 border border-neutral-200/50 text-neutral-600 font-semibold px-2 py-0.5 rounded-full uppercase">{lead.source}</span>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 
 export interface ModulePermissionRule {
@@ -116,14 +117,16 @@ export function shouldHideFinancials(userRole: string, path: string, rolePermiss
 /**
  * Custom hook to get granular permissions for a given module route
  */
-export function usePermissions(modulePath: string) {
+export function usePermissions(modulePath?: string) {
   const { user, rolePermissions } = useStore();
+  const pathname = usePathname();
+  const targetPath = modulePath || pathname || '/dashboard';
   const userRole = user?.role || '';
 
-  const canRead = hasModuleAccess(userRole, modulePath, rolePermissions);
-  const canWrite = canWriteModule(userRole, modulePath, rolePermissions);
-  const canDelete = canDeleteModule(userRole, modulePath, rolePermissions);
-  const hideFinancials = shouldHideFinancials(userRole, modulePath, rolePermissions);
+  const canRead = hasModuleAccess(userRole, targetPath, rolePermissions);
+  const canWrite = canWriteModule(userRole, targetPath, rolePermissions);
+  const canDelete = canDeleteModule(userRole, targetPath, rolePermissions);
+  const hideFinancials = shouldHideFinancials(userRole, targetPath, rolePermissions);
 
   return {
     canRead,
@@ -134,6 +137,21 @@ export function usePermissions(modulePath: string) {
     isSuperAdmin: userRole === 'SUPER_ADMIN',
     isAdmin: ['SUPER_ADMIN', 'ADMIN'].includes(userRole),
   };
+}
+
+/**
+ * Utility to format financial numbers into text or fallback mask if hideFinancials is true
+ */
+export function formatFinancialAmount(
+  value: number | string | null | undefined,
+  hideFinancials: boolean,
+  currency = '₹',
+  fallback = '••••••'
+): string {
+  if (hideFinancials) return fallback;
+  if (value === null || value === undefined) return '-';
+  const formatted = typeof value === 'number' ? value.toLocaleString('en-IN') : value;
+  return `${currency}${formatted}`;
 }
 
 /**
@@ -153,11 +171,11 @@ export function FinancialAmount({
   className?: string;
 }) {
   const { user, rolePermissions } = useStore();
+  const pathname = usePathname();
   const userRole = user?.role || '';
+  const targetPath = modulePath || pathname || '/dashboard';
 
-  const isMasked = modulePath
-    ? shouldHideFinancials(userRole, modulePath, rolePermissions)
-    : false;
+  const isMasked = shouldHideFinancials(userRole, targetPath, rolePermissions);
 
   if (isMasked) {
     return (

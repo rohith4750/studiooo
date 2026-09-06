@@ -32,15 +32,36 @@ export default function EventsPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Top Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>Shoot Event Presets</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Manage base operational templates for events.</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>Manage base operational templates for shoot events.</Typography>
         </Box>
         <Button variant="contained" color="primary" startIcon={<Plus className="h-4 w-4" />} onClick={() => router.push('/dashboard/events/create')}>
           New Shoot Event
         </Button>
       </Box>
+
+      {/* Navigation Tab Bar */}
+      <Stack direction="row" spacing={1} sx={{ bgcolor: 'background.paper', p: 0.5, borderRadius: 1.5, border: '1px solid rgba(227, 236, 231, 0.8)', width: 'fit-content' }}>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() => router.push('/dashboard/packages')}
+          sx={{ textTransform: 'none', color: 'text.secondary', px: 2 }}
+        >
+          Pricing Packages
+        </Button>
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          sx={{ textTransform: 'none', px: 2, fontWeight: 700 }}
+        >
+          Event Types Master
+        </Button>
+      </Stack>
 
       {loading ? (
         <Typography variant="body2" sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>Loading templates...</Typography>

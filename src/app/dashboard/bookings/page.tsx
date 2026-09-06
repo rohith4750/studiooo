@@ -17,6 +17,7 @@ import {
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import DataTablePagination from '@/components/DataTablePagination';
+import { usePermissions, FinancialAmount } from '@/lib/permissions';
 
 const numberToWordsIndian = (num: number): string => {
   if (num === 0) return 'Zero';
@@ -50,6 +51,7 @@ const STATUSES = [
 function BookingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { hideFinancials, canWrite, canDelete } = usePermissions('/dashboard/bookings');
   const {
     bookings, clients, packages, events, fetchData,
     createRecord, updateRecord, deleteRecord, user
@@ -477,7 +479,7 @@ function BookingsContent() {
                 <TableCell sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>
                   Venue
                 </TableCell>
-                {user?.role !== 'RECEPTIONIST' && (
+                {!hideFinancials && (
                   <>
                     <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.72rem', color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.04em', py: 1.5 }}>
                       Total
@@ -567,21 +569,21 @@ function BookingsContent() {
                         {b.venue || '—'}
                       </Typography>
                     </TableCell>
-                    {user?.role !== 'RECEPTIONIST' && (
+                    {!hideFinancials && (
                       <>
                         <TableCell align="right">
                           <Typography sx={{ fontWeight: 500, fontSize: '0.78rem', color: 'text.primary' }}>
-                            ₹{b.grandTotal.toLocaleString()}
+                            <FinancialAmount value={b.grandTotal} />
                           </Typography>
                         </TableCell>
                         <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                           <Typography sx={{ fontSize: '0.76rem', color: 'text.secondary' }}>
-                            ₹{b.paidAmount.toLocaleString()}
+                            <FinancialAmount value={b.paidAmount} />
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
                           <Chip
-                            label={`₹${b.balance.toLocaleString()}`}
+                            label={b.balance > 0 ? `₹${b.balance.toLocaleString()}` : 'SETTLED'}
                             size="small"
                             color={b.balance > 0 ? 'warning' : 'success'}
                             variant="outlined"
@@ -752,8 +754,8 @@ function BookingsContent() {
 
                 <Divider />
 
-                {/* Pricing Breakdown - Hidden for RECEPTIONIST */}
-                {user?.role !== 'RECEPTIONIST' && (
+                {/* Pricing Breakdown - Hidden if hideFinancials is true */}
+                {!hideFinancials && (
                   <Box sx={{ p: 2, bgcolor: 'background.default', border: '1px solid rgba(227, 236, 231, 0.6)', borderRadius: 1.5 }}>
                     <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.62rem', letterSpacing: '0.06em', mb: 1.5, display: 'block' }}>
                       Pricing Breakdown
@@ -761,15 +763,15 @@ function BookingsContent() {
                     <Stack spacing={1}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: 500, color: 'text.primary' }}>
                         <span>Grand Total</span>
-                        <span>₹{selectedBooking.grandTotal.toLocaleString()}</span>
+                        <FinancialAmount value={selectedBooking.grandTotal} />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: 'primary.main', fontWeight: 500 }}>
                         <span>Amount Paid</span>
-                        <span>₹{selectedBooking.paidAmount.toLocaleString()}</span>
+                        <FinancialAmount value={selectedBooking.paidAmount} />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'warning.light', color: 'warning.dark', p: 0.75, borderRadius: 1, fontWeight: 500, fontSize: '0.76rem' }}>
                         <span>Outstanding Balance</span>
-                        <span>₹{selectedBooking.balance.toLocaleString()}</span>
+                        <FinancialAmount value={selectedBooking.balance} />
                       </Box>
                     </Stack>
                   </Box>
@@ -777,7 +779,7 @@ function BookingsContent() {
 
                 {/* Action Buttons */}
                 <Stack spacing={1} sx={{ pt: 1 }}>
-                  {user?.role !== 'RECEPTIONIST' && selectedBooking.balance > 0 && (
+                  {!hideFinancials && selectedBooking.balance > 0 && (
                     <Button
                       variant="contained"
                       color="primary"
@@ -789,7 +791,7 @@ function BookingsContent() {
                     </Button>
                   )}
 
-                  {user?.role !== 'RECEPTIONIST' && (
+                  {!hideFinancials && (
                     <Grid container spacing={1}>
                       <Grid size={{ xs: 6 }}>
                         <Button
