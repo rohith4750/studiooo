@@ -38,81 +38,27 @@ export function getFromEmail() {
   return process.env.SMTP_FROM || `"R2R Studio Photography" <${process.env.SMTP_USER || 'notifications@r2rstudio.com'}>`;
 }
 
-const EMAIL_THEME_MAP: Record<QuotationTheme, {
-  headerBg: string;
-  headerSubtext: string;
-  badgeBg: string;
-  badgeBorder: string;
-  badgeText: string;
-  eventBg: string;
-  eventBorder: string;
-  eventTitleText: string;
-  totalBannerBg: string;
-  totalBannerText: string;
-  accentBtnBg: string;
-  accentBtnText: string;
-  themeTitle: string;
-}> = {
-  ROYAL_GOLD: {
-    headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
-    headerSubtext: '#fde68a',
-    badgeBg: '#fffbeb',
-    badgeBorder: '#f59e0b',
-    badgeText: '#92400e',
-    eventBg: '#fffbeb',
-    eventBorder: '#fef3c7',
-    eventTitleText: '#78350f',
-    totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
-    totalBannerText: '#fde68a',
-    accentBtnBg: '#f59e0b',
-    accentBtnText: '#0f172a',
-    themeTitle: 'Royal Gold Luxury Edition'
-  },
-  ELEGANT_IVORY: {
-    headerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
-    headerSubtext: '#fde68a',
-    badgeBg: '#fffbeb',
-    badgeBorder: '#d97706',
-    badgeText: '#78350f',
-    eventBg: '#fffbeb',
-    eventBorder: '#fde68a',
-    eventTitleText: '#451a03',
-    totalBannerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
-    totalBannerText: '#fde68a',
-    accentBtnBg: '#b45309',
-    accentBtnText: '#ffffff',
-    themeTitle: 'Porcelain Ivory Edition'
-  },
-  MINIMAL_EDITORIAL: {
-    headerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    headerSubtext: '#cbd5e1',
-    badgeBg: '#f8fafc',
-    badgeBorder: '#0f172a',
-    badgeText: '#0f172a',
-    eventBg: '#f8fafc',
-    eventBorder: '#e2e8f0',
-    eventTitleText: '#0f172a',
-    totalBannerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    totalBannerText: '#ffffff',
-    accentBtnBg: '#0f172a',
-    accentBtnText: '#ffffff',
-    themeTitle: 'Minimal Editorial Edition'
-  },
-  ROSE_ROMANCE: {
-    headerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
-    headerSubtext: '#ffe4e6',
-    badgeBg: '#fff1f2',
-    badgeBorder: '#fb7185',
-    badgeText: '#881337',
-    eventBg: '#fff1f2',
-    eventBorder: '#fecdd3',
-    eventTitleText: '#881337',
-    totalBannerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
-    totalBannerText: '#ffe4e6',
-    accentBtnBg: '#be123c',
-    accentBtnText: '#ffffff',
-    themeTitle: 'Rose Romance Edition'
-  }
+const UNIFIED_EMAIL_THEME = {
+  headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+  headerSubtext: '#fde68a',
+  badgeBg: '#fffbeb',
+  badgeBorder: '#f59e0b',
+  badgeText: '#92400e',
+  eventBg: '#fffbeb',
+  eventBorder: '#fef3c7',
+  eventTitleText: '#78350f',
+  totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+  totalBannerText: '#fde68a',
+  accentBtnBg: '#f59e0b',
+  accentBtnText: '#0f172a',
+  themeTitle: 'Official R2R Studio Edition'
+};
+
+const EMAIL_THEME_MAP: Record<QuotationTheme, typeof UNIFIED_EMAIL_THEME> = {
+  ROYAL_GOLD: UNIFIED_EMAIL_THEME,
+  ELEGANT_IVORY: UNIFIED_EMAIL_THEME,
+  MINIMAL_EDITORIAL: UNIFIED_EMAIL_THEME,
+  ROSE_ROMANCE: UNIFIED_EMAIL_THEME
 };
 
 /**
@@ -174,8 +120,8 @@ export async function sendBookingConfirmationEmail({
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
           <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Official Booking Confirmation • ${tm.themeTitle}</p>
+            <img src="${process.env.NEXT_PUBLIC_APP_URL || 'https://studiooo.vercel.app'}/r2r-logo.png" alt="R2R Studio Logo" style="height: 55px; width: auto; max-width: 200px; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" />
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Booking Confirmation • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
@@ -333,8 +279,8 @@ export async function sendQuotationEmail({
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
           <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Creative Photography & Cinematic Films • ${tm.themeTitle}</p>
+            <img src="${process.env.NEXT_PUBLIC_APP_URL || 'https://studiooo.vercel.app'}/r2r-logo.png" alt="R2R Studio Logo" style="height: 55px; width: auto; max-width: 200px; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" />
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Creative Photography & Cinematic Films • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
@@ -486,8 +432,8 @@ export async function sendInvoiceEmail({
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
           <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO BILL & INVOICE SUMMARY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber} • ${tm.themeTitle}</p>
+            <img src="${process.env.NEXT_PUBLIC_APP_URL || 'https://studiooo.vercel.app'}/r2r-logo.png" alt="R2R Studio Logo" style="height: 55px; width: auto; max-width: 200px; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" />
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber} • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
@@ -618,8 +564,8 @@ export async function sendClientPreShootReminder({
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
           <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">YOUR SHOOT IS TOMORROW! 📸</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #a7f3d0;">R2R Studio Crew Assignment Alert</p>
+            <img src="${process.env.NEXT_PUBLIC_APP_URL || 'https://studiooo.vercel.app'}/r2r-logo.png" alt="R2R Studio Logo" style="height: 50px; width: auto; max-width: 180px; margin: 0 auto 8px auto; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" />
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #a7f3d0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Shoot Reminder & Crew Assignment Alert</p>
           </div>
 
           <div style="padding: 24px;">

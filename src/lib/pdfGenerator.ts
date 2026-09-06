@@ -71,71 +71,43 @@ interface ThemeHtmlConfig {
   accentBtnBg: string;
   accentBtnText: string;
   badgeName: string;
-  borderLeftColor: string;
 }
 
-const THEME_HTML_MAP: Record<QuotationTheme, ThemeHtmlConfig> = {
-  ROYAL_GOLD: {
-    headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
-    headerSubtext: '#fde68a',
-    pageBg: '#ffffff',
-    cardBg: '#ffffff',
-    badgeBg: '#fffbeb',
-    badgeBorder: '#f59e0b',
-    badgeText: '#92400e',
-    totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
-    totalBannerText: '#fde68a',
-    accentBtnBg: '#f59e0b',
-    accentBtnText: '#0f172a',
-    badgeName: 'ROYAL GOLD LUXURY EDITION',
-    borderLeftColor: '#f59e0b'
-  },
-  ELEGANT_IVORY: {
-    headerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
-    headerSubtext: '#fde68a',
-    pageBg: '#fffbeb',
-    cardBg: '#ffffff',
-    badgeBg: '#fef3c7',
-    badgeBorder: '#d97706',
-    badgeText: '#78350f',
-    totalBannerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
-    totalBannerText: '#fde68a',
-    accentBtnBg: '#b45309',
-    accentBtnText: '#ffffff',
-    badgeName: 'PORCELAIN IVORY ELEGANT EDITION',
-    borderLeftColor: '#b45309'
-  },
-  MINIMAL_EDITORIAL: {
-    headerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    headerSubtext: '#cbd5e1',
-    pageBg: '#ffffff',
-    cardBg: '#ffffff',
-    badgeBg: '#f1f5f9',
-    badgeBorder: '#0f172a',
-    badgeText: '#0f172a',
-    totalBannerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    totalBannerText: '#ffffff',
-    accentBtnBg: '#0f172a',
-    accentBtnText: '#ffffff',
-    badgeName: 'MINIMAL EDITORIAL EDITION',
-    borderLeftColor: '#0f172a'
-  },
-  ROSE_ROMANCE: {
-    headerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
-    headerSubtext: '#ffe4e6',
-    pageBg: '#fff1f2',
-    cardBg: '#ffffff',
-    badgeBg: '#fff1f2',
-    badgeBorder: '#fb7185',
-    badgeText: '#881337',
-    totalBannerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
-    totalBannerText: '#ffe4e6',
-    accentBtnBg: '#be123c',
-    accentBtnText: '#ffffff',
-    badgeName: 'ROSE ROMANCE EDITION',
-    borderLeftColor: '#be123c'
-  }
+const STUDIO_UNIFIED_THEME: ThemeHtmlConfig = {
+  headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+  headerSubtext: '#fde68a',
+  pageBg: '#ffffff',
+  cardBg: '#ffffff',
+  badgeBg: '#fffbeb',
+  badgeBorder: '#f59e0b',
+  badgeText: '#92400e',
+  totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+  totalBannerText: '#fde68a',
+  accentBtnBg: '#f59e0b',
+  accentBtnText: '#0f172a',
+  badgeName: 'R2R STUDIO LUXURY EDITION'
 };
+
+const THEME_HTML_MAP: Record<QuotationTheme, ThemeHtmlConfig> = {
+  ROYAL_GOLD: STUDIO_UNIFIED_THEME,
+  ELEGANT_IVORY: STUDIO_UNIFIED_THEME,
+  MINIMAL_EDITORIAL: STUDIO_UNIFIED_THEME,
+  ROSE_ROMANCE: STUDIO_UNIFIED_THEME
+};
+
+/**
+ * Load r2r-logo.png as base64 Data URL for Chrome PDF rendering
+ */
+function getR2RLogoBase64(): string {
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'r2r-logo.png');
+    if (fs.existsSync(logoPath)) {
+      const buf = fs.readFileSync(logoPath);
+      return 'data:image/png;base64,' + buf.toString('base64');
+    }
+  } catch (e) {}
+  return '';
+}
 
 /**
  * Locate Chrome or Edge executable on host system
@@ -187,7 +159,6 @@ function renderHtmlToPdfBuffer(htmlContent: string): Buffer {
 
     if (fs.existsSync(pdfPath)) {
       const pdfBuffer = fs.readFileSync(pdfPath);
-      // Clean up temporary files
       try { fs.unlinkSync(htmlPath); } catch (e) {}
       try { fs.unlinkSync(pdfPath); } catch (e) {}
       return pdfBuffer;
@@ -195,7 +166,6 @@ function renderHtmlToPdfBuffer(htmlContent: string): Buffer {
       throw new Error('Chrome did not output PDF file.');
     }
   } catch (err: any) {
-    // Cleanup on failure
     try { if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath); } catch (e) {}
     try { if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath); } catch (e) {}
     throw err;
@@ -236,6 +206,7 @@ export function generateQuotationPdfBuffer(params: {
 
   const quoteRef = quotationId.startsWith('R2R-QT-') ? quotationId : `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}`;
   const tm = THEME_HTML_MAP[theme] || THEME_HTML_MAP.ROYAL_GOLD;
+  const logoBase64 = getR2RLogoBase64();
 
   const eventList = events.length > 0 ? events : [
     {
@@ -268,11 +239,11 @@ export function generateQuotationPdfBuffer(params: {
     const delivItemsHtml = deliverables.map(d => `<li style="margin-bottom: 4px;">✔ ${d}</li>`).join('');
 
     return `
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 6px solid ${tm.borderLeftColor}; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid ${tm.borderLeftColor}; border-radius: 5px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
           <div>
             <span style="font-size: 16px; font-weight: 800; color: #0f172a;">${eventTitle}</span>
-            <span style="margin-left: 10px; font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 8px; border-radius: 12px; text-transform: uppercase;">${cat}</span>
+            <span style="margin-left: 10px; font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 8px; border-radius: 5px; text-transform: uppercase;">${cat}</span>
           </div>
           <div style="font-size: 18px; font-weight: 800; color: ${tm.borderLeftColor};">
             ${priceVal}
@@ -284,7 +255,7 @@ export function generateQuotationPdfBuffer(params: {
           ${item.venue ? `<div>📍 Venue: <strong>${item.venue}</strong></div>` : ''}
         </div>
 
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 12px;">
           <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">Session Deliverables Included:</p>
           <ul style="margin: 0; padding-left: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #334155;">
             ${delivItemsHtml}
@@ -296,7 +267,7 @@ export function generateQuotationPdfBuffer(params: {
 
   const dynamicSectionsHtml = dynamicSections.map((sec) => {
     const itemsHtml = sec.items.map(item => `
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 10px 14px; margin-bottom: 8px;">
         ${item.title ? `<p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #0f172a;">• ${item.title}</p>` : ''}
         <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.5;">${item.content}</p>
       </div>
@@ -306,7 +277,7 @@ export function generateQuotationPdfBuffer(params: {
       <div style="margin-top: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${tm.badgeBorder}; padding-bottom: 6px; margin-bottom: 12px;">
           <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${sec.title}</h3>
-          ${sec.badge ? `<span style="font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 10px; border-radius: 12px;">${sec.badge}</span>` : ''}
+          ${sec.badge ? `<span style="font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 10px; border-radius: 5px;">${sec.badge}</span>` : ''}
         </div>
         ${itemsHtml}
       </div>
@@ -326,28 +297,29 @@ export function generateQuotationPdfBuffer(params: {
       <style>
         @page { size: A4; margin: 0; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: ${tm.pageBg}; margin: 0; padding: 0; color: #1e293b; webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .page { width: 210mm; min-height: 297mm; padding: 20mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
+        .page { width: 210mm; min-height: 297mm; padding: 18mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
       </style>
     </head>
     <body>
       <div class="page">
-        <!-- Header Banner -->
-        <div style="background: ${tm.headerBg}; padding: 28px; border-radius: 12px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <!-- Header Banner WITH LOGO IMAGE -->
+        <div style="background: ${tm.headerBg}; padding: 22px 28px; border-radius: 5px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Creative Photography & Cinematic Films • ${tm.badgeName}</p>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Creative Photography & Cinematic Films • ${tm.badgeName}</p>
             </div>
-            <div style="text-align: right; font-size: 11px; color: ${tm.headerSubtext}; line-height: 1.5;">
-              <p style="margin: 0;">Road No 3A, Tarnaka, Hyderabad</p>
-              <p style="margin: 2px 0 0 0;">Phone: +91 9398534380</p>
-              <p style="margin: 2px 0 0 0;">Email: contact@r2rstudio.com</p>
+            <div style="text-align: right;">
+              ${logoBase64 
+                ? `<img src="${logoBase64}" style="height: 75px; width: auto; max-width: 250px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" alt="R2R Studio Logo" />`
+                : `<div style="background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.25); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">OFFICIAL QUOTATION</div>`
+              }
             </div>
           </div>
         </div>
 
-        <!-- Document Title Box -->
-        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; border-left: 6px solid ${tm.borderLeftColor}; padding: 14px 20px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Document Title Box (Side border removed) -->
+        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; padding: 14px 20px; border-radius: 5px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h2 style="margin: 0; font-size: 16px; font-weight: 900; color: ${tm.badgeText}; text-transform: uppercase; letter-spacing: 0.5px;">OFFICIAL PHOTOGRAPHY QUOTATION</h2>
             <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Ref: ${quoteRef} | Booking #: ${bookingNumber}</p>
@@ -359,14 +331,14 @@ export function generateQuotationPdfBuffer(params: {
 
         <!-- Client & Quotation Info Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">PREPARED FOR CLIENT:</p>
             <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">${clientName}</h3>
             ${clientPhone ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">📞 Phone: ${clientPhone}</p>` : ''}
             ${clientEmail ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">✉ Email: ${clientEmail}</p>` : ''}
             ${clientAddress ? `<p style="margin: 0; font-size: 12px; color: #475569;">📍 Location: ${clientAddress}</p>` : ''}
           </div>
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">QUOTATION DETAILS:</p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Booking Reference: <strong>${bookingNumber}</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Quotation Date: <strong>${createdAt}</strong></p>
@@ -380,7 +352,7 @@ export function generateQuotationPdfBuffer(params: {
 
         <!-- Total Investment Banner & Payment Milestones -->
         <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-top: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">Payment Milestone Schedule:</h4>
             <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #475569; line-height: 1.6;">
               <li><strong>30%</strong> Advance Deposit to Lock Booking Date</li>
@@ -388,7 +360,7 @@ export function generateQuotationPdfBuffer(params: {
               <li><strong>20%</strong> Upon Final Album & Film Delivery</li>
             </ul>
           </div>
-          <div style="background: ${tm.totalBannerBg}; border-radius: 8px; padding: 20px; color: #ffffff; display: flex; flex-direction: column; justify-content: center; text-align: right; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="background: ${tm.totalBannerBg}; border-radius: 5px; padding: 20px; color: #ffffff; display: flex; flex-direction: column; justify-content: center; text-align: right; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <p style="margin: 0; font-size: 11px; color: ${tm.totalBannerText}; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">TOTAL ESTIMATED INVESTMENT</p>
             <p style="margin: 6px 0 0 0; font-size: 26px; font-weight: 900; color: ${tm.totalBannerText};">₹${grandTotal.toLocaleString('en-IN')}/-</p>
             <p style="margin: 4px 0 0 0; font-size: 11px; color: #f1f5f9;">All Taxes & Travel Included</p>
@@ -399,7 +371,7 @@ export function generateQuotationPdfBuffer(params: {
         ${dynamicSectionsHtml}
 
         <!-- Terms & Conditions -->
-        <div style="margin-top: 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+        <div style="margin-top: 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
           <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">Terms & Conditions Agreement</h3>
           <ol style="margin: 0; padding-left: 20px;">
             ${termsHtml}
@@ -462,6 +434,7 @@ export function generateInvoicePdfBuffer(params: {
   } = params;
 
   const tm = THEME_HTML_MAP[theme] || THEME_HTML_MAP.ROYAL_GOLD;
+  const logoBase64 = getR2RLogoBase64();
 
   const eventList = events.length > 0 ? events : [
     { name: 'Photography & Cinematic Video Services', category: 'WEDDING', eventDate: 'As Agreed', price: subtotal }
@@ -476,7 +449,7 @@ export function generateInvoicePdfBuffer(params: {
     return `
       <tr style="border-bottom: 1px solid #f1f5f9;">
         <td style="padding: 12px; font-weight: bold; color: #0f172a;">${eventTitle}</td>
-        <td style="padding: 12px; color: #475569;"><span style="background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">${cat}</span></td>
+        <td style="padding: 12px; color: #475569;"><span style="background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: bold;">${cat}</span></td>
         <td style="padding: 12px; color: #475569; font-size: 12px;">${dateStr}</td>
         <td style="padding: 12px; text-align: right; font-weight: bold; color: #0f172a;">${priceVal}</td>
       </tr>
@@ -492,28 +465,29 @@ export function generateInvoicePdfBuffer(params: {
       <style>
         @page { size: A4; margin: 0; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: ${tm.pageBg}; margin: 0; padding: 0; color: #1e293b; webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .page { width: 210mm; min-height: 297mm; padding: 20mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
+        .page { width: 210mm; min-height: 297mm; padding: 18mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
       </style>
     </head>
     <body>
       <div class="page">
-        <!-- Header Banner -->
-        <div style="background: ${tm.headerBg}; padding: 28px; border-radius: 12px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <!-- Header Banner WITH LOGO IMAGE -->
+        <div style="background: ${tm.headerBg}; padding: 22px 28px; border-radius: 5px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Tax Invoice & Bill Statement • ${tm.badgeName}</p>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Tax Invoice & Bill Statement • ${tm.badgeName}</p>
             </div>
-            <div style="text-align: right; font-size: 11px; color: ${tm.headerSubtext}; line-height: 1.5;">
-              <p style="margin: 0;">Road No 3A, Tarnaka, Hyderabad</p>
-              <p style="margin: 2px 0 0 0;">GSTIN: 36AAAAA0000A1Z5</p>
-              <p style="margin: 2px 0 0 0;">Email: contact@r2rstudio.com</p>
+            <div style="text-align: right;">
+              ${logoBase64 
+                ? `<img src="${logoBase64}" style="height: 75px; width: auto; max-width: 250px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));" alt="R2R Studio Logo" />`
+                : `<div style="background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.25); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">TAX INVOICE & BILL</div>`
+              }
             </div>
           </div>
         </div>
 
-        <!-- Document Title Box -->
-        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; border-left: 6px solid ${tm.borderLeftColor}; padding: 14px 20px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Document Title Box (Side border removed) -->
+        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; padding: 14px 20px; border-radius: 5px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h2 style="margin: 0; font-size: 16px; font-weight: 900; color: ${tm.badgeText}; text-transform: uppercase; letter-spacing: 0.5px;">TAX INVOICE & BILL SUMMARY</h2>
             <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber}</p>
@@ -525,14 +499,14 @@ export function generateInvoicePdfBuffer(params: {
 
         <!-- Client & Invoice Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">BILLED TO CLIENT:</p>
             <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">${clientName}</h3>
             ${clientPhone ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">📞 Phone: ${clientPhone}</p>` : ''}
             ${clientEmail ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">✉ Email: ${clientEmail}</p>` : ''}
             ${clientAddress ? `<p style="margin: 0; font-size: 12px; color: #475569;">📍 Address: ${clientAddress}</p>` : ''}
           </div>
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">INVOICE DETAILS:</p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Booking Reference: <strong>${bookingNumber}</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">HSN/SAC Code: <strong>998381 (Photography Services)</strong></p>
@@ -541,7 +515,7 @@ export function generateInvoicePdfBuffer(params: {
         </div>
 
         <!-- Events Table -->
-        <table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; font-size: 13px;">
+        <table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; overflow: hidden; margin-bottom: 24px; font-size: 13px;">
           <thead>
             <tr style="background: ${tm.headerBg}; color: #ffffff; text-align: left;">
               <th style="padding: 12px;">Shoot Session</th>
@@ -557,7 +531,7 @@ export function generateInvoicePdfBuffer(params: {
 
         <!-- Totals & Bank Details Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; margin-top: 24px;">
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">Payment Bank Details:</h4>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Account Name: <strong>R2R Studio Photography</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Bank: <strong>HDFC Bank (Tarnaka Branch)</strong></p>
@@ -566,7 +540,7 @@ export function generateInvoicePdfBuffer(params: {
             <p style="margin: 0; font-size: 12px; color: ${tm.borderLeftColor}; font-weight: bold;">UPI ID: r2rstudio@hdfcbank</p>
           </div>
 
-          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
               <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">Subtotal Amount:</td><td style="text-align: right; font-weight: bold;">₹${subtotal.toLocaleString('en-IN')}</td></tr>
               <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">GST (18% Included):</td><td style="text-align: right; font-weight: bold;">₹${gstAmount.toLocaleString('en-IN')}</td></tr>

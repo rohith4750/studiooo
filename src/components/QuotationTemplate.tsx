@@ -402,60 +402,26 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     }
   };
 
-  // Theme Styling Map (ALL BRIGHT & LIGHT - ZERO BLACK BOXES ON CANVAS - ROUNDED 5PX EVERYWHERE)
+  // Single Unified Studio Theme (Clean 1px Borders, Zero Thick Side Borders, All 5px Radius)
+  const unifiedStudioStyle = {
+    cardBg: 'bg-white text-neutral-900 border border-neutral-200/90 shadow-md rounded-[5px]',
+    headerBanner: 'border-b border-amber-200/70',
+    tagBadge: 'bg-amber-100/80 text-amber-900 border border-amber-200 rounded-[5px]',
+    iconColor: 'text-amber-600',
+    clientBanner: 'bg-gradient-to-r from-amber-50/80 via-amber-100/40 to-amber-50/80 border border-amber-200/80 rounded-[5px]',
+    eventCard: 'bg-white border border-neutral-200 hover:border-amber-400 rounded-[5px]',
+    totalBanner: 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500 shadow-sm rounded-[5px]',
+    totalHighlight: 'text-amber-100',
+    scheduleCard: 'bg-amber-50/40 border border-amber-200/60 text-neutral-800 rounded-[5px]',
+    sectionCard: 'bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-200/80 text-neutral-900 rounded-[5px]',
+    bulletDot: 'bg-amber-500 rounded-[5px]'
+  };
+
   const themeStyles = {
-    ROYAL_GOLD: {
-      cardBg: 'bg-white text-neutral-900 border-l-[10px] border-amber-500 shadow-lg border-y border-r border-neutral-200/80 rounded-[5px]',
-      headerBanner: 'border-b-2 border-amber-100',
-      tagBadge: 'bg-amber-100 text-amber-900 border border-amber-200 rounded-[5px]',
-      iconColor: 'text-amber-600',
-      clientBanner: 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/80 rounded-[5px]',
-      eventCard: 'bg-white border border-neutral-200 hover:border-amber-400 rounded-[5px]',
-      totalBanner: 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500 shadow-sm rounded-[5px]',
-      totalHighlight: 'text-amber-100',
-      scheduleCard: 'bg-amber-50/40 border border-amber-200/60 text-neutral-800 rounded-[5px]',
-      sectionCard: 'bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-200/80 text-neutral-900 rounded-[5px]',
-      bulletDot: 'bg-amber-500 rounded-[5px]'
-    },
-    ELEGANT_IVORY: {
-      cardBg: 'bg-amber-50/20 text-neutral-900 border-l-[10px] border-amber-600 shadow-lg border-y border-r border-amber-200/60 rounded-[5px]',
-      headerBanner: 'border-b-2 border-amber-200',
-      tagBadge: 'bg-amber-200/60 text-amber-900 border border-amber-300 rounded-[5px]',
-      iconColor: 'text-amber-700',
-      clientBanner: 'bg-amber-100/40 border border-amber-200 text-neutral-900 rounded-[5px]',
-      eventCard: 'bg-white border border-amber-200 hover:border-amber-500 rounded-[5px]',
-      totalBanner: 'bg-gradient-to-r from-amber-700 to-amber-900 text-white border border-amber-600 rounded-[5px]',
-      totalHighlight: 'text-amber-200',
-      scheduleCard: 'bg-white border border-amber-200 text-neutral-900 rounded-[5px]',
-      sectionCard: 'bg-amber-100/30 border border-amber-200 text-neutral-900 rounded-[5px]',
-      bulletDot: 'bg-amber-600 rounded-[5px]'
-    },
-    MINIMAL_EDITORIAL: {
-      cardBg: 'bg-white text-neutral-900 border-l-[10px] border-neutral-900 shadow-lg border-y border-r border-neutral-300 rounded-[5px]',
-      headerBanner: 'border-b-2 border-neutral-900',
-      tagBadge: 'bg-neutral-900 text-white border border-neutral-900 rounded-[5px]',
-      iconColor: 'text-neutral-900',
-      clientBanner: 'bg-neutral-100 border border-neutral-300 text-neutral-900 rounded-[5px]',
-      eventCard: 'bg-neutral-50 border border-neutral-200 hover:border-neutral-900 rounded-[5px]',
-      totalBanner: 'bg-neutral-900 text-white border border-neutral-900 rounded-[5px]',
-      totalHighlight: 'text-neutral-100',
-      scheduleCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900 rounded-[5px]',
-      sectionCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900 rounded-[5px]',
-      bulletDot: 'bg-neutral-900 rounded-[5px]'
-    },
-    ROSE_ROMANCE: {
-      cardBg: 'bg-rose-50/20 text-neutral-900 border-l-[10px] border-rose-400 shadow-lg border-y border-r border-rose-200 rounded-[5px]',
-      headerBanner: 'border-b-2 border-rose-100',
-      tagBadge: 'bg-rose-100 text-rose-800 border border-rose-200 rounded-[5px]',
-      iconColor: 'text-rose-500',
-      clientBanner: 'bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-[5px]',
-      eventCard: 'bg-white border border-rose-200 hover:border-rose-400 rounded-[5px]',
-      totalBanner: 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white border border-rose-500 rounded-[5px]',
-      totalHighlight: 'text-rose-100',
-      scheduleCard: 'bg-rose-50/50 border border-rose-200 text-neutral-900 rounded-[5px]',
-      sectionCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 text-neutral-900 rounded-[5px]',
-      bulletDot: 'bg-rose-500 rounded-[5px]'
-    }
+    ROYAL_GOLD: unifiedStudioStyle,
+    ELEGANT_IVORY: unifiedStudioStyle,
+    MINIMAL_EDITORIAL: unifiedStudioStyle,
+    ROSE_ROMANCE: unifiedStudioStyle
   };
 
   const currentStyle = themeStyles[theme];
@@ -532,22 +498,16 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {/* Theme & Controls Palette */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
             
-            {/* Theme Selector */}
+            {/* Single Studio Theme Indicator */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 flex items-center space-x-1">
                 <Palette className="h-3 w-3 text-amber-600" />
-                <span>Aesthetic Template Theme</span>
+                <span>Studio Template Theme</span>
               </label>
-              <select
-                value={theme}
-                onChange={(e) => setTheme(e.target.value as QuotationTheme)}
-                className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-[5px] px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500"
-              >
-                <option value="ROYAL_GOLD">👑 Royal Gold (Luxury Wedding)</option>
-                <option value="ELEGANT_IVORY">✨ Elegant Ivory (Warm Cream)</option>
-                <option value="MINIMAL_EDITORIAL">📰 Minimal Editorial (High-End Clean)</option>
-                <option value="ROSE_ROMANCE">🌸 Rose Romance (Pastel Wedding)</option>
-              </select>
+              <div className="w-full bg-amber-50/80 text-amber-900 border border-amber-200 rounded-[5px] px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                <span>👑 Official R2R Studio Edition</span>
+                <span className="text-[9px] uppercase tracking-wider bg-amber-200/60 px-1.5 py-0.5 rounded-[5px]">Unified</span>
+              </div>
             </div>
 
             {/* Discount Options */}
@@ -694,12 +654,13 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             </div>
           </div>
 
-          {/* Right Header: Studio Badge & QR */}
+          {/* Right Header: Studio Logo Image & QR */}
           <div className="text-right flex flex-col items-end space-y-2">
-            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-[5px] text-center shadow-xs border border-amber-400">
-              <p className="font-black text-xl tracking-widest leading-none">R2R</p>
-              <p className="text-[8px] font-extrabold text-amber-100 uppercase tracking-widest mt-1">CINEMATIC FILMS</p>
-            </div>
+            <img 
+              src="/r2r-logo.png" 
+              alt="R2R Studio Photography Logo" 
+              className="h-20 w-auto object-contain max-w-[220px] drop-shadow-sm" 
+            />
 
             <div className="flex items-center space-x-1.5 opacity-80 border border-neutral-300/40 px-2 py-1 rounded-[5px] text-[9px] font-semibold">
               <QrCode className="h-3.5 w-3.5" />

@@ -490,12 +490,9 @@ export default function BillingPage() {
                   {/* Header branding */}
                   <div className="flex justify-between items-start border-b-2 border-primary-500 pb-4">
                     <div>
-                      <h1 className="text-base font-extrabold text-neutral-800 flex items-center space-x-1.5">
-                        <Building className="h-4.5 w-4.5 text-primary-500" />
-                        <span>R2R STUDIO</span>
-                      </h1>
+                      <img src="/r2r-logo.png" alt="R2R Studio Logo" className="h-18 w-auto object-contain mb-1" />
                       <p className="text-[10px] text-neutral-400">Creative Photography & Cinematic Video</p>
-                      <p className="text-[10px] text-neutral-500 mt-1">102, Shanti Vihar, Jayanagar, Bengaluru</p>
+                      <p className="text-[10px] text-neutral-500 mt-0.5">102, Shanti Vihar, Jayanagar, Bengaluru</p>
                     </div>
                     <div className="text-right">
                       <h2 className="text-sm font-bold text-primary-600 tracking-wider">TAX INVOICE</h2>
