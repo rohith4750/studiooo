@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { generateInvoicePdfBuffer, generateQuotationPdfBuffer } from './pdfGenerator';
 
 // Resolve SMTP Transport options from env vars or defaults
 export function getSmtpTransporter() {
@@ -48,7 +49,8 @@ export async function sendBookingConfirmationEmail({
   paidAmount = 0,
   balance = 0,
   status = 'CONFIRMED',
-  events = []
+  events = [],
+  pdfBase64
 }: {
   to: string;
   clientName: string;
@@ -58,6 +60,7 @@ export async function sendBookingConfirmationEmail({
   balance?: number;
   status?: string;
   events?: any[];
+  pdfBase64?: string;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending booking confirmation email - invalid recipient: ${to}`);
@@ -136,11 +139,45 @@ export async function sendBookingConfirmationEmail({
       </html>
     `;
 
+    const attachments: any[] = [];
+    if (pdfBase64) {
+      const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '').replace(/^data:image\/\w+;base64,/, '');
+      attachments.push({
+        filename: `Official_Booking_Summary_${(clientName || 'Client').replace(/\s+/g, '_')}_${bookingNumber}.pdf`,
+        content: Buffer.from(cleanBase64, 'base64'),
+        contentType: 'application/pdf'
+      });
+    } else {
+      try {
+        const subtotal = Math.round(grandTotal / 1.18);
+        const gstAmount = grandTotal - subtotal;
+        const pdfBuf = generateInvoicePdfBuffer({
+          clientName,
+          invoiceNumber: `INV-${bookingNumber}`,
+          bookingNumber,
+          subtotal,
+          gstAmount,
+          grandTotal,
+          paidAmount,
+          balance,
+          events
+        });
+        attachments.push({
+          filename: `Official_Booking_Invoice_${(clientName || 'Client').replace(/\s+/g, '_')}_${bookingNumber}.pdf`,
+          content: pdfBuf,
+          contentType: 'application/pdf'
+        });
+      } catch (pdfErr) {
+        console.error('[SMTP Mailer] Failed auto-generating booking confirmation invoice PDF:', pdfErr);
+      }
+    }
+
     const info = await transporter.sendMail({
       from,
       to,
       subject: `Booking Confirmed! R2R Studio Photography [Ref: #${bookingNumber}]`,
       html: htmlBody,
+      attachments
     });
     console.log(`[SMTP Mailer] Booking confirmation email sent to ${to}. MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
@@ -263,6 +300,23 @@ export async function sendQuotationEmail({
         content: Buffer.from(cleanBase64, 'base64'),
         contentType: 'application/pdf'
       });
+    } else {
+      try {
+        const pdfBuf = generateQuotationPdfBuffer({
+          clientName,
+          bookingNumber,
+          quotationId: quoteRef,
+          grandTotal,
+          events
+        });
+        attachments.push({
+          filename: `Official_Quotation_${(clientName || 'Client').replace(/\s+/g, '_')}_${quoteRef}.pdf`,
+          content: pdfBuf,
+          contentType: 'application/pdf'
+        });
+      } catch (pdfErr) {
+        console.error('[SMTP Mailer] Failed auto-generating quotation PDF buffer:', pdfErr);
+      }
     }
 
     const info = await transporter.sendMail({
@@ -382,6 +436,27 @@ export async function sendInvoiceEmail({
         content: Buffer.from(cleanBase64, 'base64'),
         contentType: 'application/pdf'
       });
+    } else {
+      try {
+        const pdfBuf = generateInvoicePdfBuffer({
+          clientName,
+          invoiceNumber,
+          bookingNumber,
+          subtotal,
+          gstAmount,
+          grandTotal,
+          paidAmount,
+          balance,
+          events
+        });
+        attachments.push({
+          filename: `Official_Bill_${(clientName || 'Client').replace(/\s+/g, '_')}_${invoiceNumber}.pdf`,
+          content: pdfBuf,
+          contentType: 'application/pdf'
+        });
+      } catch (pdfErr) {
+        console.error('[SMTP Mailer] Failed auto-generating invoice PDF buffer:', pdfErr);
+      }
     }
 
     const info = await transporter.sendMail({
