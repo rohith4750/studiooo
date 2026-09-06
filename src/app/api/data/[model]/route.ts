@@ -25,15 +25,15 @@ const MODEL_MAPPING: Record<string, any> = {
   notifications: 'notification',
   auditlogs: 'auditLog',
   attendances: 'attendance' as any,
+  workupdates: 'workUpdate',
+  rolepermissions: 'rolePermission',
 };
 
 // Role-Based Access Control configuration
 // Deny list by role for specific tables
 const ROLE_DENY_LIST: Record<string, string[]> = {
-  PHOTOGRAPHER: ['expense', 'payment', 'invoice', 'quotation', 'user', 'client', 'lead'],
-  EDITOR: ['expense', 'payment', 'invoice', 'quotation', 'user', 'client', 'lead', 'employee', 'inventory'],
-  ACCOUNTANT: ['assignment', 'inventory', 'lead', 'user'],
-  RECEPTIONIST: ['expense', 'user', 'payment', 'invoice', 'quotation'],
+  SUPER_ADMIN: [],
+  ADMIN: [],
 };
 
 export async function GET(
@@ -54,7 +54,7 @@ export async function GET(
 
   // Check role access - return empty array gracefully for restricted tables
   const deniedTables = ROLE_DENY_LIST[user.role] || [];
-  if (deniedTables.includes(modelName as string) && user.role !== 'ADMIN') {
+  if (deniedTables.includes(modelName as string) && !['SUPER_ADMIN', 'ADMIN'].includes(user.role)) {
     return NextResponse.json([]);
   }
 

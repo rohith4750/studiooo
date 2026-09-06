@@ -26,6 +26,8 @@ const STATE_KEY_MAP: Record<string, string> = {
   expenses: 'expenses',
   auditlogs: 'auditLogs',
   attendances: 'attendances',
+  workupdates: 'workUpdates',
+  rolepermissions: 'rolePermissions',
 };
 
 interface StoreState {
@@ -51,6 +53,8 @@ interface StoreState {
   expenses: any[];
   auditLogs: any[];
   attendances: any[];
+  workUpdates: any[];
+  rolePermissions: any[];
 
   loading: Record<string, boolean>;
   errors: Record<string, string>;
@@ -89,6 +93,8 @@ export const useStore = create<StoreState>((set, get) => ({
   expenses: [],
   auditLogs: [],
   attendances: [],
+  workUpdates: [],
+  rolePermissions: [],
 
   loading: {},
   errors: {},

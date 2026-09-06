@@ -725,7 +725,7 @@ function BookingsContent() {
                     {selectedBooking.bookingEvents?.map((be: any) => (
                       <Paper key={be.id} variant="outlined" sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 1.5 }}>
                         <Box>
-                          <Typography sx={{ fontWeight: 500, fontSize: '0.78rem' }}>{be.event?.name}</Typography>
+                          <Typography sx={{ fontWeight: 600, fontSize: '0.78rem' }}>{be.event?.name}</Typography>
                           <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.5, color: 'text.secondary' }}>
                             <Calendar className="h-3 w-3" />
                             <Typography variant="caption" sx={{ fontSize: '0.68rem' }}>
@@ -733,6 +733,13 @@ function BookingsContent() {
                             </Typography>
                           </Stack>
                         </Box>
+                        {be.category && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 220, justifySelf: 'end' }}>
+                            {be.category.split(',').map((c: string) => c.trim()).filter(Boolean).map((cat: string) => (
+                              <Chip key={cat} label={cat} size="small" variant="outlined" color="primary" sx={{ height: 18, fontSize: '0.62rem', fontWeight: 600 }} />
+                            ))}
+                          </Box>
+                        )}
                       </Paper>
                     ))}
                     {(!selectedBooking.bookingEvents || selectedBooking.bookingEvents.length === 0) && (

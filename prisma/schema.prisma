@@ -12,13 +12,14 @@ model User {
   email            String    @unique
   password         String
   name             String
-  role             String    // ADMIN, MANAGER, PHOTOGRAPHER, EDITOR, ACCOUNTANT, RECEPTIONIST
+  role             String    // SUPER_ADMIN, ADMIN
   resetToken       String?
   resetTokenExpiry DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   auditLogs        AuditLog[]
   managedEmployees Employee[] @relation("ManagerToEmployee")
+  workUpdates      WorkUpdate[]
 }
 
 model Client {
@@ -146,7 +147,7 @@ model Employee {
   name        String
   email       String       @unique
   phone       String
-  role        String       // PHOTOGRAPHER, EDITOR, MANAGER, ACCOUNTANT, RECEPTIONIST
+  role        String       // PHOTOGRAPHER, VIDEOGRAPHER, EDITOR, MANAGER, ACCOUNTANT, RECEPTIONIST, HR, ASSISTANT
   status      String       // ACTIVE, INACTIVE
   salary      Float
   joinedAt    DateTime     @default(now())
@@ -158,6 +159,7 @@ model Employee {
   assignments Assignment[]
   albumEditor Album[]      @relation("AlbumEditor")
   attendances Attendance[]
+  workUpdates WorkUpdate[]
 }
 
 model Payment {
@@ -293,9 +295,44 @@ model MarketingContent {
   heroBadge         String   @default("Premium Wedding & Event Cinematography")
   heroTitle         String   @default("Preserving Your Most Precious Love Stories")
   heroSubtitle      String   @default("Welcome to R2R Studio. We craft timeless wedding films, candid portraits, pre-wedding concept shoots, and aerial drone cinematography with unmatched artistry.")
+  showreelUrl       String?  @default("https://www.youtube.com/embed/dQw4w9WgXcQ")
+  aboutTitle        String?  @default("Crafting Visual Stories That Stay Alive Forever")
+  aboutDescription  String?  @default("Founded with a passion for romance, emotion, and aesthetic perfection, R2R Studio has grown into one of South India's most sought-after wedding cinematography studios.")
+  weddingsCount     Int?     @default(450)
+  citiesCount       Int?     @default(35)
+  rating            Float?   @default(4.9)
   promoBannerText   String?  @default("✨ Special Season Offer: Book Your Wedding Cinematography Package & Get Complimentary Pre-Wedding Shoot!")
   promoBannerActive Boolean  @default(true)
   ctaText           String   @default("Request Custom Quote")
   updatedAt         DateTime @updatedAt
 }
+
+model WorkUpdate {
+  id          String    @id @default(uuid())
+  employeeId  String?
+  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorRole  String    // e.g. PHOTOGRAPHER, VIDEOGRAPHER, EDITOR, ADMIN
+  title       String
+  description String
+  category    String    @default("GENERAL") // SHOOT_UPDATE, EDITING_UPDATE, ATTENDANCE_NOTE, GENERAL
+  status      String    @default("COMPLETED") // IN_PROGRESS, COMPLETED, BLOCKED, PENDING_REVIEW
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model RolePermission {
+  id          String   @id @default(uuid())
+  roleName    String   @unique
+  displayName String
+  description String?
+  permissions String   // JSON array string of allowed route paths e.g. ["/dashboard", "/dashboard/bookings"]
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
 

@@ -11,7 +11,7 @@ function UserForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
-  const { users, createRecord, updateRecord } = useStore();
+  const { users, rolePermissions, fetchData, createRecord, updateRecord } = useStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -19,8 +19,12 @@ function UserForm() {
     name: '',
     email: '',
     password: '',
-    role: 'PHOTOGRAPHER'
+    role: 'ADMIN'
   });
+
+  useEffect(() => {
+    fetchData('rolePermissions');
+  }, [fetchData]);
 
   useEffect(() => {
     if (userId) {
@@ -133,12 +137,15 @@ function UserForm() {
               onChange={handleChange}
               sx={{ borderRadius: '4px' }}
             >
-              <MenuItem value="PHOTOGRAPHER">Photographer</MenuItem>
-              <MenuItem value="MANAGER">Manager</MenuItem>
-              <MenuItem value="EDITOR">Editor</MenuItem>
-              <MenuItem value="ACCOUNTANT">Accountant</MenuItem>
-              <MenuItem value="RECEPTIONIST">Receptionist</MenuItem>
-              <MenuItem value="ADMIN">Administrator (Full Access)</MenuItem>
+              <MenuItem value="SUPER_ADMIN">SUPER_ADMIN - Super Administrator (Full Control)</MenuItem>
+              <MenuItem value="ADMIN">ADMIN - Studio Administrator</MenuItem>
+              {rolePermissions
+                .filter((r: any) => !['SUPER_ADMIN', 'ADMIN'].includes(r.roleName))
+                .map((r: any) => (
+                  <MenuItem key={r.id} value={r.roleName}>
+                    {r.roleName} - {r.displayName || r.roleName}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </div>

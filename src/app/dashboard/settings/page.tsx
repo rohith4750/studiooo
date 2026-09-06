@@ -196,28 +196,20 @@ export default function SettingsPage() {
             
             <div className="space-y-2 text-[10px]">
               <div className="flex justify-between border-b border-neutral-100 pb-1 font-bold text-neutral-800">
-                <span>Role Name</span>
+                <span>System Role</span>
                 <span>Access Coverage</span>
               </div>
               <div className="flex justify-between">
-                <span>Admin</span>
-                <span className="text-primary-600 font-bold">100% Full Access</span>
+                <span className="font-bold text-purple-700">Super Admin</span>
+                <span className="text-purple-600 font-bold">100% Complete System, Security & DB Access</span>
               </div>
               <div className="flex justify-between">
-                <span>Manager</span>
-                <span className="text-neutral-500 font-semibold">Director & Bookings</span>
+                <span className="font-bold text-primary-700">Admin</span>
+                <span className="text-primary-600 font-bold">Full Operational Studio Management</span>
               </div>
-              <div className="flex justify-between">
-                <span>Photographer</span>
-                <span className="text-neutral-500 font-semibold">Assigns & Schedules</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Editor</span>
-                <span className="text-neutral-500 font-semibold">Editing & Raw Uploads</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Accountant</span>
-                <span className="text-neutral-500 font-semibold">Invoices & Cash Ledger</span>
+              <div className="border-t border-neutral-100 pt-2 flex justify-between">
+                <span className="font-bold text-neutral-600">Company Employees</span>
+                <span className="text-neutral-500 font-semibold">Shoot, Editing & Work Updates Logins</span>
               </div>
             </div>
           </div>

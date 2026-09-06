@@ -7,7 +7,7 @@ import { useToast } from '@/components/ToastProvider';
 import {
   Box, Grid, Card, CardContent, Button, TextField, Typography,
   MenuItem, Select, InputLabel, FormControl, Stack, IconButton, Divider, Paper, Autocomplete,
-  Dialog, DialogTitle, DialogContent, DialogActions, Tooltip
+  Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip
 } from '@mui/material';
 import {
   Plus, Trash2, X, Sparkles, ArrowLeft, CheckCircle2, RefreshCw, UserPlus
@@ -478,13 +478,32 @@ function BookingCreateContent() {
 
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <FormControl fullWidth size="small">
-                          <InputLabel>Functional Category</InputLabel>
+                          <InputLabel id={`cat-multi-label-${index}`}>Functional Categories (Multi-Select)</InputLabel>
                           <Select
-                            value={row.category || 'TRADITIONAL'}
-                            label="Functional Category"
-                            onChange={(e) => updateEventRow(index, 'category', e.target.value)}
+                            labelId={`cat-multi-label-${index}`}
+                            multiple
+                            value={
+                              Array.isArray(row.category)
+                                ? row.category
+                                : typeof row.category === 'string'
+                                  ? row.category.split(',').map((s: string) => s.trim()).filter(Boolean)
+                                  : ['TRADITIONAL']
+                            }
+                            label="Functional Categories (Multi-Select)"
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const selectedArr = typeof val === 'string' ? val.split(',') : val;
+                              updateEventRow(index, 'category', selectedArr.join(', '));
+                            }}
+                            renderValue={(selected) => (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {(Array.isArray(selected) ? selected : [selected]).map((catVal) => (
+                                  <Chip key={catVal} label={catVal} size="small" sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }} />
+                                ))}
+                              </Box>
+                            )}
                           >
-                            {FUNCTIONAL_CATEGORIES.map(c => (
+                            {FUNCTIONAL_CATEGORIES.map((c) => (
                               <MenuItem key={c} value={c}>{c}</MenuItem>
                             ))}
                           </Select>

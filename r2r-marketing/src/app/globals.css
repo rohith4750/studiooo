@@ -5,3 +5,21 @@
     @apply bg-white text-neutral-900 antialiased;
   }
 }
+
+/* Complete removal of blinking text insertion caret (|) on static page elements */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+  caret-color: transparent !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection & caret cursor exclusively inside form inputs and textareas */
+input, textarea, [contenteditable="true"], .selectable-text {
+  caret-color: #d97706 !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}

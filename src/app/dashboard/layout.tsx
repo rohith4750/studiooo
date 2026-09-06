@@ -8,7 +8,7 @@ import {
   Camera, LayoutDashboard, Users, UserSquare2, CalendarDays,
   FileText, ClipboardList, PenTool, HardDrive, Receipt,
   Settings, LogOut, BarChart3, Menu, X, ShieldAlert, Box as BoxIcon, Flame,
-  CheckCircle2, Sparkles, Globe
+  CheckCircle2, Sparkles, Globe, Activity, ShieldCheck
 } from 'lucide-react';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider } from '@mui/material/styles';
@@ -18,61 +18,54 @@ import {
   Typography, Avatar, Chip, IconButton, Stack, Button, Menu as MuiMenu, MenuItem
 } from '@mui/material';
 
+const SYSTEM_ROLES = ['SUPER_ADMIN', 'ADMIN'];
+
 const MENU_GROUPS = [
   {
     title: 'Overview',
     items: [
-      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST', 'ACCOUNTANT', 'PHOTOGRAPHER', 'EDITOR', 'HR'] },
-      { name: 'Reports', path: '/dashboard/reports', icon: BarChart3, roles: ['ADMIN', 'ACCOUNTANT', 'HR'] },
+      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: SYSTEM_ROLES },
+      { name: 'Reports', path: '/dashboard/reports', icon: BarChart3, roles: SYSTEM_ROLES },
     ]
   },
   {
-    title: 'Sales & Customers',
+    title: 'Sales & Clients',
     items: [
-      { name: 'Inquiries', path: '/dashboard/leads', icon: UserSquare2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Marketing Studio', path: '/dashboard/marketing', icon: Globe, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Clients', path: '/dashboard/clients', icon: Users, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Bookings', path: '/dashboard/bookings', icon: CalendarDays, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Track Status', path: '/dashboard/bookings/status', icon: CheckCircle2, roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] },
-      { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT'] },
-      { name: 'Quotation Studio', path: '/dashboard/quotations', icon: Sparkles, roles: ['ADMIN', 'MANAGER', 'ACCOUNTANT'] },
+      { name: 'Bookings & Contracts', path: '/dashboard/bookings', icon: CalendarDays, roles: SYSTEM_ROLES },
+      { name: 'Inquiries & Leads', path: '/dashboard/leads', icon: UserSquare2, roles: SYSTEM_ROLES },
+      { name: 'Clients Directory', path: '/dashboard/clients', icon: Users, roles: SYSTEM_ROLES },
+      { name: 'Marketing Studio', path: '/dashboard/marketing', icon: Globe, roles: SYSTEM_ROLES },
     ]
   },
   {
-    title: 'Work & Operations',
+    title: 'Operations & Shoots',
     items: [
-      { name: 'Shoot Schedule', path: '/dashboard/assignments', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'PHOTOGRAPHER'] },
-      { name: 'Editing Tasks', path: '/dashboard/workflows', icon: PenTool, roles: ['ADMIN', 'MANAGER', 'EDITOR', 'PHOTOGRAPHER'] },
-      { name: 'Pricing Packages', path: '/dashboard/packages', icon: BoxIcon, roles: ['ADMIN', 'MANAGER'] },
-      { name: 'Event Types', path: '/dashboard/events', icon: Flame, roles: ['ADMIN', 'MANAGER'] },
+      { name: 'Shoot Schedule', path: '/dashboard/assignments', icon: ClipboardList, roles: SYSTEM_ROLES },
+      { name: 'Work Updates', path: '/dashboard/work-updates', icon: Activity, roles: SYSTEM_ROLES },
+      { name: 'Editing Tasks', path: '/dashboard/workflows', icon: PenTool, roles: SYSTEM_ROLES },
+      { name: 'Equipment & Gear', path: '/dashboard/inventory', icon: HardDrive, roles: SYSTEM_ROLES },
     ]
   },
   {
-    title: 'Finance & Gear',
+    title: 'Finance & Billing',
     items: [
-      { name: 'Equipment', path: '/dashboard/inventory', icon: HardDrive, roles: ['ADMIN', 'MANAGER', 'PHOTOGRAPHER'] },
-      { name: 'Expenses', path: '/dashboard/expenses', icon: Receipt, roles: ['ADMIN', 'ACCOUNTANT'] },
+      { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: SYSTEM_ROLES },
+      { name: 'Expense Ledger', path: '/dashboard/expenses', icon: Receipt, roles: SYSTEM_ROLES },
     ]
   },
   {
-    title: 'Team & Directory',
+    title: 'Team & System Setup',
     items: [
-      { name: 'Photographers', path: '/dashboard/photographers', icon: Camera, roles: ['ADMIN', 'MANAGER'] },
-      { name: 'All Staff', path: '/dashboard/employees', icon: Users, roles: ['ADMIN', 'MANAGER', 'HR'] },
-      { name: 'Attendance & Payroll', path: '/dashboard/attendance', icon: FileText, roles: ['ADMIN', 'MANAGER', 'HR'] },
-      { name: 'System Users', path: '/dashboard/users', icon: ShieldAlert, roles: ['ADMIN'] },
-    ]
-  },
-  {
-    title: 'System',
-    items: [
-      { name: 'Settings', path: '/dashboard/settings', icon: Settings, roles: ['ADMIN'] },
+      { name: 'Team & Staff', path: '/dashboard/employees', icon: Users, roles: SYSTEM_ROLES },
+      { name: 'Packages & Events', path: '/dashboard/packages', icon: BoxIcon, roles: SYSTEM_ROLES },
+      { name: 'System Access & Roles', path: '/dashboard/roles', icon: ShieldCheck, roles: SYSTEM_ROLES },
+      { name: 'Studio Settings', path: '/dashboard/settings', icon: Settings, roles: SYSTEM_ROLES },
     ]
   }
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, fetchSession, logout } = useStore();
+  const { user, rolePermissions, fetchSession, fetchData, logout } = useStore();
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
@@ -90,6 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         window.location.href = '/';
       } else {
         setLoading(false);
+        fetchData('rolePermissions');
       }
     };
 
@@ -114,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleFocus);
     };
-  }, [fetchSession]);
+  }, [fetchSession, fetchData]);
 
   // Auto-close mobile menu on path changes
   useEffect(() => {
@@ -132,11 +126,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // Filter menu items by user role
+  // Check dynamic role permissions for current user's role
+  const currentRolePerm = rolePermissions?.find((r: any) => r.roleName === user?.role);
+  let allowedPaths: string[] | null = null;
+  if (currentRolePerm) {
+    try {
+      allowedPaths = typeof currentRolePerm.permissions === 'string' ? JSON.parse(currentRolePerm.permissions) : currentRolePerm.permissions;
+    } catch (e) {
+      allowedPaths = null;
+    }
+  }
+
+  // Filter menu items by user role and dynamic permissions
   const filteredGroups = MENU_GROUPS.map((group) => {
-    const allowedItems = group.items.filter(
-      (item) => user && item.roles.includes(user.role)
-    );
+    const allowedItems = group.items.filter((item) => {
+      if (!user) return false;
+      if (['SUPER_ADMIN', 'ADMIN'].includes(user.role)) return true;
+      if (allowedPaths && Array.isArray(allowedPaths)) {
+        return allowedPaths.includes(item.path);
+      }
+      return item.roles.includes(user.role);
+    });
     return {
       ...group,
       items: allowedItems,
@@ -194,34 +204,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={() => router.push(item.path)}
                             selected={isActive}
                             sx={{
-                              borderRadius: 0.5,
-                              py: 0.6,
+                              borderRadius: 1,
+                              py: 0.7,
                               px: 1.5,
+                              transition: 'all 0.15s ease',
                               '&.Mui-selected': {
-                                backgroundColor: 'primary.main',
-                                color: 'primary.contrastText',
+                                backgroundColor: '#c5963b !important',
+                                color: '#ffffff !important',
                                 '&:hover': {
-                                  backgroundColor: 'primary.dark',
+                                  backgroundColor: '#a9792a !important',
+                                  color: '#ffffff !important',
                                 },
-                                '& .MuiListItemIcon-root': {
-                                  color: 'primary.contrastText',
+                                '& .MuiListItemIcon-root, & .MuiTypography-root': {
+                                  color: '#ffffff !important',
                                 },
                               },
                               '&:hover': {
-                                backgroundColor: 'primary.light',
-                                color: 'primary.dark',
-                                '& .MuiListItemIcon-root': {
-                                  color: 'primary.dark',
+                                backgroundColor: 'rgba(197, 150, 59, 0.1) !important',
+                                color: '#c5963b !important',
+                                '& .MuiListItemIcon-root, & .MuiTypography-root': {
+                                  color: '#c5963b !important',
                                 },
                               },
                             }}
                           >
-                            <ListItemIcon sx={{ minWidth: 28, color: isActive ? 'primary.contrastText' : 'text.secondary' }}>
+                            <ListItemIcon sx={{ minWidth: 28, color: isActive ? '#ffffff !important' : 'text.secondary' }}>
                               <Icon className="h-4 w-4" />
                             </ListItemIcon>
                             <ListItemText
                               primary={
-                                <Typography sx={{ fontSize: 11.5, fontWeight: isActive ? 600 : 400, letterSpacing: '0.01em' }}>
+                                <Typography sx={{ fontSize: 11.5, fontWeight: isActive ? 600 : 500, letterSpacing: '0.01em', color: 'inherit' }}>
                                   {item.name}
                                 </Typography>
                               }

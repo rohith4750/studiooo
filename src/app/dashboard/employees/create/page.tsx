@@ -10,14 +10,14 @@ import {
 } from '@mui/material';
 import { Sparkles, ArrowLeft, CheckCircle2, RefreshCw } from 'lucide-react';
 
-const ROLES = ['PHOTOGRAPHER', 'EDITOR', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST', 'HR'];
+const ROLES = ['PHOTOGRAPHER', 'VIDEOGRAPHER', 'EDITOR', 'MANAGER', 'ACCOUNTANT', 'RECEPTIONIST', 'HR', 'ASSISTANT'];
 const STATUSES = ['ACTIVE', 'INACTIVE'];
 
 function EmployeeCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('employeeId');
-  const { employees, users, fetchData, createRecord, updateRecord } = useStore();
+  const { employees, users, rolePermissions, fetchData, createRecord, updateRecord } = useStore();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ function EmployeeCreateContent() {
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formRole, setFormRole] = useState('PHOTOGRAPHER');
+  const [formRole, setFormRole] = useState('ADMIN');
   const [formStatus, setFormStatus] = useState('ACTIVE');
   const [formPassword, setFormPassword] = useState('');
   const [formSalary, setFormSalary] = useState('');
@@ -37,7 +37,8 @@ function EmployeeCreateContent() {
     setLoading(true);
     Promise.all([
       fetchData('employees'),
-      fetchData('users')
+      fetchData('users'),
+      fetchData('rolePermissions')
     ]).finally(() => setLoading(false));
   }, [fetchData]);
 
@@ -145,9 +146,24 @@ function EmployeeCreateContent() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Corporate Role</InputLabel>
-                  <Select value={formRole} label="Corporate Role" onChange={(e) => setFormRole(e.target.value)}>
-                    {ROLES.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                  <InputLabel>System Access Role</InputLabel>
+                  <Select value={formRole} label="System Access Role" onChange={(e) => setFormRole(e.target.value)}>
+                    {((rolePermissions && rolePermissions.length > 0)
+                      ? rolePermissions
+                      : [
+                          { roleName: 'SUPER_ADMIN', displayName: 'Super Administrator' },
+                          { roleName: 'ADMIN', displayName: 'Studio Administrator' },
+                          { roleName: 'MANAGER', displayName: 'Studio Manager' },
+                          { roleName: 'RECEPTIONIST', displayName: 'Front Desk Receptionist' },
+                          { roleName: 'PHOTOGRAPHER', displayName: 'Lead Photographer' },
+                          { roleName: 'EDITOR', displayName: 'Post-Production Editor' },
+                          { roleName: 'ACCOUNTANT', displayName: 'Finance & Accountant' },
+                        ]
+                    ).map((r: any) => (
+                      <MenuItem key={r.roleName} value={r.roleName}>
+                        {r.roleName} {r.displayName ? `(${r.displayName})` : ''}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>

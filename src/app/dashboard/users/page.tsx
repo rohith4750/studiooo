@@ -43,8 +43,12 @@ export default function UsersPage() {
           <div><span className="text-[10px] uppercase font-bold text-neutral-400">Total Registered Users</span><p className="text-xl font-extrabold text-neutral-700">{users.length}</p></div>
         </div>
         <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
-          <div className="p-3 bg-primary-50 text-primary-600 rounded"><Shield className="h-6 w-6" /></div>
-          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Admin Accounts</span><p className="text-xl font-extrabold text-neutral-700">{users.filter(u => u.role === 'ADMIN').length}</p></div>
+          <div className="p-3 bg-purple-50 text-purple-600 rounded"><Shield className="h-6 w-6" /></div>
+          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Super Admins</span><p className="text-xl font-extrabold text-neutral-700">{users.filter(u => u.role === 'SUPER_ADMIN').length}</p></div>
+        </div>
+        <div className="glass-card p-4 rounded flex items-center space-x-3.5 border border-neutral-200/50">
+          <div className="p-3 bg-primary-50 text-primary-600 rounded"><UserCog className="h-6 w-6" /></div>
+          <div><span className="text-[10px] uppercase font-bold text-neutral-400">Admins</span><p className="text-xl font-extrabold text-neutral-700">{users.filter(u => u.role === 'ADMIN').length}</p></div>
         </div>
       </div>
 
@@ -61,7 +65,7 @@ export default function UsersPage() {
                 <tr className="bg-neutral-50 border-b border-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
                   <th className="py-3 px-4">User Details</th>
                   <th className="py-3 px-4">System Role</th>
-                  <th className="py-3 px-4">Access Level</th>
+                  <th className="py-3 px-4">Access Scope</th>
                   <th className="py-3 px-4">Registered On</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
@@ -76,13 +80,13 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded font-semibold flex items-center space-x-1.5 w-fit uppercase">
-                        <UserCog className="h-3 w-3 text-primary-500" /><span>{user.role}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-semibold flex items-center space-x-1.5 w-fit uppercase ${user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-primary-50 text-primary-700'}`}>
+                        <UserCog className="h-3 w-3" /><span>{user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}</span>
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                       <span className={`inline-flex px-2 py-0.5 border text-[10px] font-bold rounded-full tracking-wide ${user.role === 'ADMIN' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-neutral-100 text-neutral-600 border-neutral-200'}`}>
-                         {user.role === 'ADMIN' ? 'Full Access' : 'Restricted'}
+                       <span className={`inline-flex px-2 py-0.5 border text-[10px] font-bold rounded-full tracking-wide ${user.role === 'SUPER_ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                         {user.role === 'SUPER_ADMIN' ? 'Full System & Security' : 'Operational Administration'}
                        </span>
                     </td>
                     <td className="py-3.5 px-4">
