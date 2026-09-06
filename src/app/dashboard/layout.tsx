@@ -50,6 +50,7 @@ const MENU_GROUPS = [
   {
     title: 'Finance & Billing',
     items: [
+      { name: 'Quotation Editor', path: '/dashboard/quotations', icon: FileText, roles: SYSTEM_ROLES },
       { name: 'Invoices & Quotes', path: '/dashboard/billing', icon: FileText, roles: SYSTEM_ROLES },
       { name: 'Expense Ledger', path: '/dashboard/expenses', icon: Receipt, roles: SYSTEM_ROLES },
     ]

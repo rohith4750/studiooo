@@ -10,6 +10,7 @@ import {
 
 import DateYearFilter, { initialDateYearFilterState, DateYearFilterState, matchesDateFilter } from '@/components/DateYearFilter';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { FinancialAmount } from '@/lib/permissions';
 
 export default function BillingPage() {
@@ -252,6 +253,13 @@ export default function BillingPage() {
             Official GST Tax Invoices, Quotation PDFs, and Digital Signatures.
           </p>
         </div>
+        <Link 
+          href="/dashboard/quotations"
+          className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-neutral-950 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer self-start sm:self-auto"
+        >
+          <Sparkles className="h-4 w-4 fill-neutral-950" />
+          <span>Open Quotation Editor</span>
+        </Link>
       </div>
 
       {/* Main Ledger Section */}

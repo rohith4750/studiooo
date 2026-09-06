@@ -293,11 +293,11 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
       
       {/* Interactive Customizer Bar (Hidden when printing) */}
       {showControls && (
-        <div className="print:hidden w-full max-w-[760px] mb-4 p-3 bg-neutral-900 text-white rounded-2xl flex flex-wrap items-center justify-between shadow-xl border border-neutral-800 gap-3">
+        <div className="print:hidden w-full max-w-[760px] mb-4 p-3.5 bg-gradient-to-r from-amber-900 via-amber-950 to-amber-900 text-amber-50 rounded-2xl flex flex-wrap items-center justify-between shadow-xl border border-amber-800/80 gap-3">
           <div className="flex items-center space-x-2">
-            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-            <span className="text-xs font-bold tracking-wide">PDF Template Customizer</span>
-            <span className="text-[10px] text-neutral-400 hidden sm:inline">
+            <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
+            <span className="text-xs font-bold tracking-wide text-amber-100">PDF Template Customizer</span>
+            <span className="text-[10px] text-amber-300/80 hidden sm:inline">
               ({isEditing ? 'Live Editing Mode' : 'Pristine Preview Mode'})
             </span>
           </div>
@@ -306,7 +306,7 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
             <button
               onClick={() => setIsEditing(!isEditing)}
               className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
-                isEditing ? 'bg-amber-400 text-neutral-950 font-bold hover:bg-amber-300' : 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+                isEditing ? 'bg-amber-300 text-amber-950 font-bold hover:bg-amber-200' : 'bg-amber-800/90 text-amber-100 hover:bg-amber-800'
               }`}
             >
               {isEditing ? (
@@ -316,7 +316,7 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                 </>
               ) : (
                 <>
-                  <Edit2 className="h-3.5 w-3.5 text-amber-400" />
+                  <Edit2 className="h-3.5 w-3.5 text-amber-300" />
                   <span>Edit Custom Fields</span>
                 </>
               )}
@@ -324,15 +324,15 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
 
             <button
               onClick={handlePrintDocument}
-              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium cursor-pointer transition"
+              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-amber-850 hover:bg-amber-800 text-amber-100 rounded-lg text-xs font-medium cursor-pointer transition border border-amber-700/60"
             >
-              <Printer className="h-3.5 w-3.5 text-neutral-400" />
+              <Printer className="h-3.5 w-3.5 text-amber-300" />
               <span>Print</span>
             </button>
 
             <button
               onClick={handleDownloadPDFDocument}
-              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-neutral-950 rounded-lg text-xs font-bold cursor-pointer transition shadow-xs"
+              className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-lg text-xs font-extrabold cursor-pointer transition shadow-xs"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Download PDF</span>
@@ -421,9 +421,9 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
                 className="h-16 sm:h-20 w-auto object-contain max-w-[180px]"
               />
             ) : (
-              <div className="p-3 bg-neutral-900 text-amber-400 rounded-xl text-center border border-neutral-800 shadow-sm">
+              <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl text-center shadow-xs border border-amber-400">
                 <p className="font-black text-lg tracking-widest leading-none">R2R</p>
-                <p className="text-[8px] font-bold text-white uppercase tracking-widest mt-1">STUDIO FILMS</p>
+                <p className="text-[8px] font-bold text-amber-100 uppercase tracking-widest mt-1">STUDIO FILMS</p>
               </div>
             )}
 
@@ -589,20 +589,20 @@ export default function QuotationTemplate({ doc, showControls = true }: Quotatio
         </div>
 
         {/* Grand Total Highlight Banner */}
-        <div className="bg-neutral-900 text-white rounded-2xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-neutral-800">
+        <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white rounded-2xl p-5.5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-amber-500/80">
           <div>
-            <p className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest">
+            <p className="text-[10px] font-extrabold text-amber-200 uppercase tracking-widest">
               ESTIMATED PACKAGE INVESTMENT
             </p>
-            <h3 className="text-lg font-bold text-neutral-200 mt-0.5">
+            <h3 className="text-lg font-bold text-white mt-0.5">
               Net All-Inclusive Grand Total
             </h3>
           </div>
           <div className="text-left sm:text-right">
-            <span className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight">
+            <span className="text-2xl sm:text-3xl font-black text-amber-100 tracking-tight">
               <FinancialAmount value={calculatedGrandTotal} />
             </span>
-            <p className="text-[9px] text-neutral-400 font-normal mt-0.5">
+            <p className="text-[9px] text-amber-200/80 font-normal mt-0.5">
               Including equipment, post-production & editing charges
             </p>
           </div>
