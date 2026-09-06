@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { generateInvoicePdfBuffer, generateQuotationPdfBuffer } from './pdfGenerator';
+import { generateInvoicePdfBuffer, generateQuotationPdfBuffer, QuotationTheme } from './pdfGenerator';
 
 // Resolve SMTP Transport options from env vars or defaults
 export function getSmtpTransporter() {
@@ -38,6 +38,83 @@ export function getFromEmail() {
   return process.env.SMTP_FROM || `"R2R Studio Photography" <${process.env.SMTP_USER || 'notifications@r2rstudio.com'}>`;
 }
 
+const EMAIL_THEME_MAP: Record<QuotationTheme, {
+  headerBg: string;
+  headerSubtext: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
+  eventBg: string;
+  eventBorder: string;
+  eventTitleText: string;
+  totalBannerBg: string;
+  totalBannerText: string;
+  accentBtnBg: string;
+  accentBtnText: string;
+  themeTitle: string;
+}> = {
+  ROYAL_GOLD: {
+    headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+    headerSubtext: '#fde68a',
+    badgeBg: '#fffbeb',
+    badgeBorder: '#f59e0b',
+    badgeText: '#92400e',
+    eventBg: '#fffbeb',
+    eventBorder: '#fef3c7',
+    eventTitleText: '#78350f',
+    totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+    totalBannerText: '#fde68a',
+    accentBtnBg: '#f59e0b',
+    accentBtnText: '#0f172a',
+    themeTitle: 'Royal Gold Luxury Edition'
+  },
+  ELEGANT_IVORY: {
+    headerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
+    headerSubtext: '#fde68a',
+    badgeBg: '#fffbeb',
+    badgeBorder: '#d97706',
+    badgeText: '#78350f',
+    eventBg: '#fffbeb',
+    eventBorder: '#fde68a',
+    eventTitleText: '#451a03',
+    totalBannerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
+    totalBannerText: '#fde68a',
+    accentBtnBg: '#b45309',
+    accentBtnText: '#ffffff',
+    themeTitle: 'Porcelain Ivory Edition'
+  },
+  MINIMAL_EDITORIAL: {
+    headerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    headerSubtext: '#cbd5e1',
+    badgeBg: '#f8fafc',
+    badgeBorder: '#0f172a',
+    badgeText: '#0f172a',
+    eventBg: '#f8fafc',
+    eventBorder: '#e2e8f0',
+    eventTitleText: '#0f172a',
+    totalBannerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    totalBannerText: '#ffffff',
+    accentBtnBg: '#0f172a',
+    accentBtnText: '#ffffff',
+    themeTitle: 'Minimal Editorial Edition'
+  },
+  ROSE_ROMANCE: {
+    headerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+    headerSubtext: '#ffe4e6',
+    badgeBg: '#fff1f2',
+    badgeBorder: '#fb7185',
+    badgeText: '#881337',
+    eventBg: '#fff1f2',
+    eventBorder: '#fecdd3',
+    eventTitleText: '#881337',
+    totalBannerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+    totalBannerText: '#ffe4e6',
+    accentBtnBg: '#be123c',
+    accentBtnText: '#ffffff',
+    themeTitle: 'Rose Romance Edition'
+  }
+};
+
 /**
  * 1. Send Official Booking Confirmation Email to Client
  */
@@ -50,7 +127,8 @@ export async function sendBookingConfirmationEmail({
   balance = 0,
   status = 'CONFIRMED',
   events = [],
-  pdfBase64
+  pdfBase64,
+  theme = 'ROYAL_GOLD'
 }: {
   to: string;
   clientName: string;
@@ -61,6 +139,7 @@ export async function sendBookingConfirmationEmail({
   status?: string;
   events?: any[];
   pdfBase64?: string;
+  theme?: QuotationTheme;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending booking confirmation email - invalid recipient: ${to}`);
@@ -70,16 +149,17 @@ export async function sendBookingConfirmationEmail({
   try {
     const transporter = getSmtpTransporter();
     const from = getFromEmail();
+    const tm = EMAIL_THEME_MAP[theme] || EMAIL_THEME_MAP.ROYAL_GOLD;
 
     const formattedTotal = (grandTotal || 0).toLocaleString('en-IN');
     const formattedPaid = (paidAmount || 0).toLocaleString('en-IN');
     const formattedBalance = (balance || (grandTotal - paidAmount)).toLocaleString('en-IN');
 
     const eventsHtml = events.length > 0 ? events.map((be: any) => `
-      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
-          <strong style="color: #0f172a; font-size: 13px;">${be.event?.name || 'Shoot Session'}</strong>
-          <span style="font-weight: bold; color: #b45309; font-size: 12px;">${be.category || 'EVENT'}</span>
+      <div style="background-color: ${tm.eventBg}; border: 1px solid ${tm.eventBorder}; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid ${tm.badgeBorder}; padding-bottom: 4px; margin-bottom: 6px;">
+          <strong style="color: ${tm.eventTitleText}; font-size: 13px;">${be.event?.name || 'Shoot Session'}</strong>
+          <span style="font-weight: bold; color: ${tm.badgeText}; font-size: 12px;">${be.category || 'EVENT'}</span>
         </div>
         <p style="margin: 0; font-size: 12px; color: #475569;">📅 Date: <strong>${be.eventDate}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
         ${be.venue ? `<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">📍 Venue: ${be.venue}</p>` : ''}
@@ -93,15 +173,15 @@ export async function sendBookingConfirmationEmail({
       <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
-          <div style="background: linear-gradient(135deg, #b45309 0%, #78350f 100%); padding: 24px; text-align: center; color: #ffffff;">
+          <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #fde68a; font-weight: 600; text-transform: uppercase;">Official Booking Confirmation</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Official Booking Confirmation • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
-            <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
-              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #065f46;">BOOKING CONFIRMED & RESERVED!</p>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #047857;">Booking #: ${bookingNumber} | Status: ${status}</p>
+            <div style="background-color: ${tm.badgeBg}; border-left: 4px solid ${tm.badgeBorder}; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 13px; font-weight: bold; color: ${tm.badgeText};">BOOKING CONFIRMED & RESERVED!</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Booking #: ${bookingNumber} | Status: ${status}</p>
             </div>
 
             <p style="font-size: 15px; margin-top: 0;">Dear <strong>${clientName}</strong>,</p>
@@ -110,18 +190,18 @@ export async function sendBookingConfirmationEmail({
             <h3 style="font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Your Event Shoot Schedule</h3>
             ${eventsHtml}
 
-            <div style="background-color: #0f172a; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-space-between; align-items: center;">
+            <div style="background: ${tm.totalBannerBg}; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-space-between; align-items: center;">
               <div>
-                <p style="margin: 0; font-size: 11px; color: #f59e0b; font-weight: bold; text-transform: uppercase;">Total Booking Package Value</p>
-                <p style="margin: 2px 0 0 0; font-size: 12px; color: #94a3b8;">Advance Paid: ₹${formattedPaid} | Due: ₹${formattedBalance}</p>
+                <p style="margin: 0; font-size: 11px; color: ${tm.totalBannerText}; font-weight: bold; text-transform: uppercase;">Total Booking Package Value</p>
+                <p style="margin: 2px 0 0 0; font-size: 12px; color: #e2e8f0;">Advance Paid: ₹${formattedPaid} | Due: ₹${formattedBalance}</p>
               </div>
               <div style="text-align: right;">
-                <span style="font-size: 22px; font-weight: 800; color: #fde68a;">₹${formattedTotal}/-</span>
+                <span style="font-size: 22px; font-weight: 800; color: ${tm.totalBannerText};">₹${formattedTotal}/-</span>
               </div>
             </div>
 
             <div style="margin-top: 24px; text-align: center;">
-              <a href="http://localhost:3000/dashboard/quotations?bookingId=${bookingNumber}" style="display: inline-block; background-color: #f59e0b; color: #0f172a; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-right: 8px;">
+              <a href="http://localhost:3000/dashboard/quotations?bookingId=${bookingNumber}" style="display: inline-block; background-color: ${tm.accentBtnBg}; color: ${tm.accentBtnText}; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-right: 8px;">
                 View Quotation PDF
               </a>
               <a href="http://localhost:3000/dashboard/billing" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
@@ -160,7 +240,8 @@ export async function sendBookingConfirmationEmail({
           grandTotal,
           paidAmount,
           balance,
-          events
+          events,
+          theme
         });
         attachments.push({
           filename: `Official_Booking_Invoice_${(clientName || 'Client').replace(/\s+/g, '_')}_${bookingNumber}.pdf`,
@@ -179,7 +260,7 @@ export async function sendBookingConfirmationEmail({
       html: htmlBody,
       attachments
     });
-    console.log(`[SMTP Mailer] Booking confirmation email sent to ${to}. MessageId: ${info.messageId || 'OK'}`);
+    console.log(`[SMTP Mailer] Booking confirmation email sent to ${to} (Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error(`[SMTP Mailer] Error sending booking confirmation email to ${to}:`, error.message);
@@ -197,7 +278,8 @@ export async function sendQuotationEmail({
   grandTotal,
   events = [],
   quotationId,
-  pdfBase64
+  pdfBase64,
+  theme = 'ROYAL_GOLD'
 }: {
   to: string;
   clientName: string;
@@ -206,6 +288,7 @@ export async function sendQuotationEmail({
   events?: any[];
   quotationId?: string;
   pdfBase64?: string;
+  theme?: QuotationTheme;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending quotation email - invalid recipient: ${to}`);
@@ -215,18 +298,27 @@ export async function sendQuotationEmail({
   try {
     const transporter = getSmtpTransporter();
     const from = getFromEmail();
+    const tm = EMAIL_THEME_MAP[theme] || EMAIL_THEME_MAP.ROYAL_GOLD;
 
     const formattedTotal = (grandTotal || 0).toLocaleString('en-IN');
-    const quoteRef = quotationId ? `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}` : `R2R-QT-${bookingNumber}`;
+    const quoteRef = quotationId ? (quotationId.startsWith('R2R-QT-') ? quotationId : `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}`) : `R2R-QT-${bookingNumber}`;
 
     const eventsHtml = events.map((be: any) => `
-      <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fde68a; padding-bottom: 6px; margin-bottom: 8px;">
-          <strong style="color: #78350f; font-size: 14px;">${be.event?.name || 'Shoot Session'}</strong>
-          <span style="font-weight: bold; color: #92400e;">₹${(be.price || 0).toLocaleString('en-IN')}</span>
+      <div style="background-color: ${tm.eventBg}; border: 1px solid ${tm.eventBorder}; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid ${tm.badgeBorder}; padding-bottom: 6px; margin-bottom: 8px;">
+          <strong style="color: ${tm.eventTitleText}; font-size: 14px;">${be.event?.name || be.name || 'Shoot Session'}</strong>
+          <span style="font-weight: bold; color: ${tm.badgeText};">₹${(be.price || 0).toLocaleString('en-IN')}</span>
         </div>
-        <p style="margin: 0; font-size: 12px; color: #4b5563;">Date: <strong>${be.eventDate}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
+        <p style="margin: 0; font-size: 12px; color: #4b5563;">Date: <strong>${be.eventDate || 'Scheduled'}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
         ${be.venue ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">Venue: ${be.venue}</p>` : ''}
+        ${be.deliverables && be.deliverables.length > 0 ? `
+          <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed ${tm.badgeBorder};">
+            <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: ${tm.badgeText}; text-transform: uppercase;">Included Deliverables:</p>
+            <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #475569; line-height: 1.5;">
+              ${be.deliverables.map((d: string) => `<li>${d}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
       </div>
     `).join('');
 
@@ -240,15 +332,15 @@ export async function sendQuotationEmail({
       <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
-          <div style="background: linear-gradient(135deg, #b45309 0%, #78350f 100%); padding: 24px; text-align: center; color: #ffffff;">
+          <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #fde68a; font-weight: 600; text-transform: uppercase;">Creative Photography & Cinematic Films</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Creative Photography & Cinematic Films • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
-            <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
-              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #92400e;">OFFICIAL QUOTATION ESTIMATE</p>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #b45309;">Ref: ${quoteRef} | Booking #: ${bookingNumber}</p>
+            <div style="background-color: ${tm.badgeBg}; border-left: 4px solid ${tm.badgeBorder}; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 13px; font-weight: bold; color: ${tm.badgeText};">OFFICIAL QUOTATION ESTIMATE</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Ref: ${quoteRef} | Booking #: ${bookingNumber}</p>
             </div>
 
             <p style="font-size: 15px; margin-top: 0;">Dear <strong>${clientName}</strong>,</p>
@@ -257,13 +349,13 @@ export async function sendQuotationEmail({
             <h3 style="font-size: 14px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Covered Events Breakdown</h3>
             ${eventsHtml || '<p style="font-size: 12px; color: #64748b;">Package details as per studio agreement.</p>'}
 
-            <div style="background-color: #0f172a; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-space-between; align-items: center;">
+            <div style="background: ${tm.totalBannerBg}; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-space-between; align-items: center;">
               <div>
-                <p style="margin: 0; font-size: 11px; color: #f59e0b; font-weight: bold; text-transform: uppercase;">Total Estimated Investment</p>
-                <p style="margin: 2px 0 0 0; font-size: 12px; color: #94a3b8;">All-Inclusive Package Estimate</p>
+                <p style="margin: 0; font-size: 11px; color: ${tm.totalBannerText}; font-weight: bold; text-transform: uppercase;">Total Estimated Investment</p>
+                <p style="margin: 2px 0 0 0; font-size: 12px; color: #e2e8f0;">All-Inclusive Package Estimate</p>
               </div>
               <div style="text-align: right;">
-                <span style="font-size: 22px; font-weight: 800; color: #fde68a;">₹${formattedTotal}/-</span>
+                <span style="font-size: 22px; font-weight: 800; color: ${tm.totalBannerText};">₹${formattedTotal}/-</span>
               </div>
             </div>
 
@@ -277,7 +369,7 @@ export async function sendQuotationEmail({
             </div>
 
             <div style="margin-top: 24px; text-align: center;">
-              <a href="http://localhost:3000/dashboard/quotations?bookingId=${bookingNumber}" style="display: inline-block; background-color: #f59e0b; color: #0f172a; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+              <a href="http://localhost:3000/dashboard/quotations?bookingId=${bookingNumber}" style="display: inline-block; background-color: ${tm.accentBtnBg}; color: ${tm.accentBtnText}; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                 View & Print Official Quotation PDF
               </a>
             </div>
@@ -307,7 +399,8 @@ export async function sendQuotationEmail({
           bookingNumber,
           quotationId: quoteRef,
           grandTotal,
-          events
+          events,
+          theme
         });
         attachments.push({
           filename: `Official_Quotation_${(clientName || 'Client').replace(/\s+/g, '_')}_${quoteRef}.pdf`,
@@ -326,7 +419,7 @@ export async function sendQuotationEmail({
       html: htmlBody,
       attachments
     });
-    console.log(`[SMTP Mailer] Quotation email sent to ${to} (Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
+    console.log(`[SMTP Mailer] Quotation email sent to ${to} (Theme: ${theme}, Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error(`[SMTP Mailer] Error sending quotation email to ${to}:`, error.message);
@@ -348,7 +441,8 @@ export async function sendInvoiceEmail({
   paidAmount,
   balance,
   events = [],
-  pdfBase64
+  pdfBase64,
+  theme = 'ROYAL_GOLD'
 }: {
   to: string;
   clientName: string;
@@ -361,6 +455,7 @@ export async function sendInvoiceEmail({
   balance: number;
   events?: any[];
   pdfBase64?: string;
+  theme?: QuotationTheme;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending invoice email - invalid recipient: ${to}`);
@@ -370,14 +465,15 @@ export async function sendInvoiceEmail({
   try {
     const transporter = getSmtpTransporter();
     const from = getFromEmail();
+    const tm = EMAIL_THEME_MAP[theme] || EMAIL_THEME_MAP.ROYAL_GOLD;
 
     const eventsHtml = events.length > 0 ? events.map((be: any) => `
-      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+      <div style="background-color: ${tm.eventBg}; border: 1px solid ${tm.eventBorder}; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <strong style="color: #0f172a; font-size: 13px;">${be.event?.name || 'Shoot Session'}</strong>
-          <span style="font-size: 11px; font-weight: bold; color: #b45309;">${be.category || 'EVENT'}</span>
+          <strong style="color: ${tm.eventTitleText}; font-size: 13px;">${be.event?.name || be.name || 'Shoot Session'}</strong>
+          <span style="font-size: 11px; font-weight: bold; color: ${tm.badgeText};">${be.category || 'EVENT'}</span>
         </div>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">📅 Date: <strong>${be.eventDate}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">📅 Date: <strong>${be.eventDate || 'Scheduled'}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
         ${be.venue ? `<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">📍 Venue: ${be.venue}</p>` : ''}
       </div>
     `).join('') : '';
@@ -389,14 +485,14 @@ export async function sendInvoiceEmail({
       <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
-          <div style="background-color: #0f172a; padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; color: #f59e0b;">R2R STUDIO BILL & INVOICE SUMMARY</h1>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber}</p>
+          <div style="background: ${tm.headerBg}; padding: 24px; text-align: center; color: #ffffff;">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO BILL & INVOICE SUMMARY</h1>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 600; text-transform: uppercase;">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber} • ${tm.themeTitle}</p>
           </div>
 
           <div style="padding: 24px;">
             <p style="font-size: 15px; margin-top: 0;">Dear <strong>${clientName}</strong>,</p>
-            <p style="font-size: 13px; color: #475569;">Please find your official tax invoice, bill summary, and covered event shoot schedule from R2R Studio Photography below:</p>
+            <p style="font-size: 13px; color: #475569;">Please find your official tax invoice, bill summary, and covered event shoot schedule from R2R Studio Photography attached as a PDF and detailed below:</p>
 
             ${eventsHtml ? `
               <h3 style="font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Covered Event Shoot Schedule</h3>
@@ -413,7 +509,7 @@ export async function sendInvoiceEmail({
             </table>
 
             <div style="margin-top: 24px; text-align: center;">
-              <a href="http://localhost:3000/dashboard/billing" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+              <a href="http://localhost:3000/dashboard/billing" style="display: inline-block; background-color: ${tm.accentBtnBg}; color: ${tm.accentBtnText}; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                 View & Print Official Bill PDF
               </a>
             </div>
@@ -447,7 +543,8 @@ export async function sendInvoiceEmail({
           grandTotal,
           paidAmount,
           balance,
-          events
+          events,
+          theme
         });
         attachments.push({
           filename: `Official_Bill_${(clientName || 'Client').replace(/\s+/g, '_')}_${invoiceNumber}.pdf`,
@@ -466,7 +563,7 @@ export async function sendInvoiceEmail({
       html: htmlBody,
       attachments
     });
-    console.log(`[SMTP Mailer] Invoice email sent to ${to} (Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
+    console.log(`[SMTP Mailer] Invoice email sent to ${to} (Theme: ${theme}, Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error(`[SMTP Mailer] Error sending invoice email to ${to}:`, error.message);

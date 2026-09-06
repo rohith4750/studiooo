@@ -1,5 +1,7 @@
 import { jsPDF } from 'jspdf';
 
+export type QuotationTheme = 'ROYAL_GOLD' | 'ELEGANT_IVORY' | 'MINIMAL_EDITORIAL' | 'ROSE_ROMANCE';
+
 export interface PdfEventItem {
   name?: string;
   category?: string;
@@ -8,10 +10,80 @@ export interface PdfEventItem {
   venue?: string;
   price?: number;
   event?: { name: string };
+  deliverables?: string[];
 }
 
+interface ThemeRgbConfig {
+  headerFill: [number, number, number];
+  headerSubtext: [number, number, number];
+  titleBoxFill: [number, number, number];
+  titleBoxDraw: [number, number, number];
+  titleText: [number, number, number];
+  titleRef: [number, number, number];
+  tableHeaderFill: [number, number, number];
+  totalsBoxFill: [number, number, number];
+  totalsBoxDraw: [number, number, number];
+  totalsText: [number, number, number];
+  badgeName: string;
+}
+
+const THEME_RGB_MAP: Record<QuotationTheme, ThemeRgbConfig> = {
+  ROYAL_GOLD: {
+    headerFill: [180, 83, 9], // #b45309
+    headerSubtext: [254, 243, 199], // #fef3c7
+    titleBoxFill: [254, 243, 199], // #fef3c7
+    titleBoxDraw: [245, 158, 11], // #f59e0b
+    titleText: [120, 53, 15], // #78350f
+    titleRef: [180, 83, 9], // #b45309
+    tableHeaderFill: [180, 83, 9],
+    totalsBoxFill: [254, 243, 199],
+    totalsBoxDraw: [245, 158, 11],
+    totalsText: [180, 83, 9],
+    badgeName: 'ROYAL GOLD LUXURY EDITION'
+  },
+  ELEGANT_IVORY: {
+    headerFill: [120, 53, 15], // #78350f
+    headerSubtext: [254, 243, 199],
+    titleBoxFill: [255, 251, 235], // #fffbeb
+    titleBoxDraw: [217, 119, 6],
+    titleText: [69, 26, 3],
+    titleRef: [120, 53, 15],
+    tableHeaderFill: [120, 53, 15],
+    totalsBoxFill: [255, 251, 235],
+    totalsBoxDraw: [217, 119, 6],
+    totalsText: [120, 53, 15],
+    badgeName: 'PORCELAIN IVORY ELEGANT EDITION'
+  },
+  MINIMAL_EDITORIAL: {
+    headerFill: [15, 23, 42], // #0f172a
+    headerSubtext: [226, 232, 240],
+    titleBoxFill: [241, 245, 249],
+    titleBoxDraw: [148, 163, 184],
+    titleText: [15, 23, 42],
+    titleRef: [71, 85, 105],
+    tableHeaderFill: [15, 23, 42],
+    totalsBoxFill: [248, 250, 252],
+    totalsBoxDraw: [203, 213, 225],
+    totalsText: [15, 23, 42],
+    badgeName: 'MINIMAL EDITORIAL EDITION'
+  },
+  ROSE_ROMANCE: {
+    headerFill: [190, 18, 60], // #be123c
+    headerSubtext: [254, 205, 211],
+    titleBoxFill: [255, 241, 242],
+    titleBoxDraw: [251, 113, 133],
+    titleText: [136, 19, 55],
+    titleRef: [190, 18, 60],
+    tableHeaderFill: [190, 18, 60],
+    totalsBoxFill: [255, 241, 242],
+    totalsBoxDraw: [251, 113, 133],
+    totalsText: [190, 18, 60],
+    badgeName: 'ROSE ROMANCE EDITION'
+  }
+};
+
 /**
- * Generates an Official Tax Invoice / Bill PDF Buffer using jsPDF
+ * Generates an Official Tax Invoice / Bill PDF Buffer using jsPDF with Theme Styling
  */
 export function generateInvoicePdfBuffer(params: {
   clientName: string;
@@ -27,6 +99,7 @@ export function generateInvoicePdfBuffer(params: {
   balance: number;
   events?: PdfEventItem[];
   createdAt?: string;
+  theme?: QuotationTheme;
 }): Buffer {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -47,36 +120,39 @@ export function generateInvoicePdfBuffer(params: {
     paidAmount,
     balance,
     events = [],
-    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    theme = 'ROYAL_GOLD'
   } = params;
 
+  const t = THEME_RGB_MAP[theme] || THEME_RGB_MAP.ROYAL_GOLD;
+
   // Header Banner
-  doc.setFillColor(15, 23, 42); // #0f172a
+  doc.setFillColor(...t.headerFill);
   doc.rect(0, 0, 210, 36, 'F');
 
-  doc.setTextColor(245, 158, 11); // #f59e0b
+  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
   doc.text('R2R STUDIO PHOTOGRAPHY', 14, 16);
 
-  doc.setTextColor(226, 232, 240); // #e2e8f0
+  doc.setTextColor(...t.headerSubtext);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text('Road No 3A, Tarnaka, Hyderabad • Phone: +91 9398534380 • Email: info@r2rstudio.com', 14, 23);
-  doc.text('GSTIN: 36ABCDE1234F1Z5 • Official Tax Invoice & Bill Statement', 14, 29);
+  doc.text(`GSTIN: 36ABCDE1234F1Z5 • ${t.badgeName}`, 14, 29);
 
   // Document Title Box
-  doc.setFillColor(241, 245, 249); // #f1f5f9
+  doc.setFillColor(...t.titleBoxFill);
   doc.rect(14, 42, 182, 14, 'F');
-  doc.setDrawColor(203, 213, 225);
+  doc.setDrawColor(...t.titleBoxDraw);
   doc.rect(14, 42, 182, 14, 'S');
 
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(...t.titleText);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.text('TAX INVOICE & BILL SUMMARY', 18, 51);
 
-  doc.setTextColor(180, 83, 9);
+  doc.setTextColor(...t.titleRef);
   doc.setFontSize(10);
   doc.text(`INVOICE #: ${invoiceNumber}`, 145, 51);
 
@@ -131,7 +207,7 @@ export function generateInvoicePdfBuffer(params: {
 
   // Covered Events Table Header
   y = 100;
-  doc.setFillColor(15, 23, 42);
+  doc.setFillColor(...t.tableHeaderFill);
   doc.rect(14, y, 182, 8, 'F');
 
   doc.setTextColor(255, 255, 255);
@@ -185,8 +261,8 @@ export function generateInvoicePdfBuffer(params: {
   const totalsX = 110;
   const totalsWidth = 86;
 
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(...t.totalsBoxFill);
+  doc.setDrawColor(...t.totalsBoxDraw);
   doc.rect(totalsX, y, totalsWidth, 42, 'F');
   doc.rect(totalsX, y, totalsWidth, 42, 'S');
 
@@ -209,7 +285,7 @@ export function generateInvoicePdfBuffer(params: {
   doc.text(`₹${gstAmount.toLocaleString('en-IN')}`, totalsX + 54, y + 14);
 
   // Divider
-  doc.setDrawColor(203, 213, 225);
+  doc.setDrawColor(...t.totalsBoxDraw);
   doc.line(totalsX + 4, y + 18, totalsX + totalsWidth - 4, y + 18);
 
   // Grand Total
@@ -217,7 +293,7 @@ export function generateInvoicePdfBuffer(params: {
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
   doc.text('Grand Total:', totalsX + 6, y + 25);
-  doc.setTextColor(180, 83, 9);
+  doc.setTextColor(...t.totalsText);
   doc.text(`₹${grandTotal.toLocaleString('en-IN')}`, totalsX + 50, y + 25);
 
   // Advance Paid
@@ -277,7 +353,7 @@ export function generateInvoicePdfBuffer(params: {
 }
 
 /**
- * Generates an Official Quotation PDF Buffer using jsPDF
+ * Generates an Official Quotation PDF Buffer using jsPDF with Theme Styling
  */
 export function generateQuotationPdfBuffer(params: {
   clientName: string;
@@ -289,6 +365,7 @@ export function generateQuotationPdfBuffer(params: {
   grandTotal: number;
   events?: PdfEventItem[];
   createdAt?: string;
+  theme?: QuotationTheme;
 }): Buffer {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -305,13 +382,16 @@ export function generateQuotationPdfBuffer(params: {
     quotationId = 'QT-2026',
     grandTotal,
     events = [],
-    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    theme = 'ROYAL_GOLD'
   } = params;
 
   const quoteRef = quotationId.startsWith('R2R-QT-') ? quotationId : `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}`;
 
+  const t = THEME_RGB_MAP[theme] || THEME_RGB_MAP.ROYAL_GOLD;
+
   // Header Banner
-  doc.setFillColor(180, 83, 9); // #b45309 Warm Gold / Amber
+  doc.setFillColor(...t.headerFill);
   doc.rect(0, 0, 210, 36, 'F');
 
   doc.setTextColor(255, 255, 255);
@@ -319,24 +399,24 @@ export function generateQuotationPdfBuffer(params: {
   doc.setFontSize(20);
   doc.text('R2R STUDIO PHOTOGRAPHY', 14, 16);
 
-  doc.setTextColor(254, 243, 199); // #fef3c7
+  doc.setTextColor(...t.headerSubtext);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text('Road No 3A, Tarnaka, Hyderabad • Phone: +91 9398534380 • Email: info@r2rstudio.com', 14, 23);
-  doc.text('Luxury Photography, Cinematic Wedding Films & Drone Coverage', 14, 29);
+  doc.text(`Luxury Photography, Cinematic Wedding Films • ${t.badgeName}`, 14, 29);
 
   // Document Title Box
-  doc.setFillColor(254, 243, 199); // #fef3c7
+  doc.setFillColor(...t.titleBoxFill);
   doc.rect(14, 42, 182, 14, 'F');
-  doc.setDrawColor(245, 158, 11);
+  doc.setDrawColor(...t.titleBoxDraw);
   doc.rect(14, 42, 182, 14, 'S');
 
-  doc.setTextColor(120, 53, 15);
+  doc.setTextColor(...t.titleText);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.text('OFFICIAL PHOTOGRAPHY QUOTATION', 18, 51);
 
-  doc.setTextColor(180, 83, 9);
+  doc.setTextColor(...t.titleRef);
   doc.setFontSize(10);
   doc.text(`REF: ${quoteRef}`, 145, 51);
 
@@ -385,12 +465,12 @@ export function generateQuotationPdfBuffer(params: {
   doc.setFont('helvetica', 'normal');
   doc.text(`Valid Until:`, 110, y + 25);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(180, 83, 9);
+  doc.setTextColor(...t.titleRef);
   doc.text('30 Days From Issue', 150, y + 25);
 
   // Covered Events Table Header
   y = 100;
-  doc.setFillColor(180, 83, 9);
+  doc.setFillColor(...t.tableHeaderFill);
   doc.rect(14, y, 182, 8, 'F');
 
   doc.setTextColor(255, 255, 255);
@@ -412,7 +492,7 @@ export function generateQuotationPdfBuffer(params: {
     const isEven = index % 2 === 0;
     doc.setFillColor(isEven ? 255 : 254, isEven ? 255 : 252, isEven ? 255 : 243);
     doc.rect(14, y, 182, 10, 'F');
-    doc.setDrawColor(254, 243, 199);
+    doc.setDrawColor(241, 245, 249);
     doc.line(14, y + 10, 196, y + 10);
 
     const eventTitle = item.event?.name || item.name || 'Shoot Session';
@@ -443,19 +523,19 @@ export function generateQuotationPdfBuffer(params: {
   const totalsX = 110;
   const totalsWidth = 86;
 
-  doc.setFillColor(254, 243, 199);
-  doc.setDrawColor(245, 158, 11);
+  doc.setFillColor(...t.totalsBoxFill);
+  doc.setDrawColor(...t.totalsBoxDraw);
   doc.rect(totalsX, y, totalsWidth, 42, 'F');
   doc.rect(totalsX, y, totalsWidth, 42, 'S');
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(120, 53, 15);
+  doc.setTextColor(...t.titleText);
   doc.text('ESTIMATED INVESTMENT', totalsX + 6, y + 10);
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(180, 83, 9);
+  doc.setTextColor(...t.totalsText);
   doc.text(`₹${grandTotal.toLocaleString('en-IN')}/-`, totalsX + 6, y + 22);
 
   doc.setFontSize(7.5);

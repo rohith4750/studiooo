@@ -12,6 +12,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
       const targetEmail = record.clientEmail;
       const targetClientName = record.clientName;
 
+      const theme = record.theme || 'ROYAL_GOLD';
+
       // Handle direct quotation dispatch if temp-id or standalone email in UI
       if (modelName === 'quotation' && (bookingId === 'temp-id' || !bookingId || targetEmail)) {
         if (targetEmail) {
@@ -22,7 +24,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
             grandTotal: record.grandTotal || 0,
             events: [],
             quotationId: record.id,
-            pdfBase64: pdfBase64
+            pdfBase64: pdfBase64,
+            theme: theme
           }).catch(err => console.error('[SMTP Direct Quotation Dispatch Error]', err));
         }
         if (bookingId === 'temp-id' || !bookingId) return;
@@ -59,7 +62,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
               balance: fullBooking?.balance || 0,
               status: status,
               events: fullBooking?.bookingEvents || [],
-              pdfBase64: pdfBase64
+              pdfBase64: pdfBase64,
+              theme: theme
             }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
           }
 
@@ -72,7 +76,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
               grandTotal: fullBooking?.grandTotal || record.grandTotal || 0,
               events: fullBooking?.bookingEvents || [],
               quotationId: record.id,
-              pdfBase64: pdfBase64
+              pdfBase64: pdfBase64,
+              theme: theme
             }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
           } else if (modelName === 'invoice' || status === 'CONFIRMED' || status === 'INVOICE') {
             sendInvoiceEmail({
@@ -86,7 +91,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
               paidAmount: fullBooking?.paidAmount || 0,
               balance: fullBooking?.balance || 0,
               events: fullBooking?.bookingEvents || [],
-              pdfBase64: pdfBase64
+              pdfBase64: pdfBase64,
+              theme: theme
             }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
           }
         } catch (innerErr) {
@@ -225,7 +231,7 @@ export async function POST(
     const body = await req.json();
     
     // Destructure non-Prisma metadata fields away before Prisma create
-    const { pdfBase64, clientEmail, clientName, quoteRef, grandTotal, ...prismaData } = body;
+    const { pdfBase64, clientEmail, clientName, quoteRef, grandTotal, theme, ...prismaData } = body;
 
     let created: any = { id: `temp-${Date.now()}`, ...body };
 
@@ -241,7 +247,7 @@ export async function POST(
     await createAuditLog(user.id, 'CREATE', `Created ${String(modelName)} (${itemLabel})`);
 
     // Trigger automated email dispatch asynchronously with PDF attachment
-    triggerAutomatedSmtpEmails(modelName, { ...created, pdfBase64, clientEmail, clientName, quoteRef, grandTotal }, 'CREATE');
+    triggerAutomatedSmtpEmails(modelName, { ...created, pdfBase64, clientEmail, clientName, quoteRef, grandTotal, theme }, 'CREATE');
 
     return NextResponse.json(created, { status: 201 });
   } catch (error: any) {
@@ -277,7 +283,7 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { id, pdfBase64, clientEmail, clientName, quoteRef, grandTotal, ...data } = body;
+    const { id, pdfBase64, clientEmail, clientName, quoteRef, grandTotal, theme, ...data } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Record ID is required for updates' }, { status: 400 });
@@ -299,7 +305,7 @@ export async function PUT(
     await createAuditLog(user.id, 'UPDATE', `Updated ${String(modelName)} (${itemLabel})`);
 
     // Trigger automated email dispatch asynchronously with PDF attachment
-    triggerAutomatedSmtpEmails(modelName, { ...updated, pdfBase64, clientEmail, clientName, quoteRef, grandTotal }, 'UPDATE');
+    triggerAutomatedSmtpEmails(modelName, { ...updated, pdfBase64, clientEmail, clientName, quoteRef, grandTotal, theme }, 'UPDATE');
 
     return NextResponse.json(updated);
   } catch (error: any) {
