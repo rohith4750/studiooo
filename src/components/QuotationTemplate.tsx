@@ -98,22 +98,24 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
   const buildInitialEvents = (): EventItem[] => {
     if (initialEventsFromDoc.length > 0) {
-      return initialEventsFromDoc.map((be: any, idx: number) => ({
-        id: be.id || `evt-${idx}`,
-        name: be.event?.name || `Event ${idx + 1}`,
-        price: be.price || Math.round((initialGrandTotal || 300000) / initialEventsFromDoc.length),
-        deliverables: be.deliverables 
-          ? (Array.isArray(be.deliverables) ? be.deliverables : be.deliverables.split('\n'))
-          : getDefaultDeliverables(be.event?.name || '')
+      return initialEventsFromDoc.map((be: any) => ({
+        id: be.id,
+        name: be.event?.name || 'Custom Shoot Event',
+        price: be.price || 25000,
+        deliverables: getDefaultDeliverables(be.event?.name || 'Event')
       }));
     }
-
     return [
-      { name: 'Pre-Wedding Shoot', price: 38000, deliverables: getDefaultDeliverables('Pre-Wedding') },
-      { name: 'Engagement Ceremony', price: 70000, deliverables: getDefaultDeliverables('Engagement') },
-      { name: 'Haldi & Sangeet', price: 59000, deliverables: getDefaultDeliverables('Haldi') },
-      { name: 'Wedding Ceremony', price: 88000, deliverables: getDefaultDeliverables('Wedding') },
-      { name: 'Grand Reception', price: 65000, deliverables: getDefaultDeliverables('Reception') }
+      {
+        name: 'Pre-Wedding Shoot Session',
+        price: 50000,
+        deliverables: ['1 Candid Photographer', '1 Cinematic Videographer', '20 Sheets Luxury Album', 'Cinematic Teaser Trailer']
+      },
+      {
+        name: 'Wedding & Reception Ceremony',
+        price: initialGrandTotal ? Math.max(0, initialGrandTotal - 50000) : 300000,
+        deliverables: ['1 Candid Photographer', '1 Cinematic Videographer', '1 Traditional Photographer', '1 Traditional Videographer', '50 Sheets Royal Album', '4K Teaser & Film', '2 Instagram Reels']
+      }
     ];
   };
 
@@ -226,14 +228,18 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     setEventItems([
       ...eventItems,
       {
-        name: 'Custom Event Package',
+        name: 'Custom Event Package Block',
         price: 25000,
-        deliverables: ['1 Candid Photographer', '1 Traditional Videographer', 'Edited HD Album & Video']
+        deliverables: ['1 Candid Photographer', '1 Cinematic Videographer', 'Edited HD Album & Film']
       }
     ]);
   };
 
   const handleRemoveEvent = (idx: number) => {
+    if (eventItems.length <= 1) {
+      alert('At least one event package block must be present.');
+      return;
+    }
     setEventItems(eventItems.filter((_, i) => i !== idx));
   };
 
@@ -241,10 +247,10 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
   const handleAddDynamicSection = () => {
     const newSec: DynamicSection = {
       id: `sec-${Date.now()}`,
-      title: 'Custom Studio Policy / Add-on Section',
-      badge: 'Custom Note',
+      title: 'Custom Terms & Studio Inclusions',
+      badge: 'Custom Terms',
       items: [
-        { title: 'Itemized Clause 1', content: 'Specify details for travel, drone permissions, or extra deliverables here.' }
+        { title: 'Included Technical Scope', content: 'Details of equipment, crew, and technical deliverables included.' }
       ]
     };
     setDynamicSections([...dynamicSections, newSec]);
@@ -298,7 +304,6 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     setSendingEmail(true);
     setEmailStatus('Rendering PDF attachment and dispatching email to client...');
     try {
-      // 1. Temporarily lock editing mode to capture pristine document canvas
       setIsEditing(false);
       await new Promise((res) => setTimeout(res, 250));
 
@@ -309,7 +314,6 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         const { toCanvas } = await import('html-to-image');
         const { jsPDF } = await import('jspdf');
 
-        // Render DOM to Canvas with solid white background
         const canvas = await toCanvas(element, { 
           quality: 0.98, 
           pixelRatio: 2,
@@ -341,7 +345,8 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             quoteRef: quoteRef,
             grandTotal: calculatedGrandTotal,
             status: 'QUOTATION',
-            pdfBase64: pdfBase64
+            pdfBase64: pdfBase64,
+            theme: theme
           })
         });
         if (!res.ok) throw new Error('Failed to dispatch email');
@@ -397,59 +402,59 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     }
   };
 
-  // Theme Styling Map (ALL BRIGHT & LIGHT - ZERO BLACK BOXES ON CANVAS)
+  // Theme Styling Map (ALL BRIGHT & LIGHT - ZERO BLACK BOXES ON CANVAS - ROUNDED 5PX EVERYWHERE)
   const themeStyles = {
     ROYAL_GOLD: {
-      cardBg: 'bg-white text-neutral-900 border-l-[12px] border-amber-500 shadow-2xl border-y border-r border-neutral-200/80',
+      cardBg: 'bg-white text-neutral-900 border-l-[10px] border-amber-500 shadow-lg border-y border-r border-neutral-200/80 rounded-[5px]',
       headerBanner: 'border-b-2 border-amber-100',
-      tagBadge: 'bg-amber-100 text-amber-900 border border-amber-200',
+      tagBadge: 'bg-amber-100 text-amber-900 border border-amber-200 rounded-[5px]',
       iconColor: 'text-amber-600',
-      clientBanner: 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/80',
-      eventCard: 'bg-white border border-neutral-200 hover:border-amber-400',
-      totalBanner: 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500 shadow-md',
+      clientBanner: 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-amber-50 border border-amber-200/80 rounded-[5px]',
+      eventCard: 'bg-white border border-neutral-200 hover:border-amber-400 rounded-[5px]',
+      totalBanner: 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500 shadow-sm rounded-[5px]',
       totalHighlight: 'text-amber-100',
-      scheduleCard: 'bg-amber-50/40 border border-amber-200/60 text-neutral-800',
-      sectionCard: 'bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-200/80 text-neutral-900 shadow-2xs',
-      bulletDot: 'bg-amber-500'
+      scheduleCard: 'bg-amber-50/40 border border-amber-200/60 text-neutral-800 rounded-[5px]',
+      sectionCard: 'bg-gradient-to-br from-amber-50/60 to-orange-50/30 border border-amber-200/80 text-neutral-900 rounded-[5px]',
+      bulletDot: 'bg-amber-500 rounded-[5px]'
     },
     ELEGANT_IVORY: {
-      cardBg: 'bg-amber-50/20 text-neutral-900 border-l-[12px] border-amber-600 shadow-2xl border-y border-r border-amber-200/60',
+      cardBg: 'bg-amber-50/20 text-neutral-900 border-l-[10px] border-amber-600 shadow-lg border-y border-r border-amber-200/60 rounded-[5px]',
       headerBanner: 'border-b-2 border-amber-200',
-      tagBadge: 'bg-amber-200/60 text-amber-900 border border-amber-300',
+      tagBadge: 'bg-amber-200/60 text-amber-900 border border-amber-300 rounded-[5px]',
       iconColor: 'text-amber-700',
-      clientBanner: 'bg-amber-100/40 border border-amber-200 text-neutral-900',
-      eventCard: 'bg-white border border-amber-200 hover:border-amber-500',
-      totalBanner: 'bg-gradient-to-r from-amber-700 to-amber-900 text-white border border-amber-600',
+      clientBanner: 'bg-amber-100/40 border border-amber-200 text-neutral-900 rounded-[5px]',
+      eventCard: 'bg-white border border-amber-200 hover:border-amber-500 rounded-[5px]',
+      totalBanner: 'bg-gradient-to-r from-amber-700 to-amber-900 text-white border border-amber-600 rounded-[5px]',
       totalHighlight: 'text-amber-200',
-      scheduleCard: 'bg-white border border-amber-200 text-neutral-900',
-      sectionCard: 'bg-amber-100/30 border border-amber-200 text-neutral-900',
-      bulletDot: 'bg-amber-600'
+      scheduleCard: 'bg-white border border-amber-200 text-neutral-900 rounded-[5px]',
+      sectionCard: 'bg-amber-100/30 border border-amber-200 text-neutral-900 rounded-[5px]',
+      bulletDot: 'bg-amber-600 rounded-[5px]'
     },
     MINIMAL_EDITORIAL: {
-      cardBg: 'bg-white text-neutral-900 border-l-[12px] border-neutral-900 shadow-2xl border-y border-r border-neutral-300',
+      cardBg: 'bg-white text-neutral-900 border-l-[10px] border-neutral-900 shadow-lg border-y border-r border-neutral-300 rounded-[5px]',
       headerBanner: 'border-b-2 border-neutral-900',
-      tagBadge: 'bg-neutral-900 text-white border border-neutral-900',
+      tagBadge: 'bg-neutral-900 text-white border border-neutral-900 rounded-[5px]',
       iconColor: 'text-neutral-900',
-      clientBanner: 'bg-neutral-100 border border-neutral-300 text-neutral-900',
-      eventCard: 'bg-neutral-50 border border-neutral-200 hover:border-neutral-900',
-      totalBanner: 'bg-neutral-900 text-white border border-neutral-900',
+      clientBanner: 'bg-neutral-100 border border-neutral-300 text-neutral-900 rounded-[5px]',
+      eventCard: 'bg-neutral-50 border border-neutral-200 hover:border-neutral-900 rounded-[5px]',
+      totalBanner: 'bg-neutral-900 text-white border border-neutral-900 rounded-[5px]',
       totalHighlight: 'text-neutral-100',
-      scheduleCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900',
-      sectionCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900',
-      bulletDot: 'bg-neutral-900'
+      scheduleCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900 rounded-[5px]',
+      sectionCard: 'bg-neutral-50 border border-neutral-200 text-neutral-900 rounded-[5px]',
+      bulletDot: 'bg-neutral-900 rounded-[5px]'
     },
     ROSE_ROMANCE: {
-      cardBg: 'bg-rose-50/20 text-neutral-900 border-l-[12px] border-rose-400 shadow-2xl border-y border-r border-rose-200',
+      cardBg: 'bg-rose-50/20 text-neutral-900 border-l-[10px] border-rose-400 shadow-lg border-y border-r border-rose-200 rounded-[5px]',
       headerBanner: 'border-b-2 border-rose-100',
-      tagBadge: 'bg-rose-100 text-rose-800 border border-rose-200',
+      tagBadge: 'bg-rose-100 text-rose-800 border border-rose-200 rounded-[5px]',
       iconColor: 'text-rose-500',
-      clientBanner: 'bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200',
-      eventCard: 'bg-white border border-rose-200 hover:border-rose-400',
-      totalBanner: 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white border border-rose-500',
+      clientBanner: 'bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-[5px]',
+      eventCard: 'bg-white border border-rose-200 hover:border-rose-400 rounded-[5px]',
+      totalBanner: 'bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 text-white border border-rose-500 rounded-[5px]',
       totalHighlight: 'text-rose-100',
-      scheduleCard: 'bg-rose-50/50 border border-rose-200 text-neutral-900',
-      sectionCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 text-neutral-900',
-      bulletDot: 'bg-rose-500'
+      scheduleCard: 'bg-rose-50/50 border border-rose-200 text-neutral-900 rounded-[5px]',
+      sectionCard: 'bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 text-neutral-900 rounded-[5px]',
+      bulletDot: 'bg-rose-500 rounded-[5px]'
     }
   };
 
@@ -474,14 +479,14 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         }
       `}</style>
 
-      {/* Interactive Quotation Customizer Toolbar */}
+      {/* Interactive Quotation Customizer Toolbar - REMOVED BLACK THEME, FULL WIDTH, ROUNDED-[5PX] */}
       {showControls && (
-        <div className="print:hidden w-full max-w-[780px] mb-4 p-4 bg-neutral-900 text-white rounded-2xl shadow-xl border border-neutral-800 space-y-3">
+        <div className="print:hidden w-full mb-4 p-4 bg-white text-neutral-900 rounded-[5px] shadow-xs border border-neutral-200/90 space-y-3">
           
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-3">
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-              <span className="text-xs font-extrabold tracking-wider uppercase text-amber-300">
+              <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+              <span className="text-xs font-extrabold tracking-wider uppercase text-neutral-800">
                 Advanced Quotation Designer & Builder
               </span>
             </div>
@@ -489,18 +494,18 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
-                  isEditing ? 'bg-amber-400 text-neutral-950 hover:bg-amber-300' : 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-[5px] text-xs font-bold cursor-pointer transition ${
+                  isEditing ? 'bg-amber-400 text-neutral-950 hover:bg-amber-300' : 'bg-neutral-100 text-neutral-800 hover:bg-neutral-200 border border-neutral-300'
                 }`}
               >
-                {isEditing ? <Check className="h-3.5 w-3.5" /> : <Edit2 className="h-3.5 w-3.5 text-amber-400" />}
+                {isEditing ? <Check className="h-3.5 w-3.5" /> : <Edit2 className="h-3.5 w-3.5 text-amber-600" />}
                 <span>{isEditing ? 'Done Customizing' : 'Customize Fields'}</span>
               </button>
 
               <button
                 onClick={handleSendEmailToClient}
                 disabled={sendingEmail}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs disabled:opacity-50"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-[5px] text-xs font-bold cursor-pointer transition shadow-xs disabled:opacity-50"
               >
                 {sendingEmail ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
                 <span>Email Client</span>
@@ -508,15 +513,15 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
               <button
                 onClick={handlePrintDocument}
-                className="inline-flex items-center space-x-1 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold cursor-pointer transition"
+                className="inline-flex items-center space-x-1 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-300 rounded-[5px] text-xs font-semibold cursor-pointer transition"
               >
-                <Printer className="h-3.5 w-3.5 text-amber-400" />
+                <Printer className="h-3.5 w-3.5 text-neutral-700" />
                 <span>Print</span>
               </button>
 
               <button
                 onClick={handleDownloadPDFDocument}
-                className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-xl text-xs font-extrabold cursor-pointer transition"
+                className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 rounded-[5px] text-xs font-extrabold cursor-pointer transition"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span>PDF Export</span>
@@ -529,14 +534,14 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             
             {/* Theme Selector */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
-                <Palette className="h-3 w-3 text-amber-400" />
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 flex items-center space-x-1">
+                <Palette className="h-3 w-3 text-amber-600" />
                 <span>Aesthetic Template Theme</span>
               </label>
               <select
                 value={theme}
                 onChange={(e) => setTheme(e.target.value as QuotationTheme)}
-                className="w-full bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-400"
+                className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-[5px] px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500"
               >
                 <option value="ROYAL_GOLD">👑 Royal Gold (Luxury Wedding)</option>
                 <option value="ELEGANT_IVORY">✨ Elegant Ivory (Warm Cream)</option>
@@ -547,15 +552,15 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
             {/* Discount Options */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
-                <Percent className="h-3 w-3 text-amber-400" />
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 flex items-center space-x-1">
+                <Percent className="h-3 w-3 text-amber-600" />
                 <span>Custom Discount</span>
               </label>
               <div className="flex items-center space-x-1.5">
                 <select
                   value={discountType}
                   onChange={(e) => setDiscountType(e.target.value as 'FLAT' | 'PERCENT')}
-                  className="bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
+                  className="bg-white text-neutral-900 border border-neutral-300 rounded-[5px] px-2 py-1.5 text-xs focus:outline-none"
                 >
                   <option value="FLAT">Flat ₹</option>
                   <option value="PERCENT">% Off</option>
@@ -565,23 +570,23 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                   placeholder="0"
                   value={discountValue || ''}
                   onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-neutral-800 text-neutral-100 border border-neutral-700 rounded-lg px-2 py-1.5 text-xs font-bold focus:outline-none"
+                  className="w-full bg-white text-neutral-900 border border-neutral-300 rounded-[5px] px-2 py-1.5 text-xs font-bold focus:outline-none"
                 />
               </div>
             </div>
 
             {/* GST Tax Toggle */}
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1">
-                <DollarSign className="h-3 w-3 text-amber-400" />
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 flex items-center space-x-1">
+                <DollarSign className="h-3 w-3 text-amber-600" />
                 <span>GST Tax Breakdown</span>
               </label>
               <div className="flex items-center space-x-2 pt-0.5">
                 <button
                   type="button"
                   onClick={() => setShowGst(!showGst)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    showGst ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-800 text-neutral-400'
+                  className={`px-3 py-1 rounded-[5px] text-xs font-bold transition ${
+                    showGst ? 'bg-amber-500 text-neutral-950' : 'bg-neutral-100 text-neutral-600 border border-neutral-300'
                   }`}
                 >
                   {showGst ? 'GST Included (18%)' : 'GST Exempt / Off'}
@@ -592,7 +597,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           </div>
 
           {emailStatus && (
-            <div className="p-2 rounded-lg bg-neutral-800 text-amber-300 text-xs font-bold text-center animate-fadeIn">
+            <div className="p-2 rounded-[5px] bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold text-center animate-fadeIn">
               {emailStatus}
             </div>
           )}
@@ -600,10 +605,10 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         </div>
       )}
 
-      {/* Main Quotation Sheet Canvas (ALWAYS PISTINE LIGHT & BLACK-FREE) */}
+      {/* Main Quotation Sheet Canvas (FULL WIDTH, ROUNDED-[5PX], BRIGHT & LIGHT) */}
       <div 
         id="pdf-document"
-        className={`relative p-6 sm:p-10 min-h-[1050px] w-full max-w-[780px] text-left rounded-r-2xl space-y-6 transition-all duration-300 ${currentStyle.cardBg}`}
+        className={`relative p-6 sm:p-10 min-h-[1050px] w-full text-left rounded-[5px] space-y-6 transition-all duration-300 ${currentStyle.cardBg}`}
       >
         
         {/* Top Header Section */}
@@ -631,7 +636,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                 <>
                   <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
                     <span>{studioName}</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${currentStyle.tagBadge}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-[5px] ${currentStyle.tagBadge}`}>
                       OFFICIAL QUOTATION
                     </span>
                   </h1>
@@ -678,7 +683,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                     value={studioAddress}
                     onChange={(e) => setStudioAddress(e.target.value)}
                     rows={2}
-                    className="w-full text-[10px] bg-transparent border border-amber-300 rounded p-1"
+                    className="w-full text-[10px] bg-transparent border border-amber-300 rounded-[5px] p-1"
                   />
                 ) : (
                   <p className="text-[10px] leading-relaxed opacity-75">
@@ -691,12 +696,12 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
           {/* Right Header: Studio Badge & QR */}
           <div className="text-right flex flex-col items-end space-y-2">
-            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl text-center shadow-md border border-amber-400">
+            <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-[5px] text-center shadow-xs border border-amber-400">
               <p className="font-black text-xl tracking-widest leading-none">R2R</p>
               <p className="text-[8px] font-extrabold text-amber-100 uppercase tracking-widest mt-1">CINEMATIC FILMS</p>
             </div>
 
-            <div className="flex items-center space-x-1.5 opacity-80 border border-neutral-300/40 px-2 py-1 rounded-lg text-[9px] font-semibold">
+            <div className="flex items-center space-x-1.5 opacity-80 border border-neutral-300/40 px-2 py-1 rounded-[5px] text-[9px] font-semibold">
               <QrCode className="h-3.5 w-3.5" />
               <span>Scan to view Portfolio</span>
             </div>
@@ -705,7 +710,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         </div>
 
         {/* Client & Quotation Metadata Banner */}
-        <div className={`rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${currentStyle.clientBanner}`}>
+        <div className={`rounded-[5px] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${currentStyle.clientBanner}`}>
           <div>
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 block">
               QUOTATION PREPARED FOR
@@ -771,11 +776,11 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {eventItems.map((item, idx) => (
             <div 
               key={idx} 
-              className={`rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 transition ${currentStyle.eventCard}`}
+              className={`rounded-[5px] p-4 sm:p-5 shadow-2xs space-y-3 transition ${currentStyle.eventCard}`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-200/30 pb-2.5 gap-2">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-2.5 h-2.5 rounded-full ${currentStyle.bulletDot}`}></div>
+                  <div className={`w-2.5 h-2.5 rounded-[5px] ${currentStyle.bulletDot}`}></div>
                   {isEditing ? (
                     <input
                       type="text"
@@ -807,7 +812,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                   {isEditing && (
                     <button
                       onClick={() => handleRemoveEvent(idx)}
-                      className="text-red-500 hover:bg-red-50/20 p-1.5 rounded transition"
+                      className="text-red-500 hover:bg-red-50/20 p-1.5 rounded-[5px] transition"
                       title="Remove Event"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -828,7 +833,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                       rows={item.deliverables.length || 3}
                       value={item.deliverables.join('\n')}
                       onChange={(e) => handleUpdateDeliverables(idx, e.target.value)}
-                      className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded font-sans focus:outline-none"
+                      className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded-[5px] font-sans focus:outline-none"
                     />
                     
                     {/* Quick Deliverable Presets */}
@@ -840,7 +845,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                             key={pIdx}
                             type="button"
                             onClick={() => handleAddPresetDeliverable(idx, preset)}
-                            className="px-2 py-0.5 bg-amber-100 hover:bg-amber-400 hover:text-neutral-950 rounded text-[9px] font-semibold transition"
+                            className="px-2 py-0.5 bg-amber-100 hover:bg-amber-400 hover:text-neutral-950 rounded-[5px] text-[9px] font-semibold transition"
                           >
                             + {preset}
                           </button>
@@ -865,7 +870,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {isEditing && (
             <button
               onClick={handleAddEvent}
-              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-2 cursor-pointer transition"
+              className="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-xs font-bold rounded-[5px] border border-dashed border-amber-400 flex items-center justify-center space-x-2 cursor-pointer transition"
             >
               <Plus className="h-4 w-4" />
               <span>Add Custom Event Package Block</span>
@@ -899,7 +904,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           </div>
 
           {/* Grand Total Banner */}
-          <div className={`rounded-2xl p-5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${currentStyle.totalBanner}`}>
+          <div className={`rounded-[5px] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${currentStyle.totalBanner}`}>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-80">
                 ESTIMATED PACKAGE INVESTMENT
@@ -924,7 +929,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
           
           {/* Milestone Payment Schedule */}
-          <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
+          <div className={`rounded-[5px] p-4 space-y-2 ${currentStyle.scheduleCard}`}>
             <h4 className="text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5 text-amber-700">
               <ShieldCheck className={`h-4 w-4 ${currentStyle.iconColor}`} />
               <span>Payment Milestone Schedule</span>
@@ -935,13 +940,13 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                 rows={3}
                 value={paymentSchedule.join('\n')}
                 onChange={(e) => setPaymentSchedule(e.target.value.split('\n'))}
-                className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded font-normal"
+                className="w-full text-xs p-2 bg-transparent border border-amber-300 rounded-[5px] font-normal"
               />
             ) : (
               <ul className="space-y-1.5 text-xs font-medium opacity-90">
                 {paymentSchedule.map((sched, sIdx) => (
                   <li key={sIdx} className="flex items-center space-x-2">
-                    <span className={`w-1.5 h-1.5 rounded-full ${currentStyle.bulletDot}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-[5px] ${currentStyle.bulletDot}`}></span>
                     <span>{sched}</span>
                   </li>
                 ))}
@@ -950,7 +955,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           </div>
 
           {/* Terms and Conditions */}
-          <div className={`rounded-xl p-4 space-y-2 ${currentStyle.scheduleCard}`}>
+          <div className={`rounded-[5px] p-4 space-y-2 ${currentStyle.scheduleCard}`}>
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-700">
                 Terms & Conditions
@@ -961,14 +966,14 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                   <button
                     type="button"
                     onClick={() => setTerms(TERMS_PRESETS.WEDDING)}
-                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded font-bold"
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded-[5px] font-bold"
                   >
                     Wedding
                   </button>
                   <button
                     type="button"
                     onClick={() => setTerms(TERMS_PRESETS.PREWEDDING)}
-                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded font-bold"
+                    className="px-1.5 py-0.5 text-[9px] bg-amber-500/20 text-amber-700 rounded-[5px] font-bold"
                   >
                     Pre-Wedding
                   </button>
@@ -981,7 +986,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                 rows={4}
                 value={terms.join('\n')}
                 onChange={(e) => setTerms(e.target.value.split('\n'))}
-                className="w-full text-[10px] p-2 bg-transparent border border-amber-300 rounded font-normal"
+                className="w-full text-[10px] p-2 bg-transparent border border-amber-300 rounded-[5px] font-normal"
               />
             ) : (
               <ul className="space-y-1 text-[10px] opacity-80 leading-relaxed font-normal">
@@ -1002,7 +1007,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
           {dynamicSections.map((sec) => (
             <div 
               key={sec.id} 
-              className={`rounded-2xl p-5 shadow-2xs space-y-3.5 transition-all relative ${currentStyle.sectionCard}`}
+              className={`rounded-[5px] p-5 shadow-2xs space-y-3.5 transition-all relative ${currentStyle.sectionCard}`}
             >
               <div className="flex items-center justify-between border-b border-amber-200/80 pb-2 gap-2">
                 {isEditing ? (
@@ -1021,14 +1026,14 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
                 <div className="flex items-center space-x-2">
                   {sec.badge && (
-                    <span className="text-[9px] font-extrabold uppercase bg-amber-200/50 text-amber-900 px-2 py-0.5 rounded border border-amber-300/80">
+                    <span className="text-[9px] font-extrabold uppercase bg-amber-200/50 text-amber-900 px-2 py-0.5 rounded-[5px] border border-amber-300/80">
                       {sec.badge}
                     </span>
                   )}
                   {isEditing && (
                     <button
                       onClick={() => handleRemoveDynamicSection(sec.id)}
-                      className="text-red-500 hover:bg-red-50 p-1 rounded transition"
+                      className="text-red-500 hover:bg-red-50 p-1 rounded-[5px] transition"
                       title="Delete Dynamic Section Block"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -1040,7 +1045,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
               {/* Items Grid inside Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-medium">
                 {sec.items.map((item, itemIdx) => (
-                  <div key={itemIdx} className="space-y-1 bg-white/70 p-3 rounded-xl border border-amber-200/70 shadow-2xs">
+                  <div key={itemIdx} className="space-y-1 bg-white/80 p-3 rounded-[5px] border border-amber-200/70 shadow-2xs">
                     {isEditing ? (
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
@@ -1062,7 +1067,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
                           rows={2}
                           value={item.content}
                           onChange={(e) => handleUpdateSectionItem(sec.id, itemIdx, 'content', e.target.value)}
-                          className="w-full text-[10px] bg-transparent border border-amber-300 rounded p-1 font-normal"
+                          className="w-full text-[10px] bg-transparent border border-amber-300 rounded-[5px] p-1 font-normal"
                         />
                       </div>
                     ) : (
@@ -1094,7 +1099,7 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             <button
               type="button"
               onClick={handleAddDynamicSection}
-              className="w-full py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-xl border border-dashed border-amber-400 flex items-center justify-center space-x-1.5 cursor-pointer transition"
+              className="w-full py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold rounded-[5px] border border-dashed border-amber-400 flex items-center justify-center space-x-1.5 cursor-pointer transition"
             >
               <Plus className="h-4 w-4" />
               <span>➕ Add Custom Dynamic Section Block</span>

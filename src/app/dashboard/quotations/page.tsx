@@ -120,10 +120,10 @@ function QuotationStudioContent() {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn font-sans pb-16">
+    <div className="space-y-6 animate-fadeIn font-sans pb-16 w-full">
       
-      {/* Top Header Banner */}
-      <div className="print:hidden bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Header Banner - Full Width with rounded-[5px] */}
+      <div className="print:hidden bg-white p-5 rounded-[5px] border border-neutral-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Sparkles className="h-5 w-5 text-amber-500 fill-amber-400" />
@@ -145,7 +145,7 @@ function QuotationStudioContent() {
                 value={selectedBookingId}
                 label="Select Client Booking"
                 onChange={(e) => handleSelectBooking(e.target.value)}
-                sx={{ borderRadius: '0.75rem', bgcolor: 'neutral.50', fontSize: '0.8rem' }}
+                sx={{ borderRadius: '5px', bgcolor: '#f8fafc', fontSize: '0.8rem' }}
               >
                 {bookings.map((b) => (
                   <MenuItem key={b.id} value={b.id}>
@@ -158,7 +158,7 @@ function QuotationStudioContent() {
 
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs rounded-[5px] shadow-xs transition cursor-pointer"
           >
             <Download className="h-4 w-4" />
             <span>Download PDF</span>
@@ -166,7 +166,7 @@ function QuotationStudioContent() {
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-neutral-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-neutral-900 hover:bg-black text-white font-bold text-xs rounded-[5px] shadow-xs transition cursor-pointer"
           >
             <Printer className="h-4 w-4" />
             <span>Print</span>
@@ -174,7 +174,7 @@ function QuotationStudioContent() {
 
           <button
             onClick={() => router.push('/dashboard/billing')}
-            className="inline-flex items-center space-x-1 px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-semibold text-xs rounded-xl transition cursor-pointer"
+            className="inline-flex items-center space-x-1 px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-semibold text-xs rounded-[5px] transition cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Billing</span>
@@ -182,10 +182,9 @@ function QuotationStudioContent() {
         </div>
       </div>
 
-      {/* Main Quotation Sheet Canvas (Dedicated Full Page Container) */}
-      <div className="flex justify-center w-full">
-        {/* Printable & Canvas Element */}
-        <div id="pdf-document" className="w-full max-w-[760px] flex justify-center">
+      {/* Main Quotation Sheet Canvas (Full Width Container) */}
+      <div className="w-full flex justify-center">
+        <div id="pdf-document" className="w-full flex justify-center">
           <QuotationTemplate doc={selectedQuote} showControls={true} />
         </div>
       </div>
