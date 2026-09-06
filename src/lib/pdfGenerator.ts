@@ -1,4 +1,7 @@
-import { jsPDF } from 'jspdf';
+import { execFileSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export type QuotationTheme = 'ROYAL_GOLD' | 'ELEGANT_IVORY' | 'MINIMAL_EDITORIAL' | 'ROSE_ROMANCE';
 
@@ -13,77 +16,417 @@ export interface PdfEventItem {
   deliverables?: string[];
 }
 
-interface ThemeRgbConfig {
-  headerFill: [number, number, number];
-  headerSubtext: [number, number, number];
-  titleBoxFill: [number, number, number];
-  titleBoxDraw: [number, number, number];
-  titleText: [number, number, number];
-  titleRef: [number, number, number];
-  tableHeaderFill: [number, number, number];
-  totalsBoxFill: [number, number, number];
-  totalsBoxDraw: [number, number, number];
-  totalsText: [number, number, number];
-  badgeName: string;
+export interface DynamicSectionItem {
+  title?: string;
+  content: string;
 }
 
-const THEME_RGB_MAP: Record<QuotationTheme, ThemeRgbConfig> = {
+export interface DynamicSection {
+  id?: string;
+  title: string;
+  badge?: string;
+  items: DynamicSectionItem[];
+}
+
+const DEFAULT_DYNAMIC_SECTIONS: DynamicSection[] = [
+  {
+    title: 'Detailed Album Printing & Physical Specifications',
+    badge: 'Handcrafted Quality',
+    items: [
+      { title: '📖 Primary Royal Photobook Album', content: '1 Master Royal Photobook (40-50 Sheets / 100 Pages) in Premium Non-Tearable Velvet Matte / Silk Finish with Handcrafted Leatherette Case.' },
+      { title: '🖼️ Family Albums & Wall Canvas Prints', content: '2 Mini Replica Parent Albums (20 Sheets each) + 1 Luxury 24" x 36" Enlarged Acrylic Wall Frame.' },
+      { title: '🎬 Cinematic Video & Teasers', content: '4K Ultra HD Cinematic Teaser + Full Length HD Edited Film (60-90 min).' },
+      { title: '💾 Data Drive & Cloud Gallery', content: '1 Custom Engraved 128GB USB 3.2 Flash Drive + 1 Year Cloud Gallery Access.' }
+    ]
+  },
+  {
+    title: 'Studio Data Security, Backup & Privacy Safeguards',
+    badge: '100% Data Safety',
+    items: [
+      { title: '📷 Dual Card Slot Redundant Recording', content: 'Every camera shot with real-time dual card recording to eliminate memory card failure risks.' },
+      { title: '💾 Triple RAID NAS & Cloud Vault', content: 'Raw data backed up across dual RAID local NAS servers + offsite encrypted cloud storage.' },
+      { title: '⚡ On-Site Equipment Redundancy', content: 'Backup camera bodies, prime lenses & wireless microphones brought standby to every event.' }
+    ]
+  }
+];
+
+const DEFAULT_TERMS: string[] = [
+  'Travel & luxury accommodation for outstation events to be provided by the client.',
+  'Includes 1 master premium flush-mount album (40 sheets). Additional sheets charged at ₹650/sheet.',
+  'High-resolution edited RAW photos delivered via private Cloud Gallery link.',
+  'Deliverable timeline: 30-45 business days post client photo selection.',
+  '50% advance non-refundable deposit required to lock studio booking dates.'
+];
+
+interface ThemeHtmlConfig {
+  headerBg: string;
+  headerSubtext: string;
+  pageBg: string;
+  cardBg: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
+  totalBannerBg: string;
+  totalBannerText: string;
+  accentBtnBg: string;
+  accentBtnText: string;
+  badgeName: string;
+  borderLeftColor: string;
+}
+
+const THEME_HTML_MAP: Record<QuotationTheme, ThemeHtmlConfig> = {
   ROYAL_GOLD: {
-    headerFill: [180, 83, 9], // #b45309
-    headerSubtext: [254, 243, 199], // #fef3c7
-    titleBoxFill: [254, 243, 199], // #fef3c7
-    titleBoxDraw: [245, 158, 11], // #f59e0b
-    titleText: [120, 53, 15], // #78350f
-    titleRef: [180, 83, 9], // #b45309
-    tableHeaderFill: [180, 83, 9],
-    totalsBoxFill: [254, 243, 199],
-    totalsBoxDraw: [245, 158, 11],
-    totalsText: [180, 83, 9],
-    badgeName: 'ROYAL GOLD LUXURY EDITION'
+    headerBg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)',
+    headerSubtext: '#fde68a',
+    pageBg: '#ffffff',
+    cardBg: '#ffffff',
+    badgeBg: '#fffbeb',
+    badgeBorder: '#f59e0b',
+    badgeText: '#92400e',
+    totalBannerBg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+    totalBannerText: '#fde68a',
+    accentBtnBg: '#f59e0b',
+    accentBtnText: '#0f172a',
+    badgeName: 'ROYAL GOLD LUXURY EDITION',
+    borderLeftColor: '#f59e0b'
   },
   ELEGANT_IVORY: {
-    headerFill: [120, 53, 15], // #78350f
-    headerSubtext: [254, 243, 199],
-    titleBoxFill: [255, 251, 235], // #fffbeb
-    titleBoxDraw: [217, 119, 6],
-    titleText: [69, 26, 3],
-    titleRef: [120, 53, 15],
-    tableHeaderFill: [120, 53, 15],
-    totalsBoxFill: [255, 251, 235],
-    totalsBoxDraw: [217, 119, 6],
-    totalsText: [120, 53, 15],
-    badgeName: 'PORCELAIN IVORY ELEGANT EDITION'
+    headerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
+    headerSubtext: '#fde68a',
+    pageBg: '#fffbeb',
+    cardBg: '#ffffff',
+    badgeBg: '#fef3c7',
+    badgeBorder: '#d97706',
+    badgeText: '#78350f',
+    totalBannerBg: 'linear-gradient(135deg, #78350f 0%, #451a03 100%)',
+    totalBannerText: '#fde68a',
+    accentBtnBg: '#b45309',
+    accentBtnText: '#ffffff',
+    badgeName: 'PORCELAIN IVORY ELEGANT EDITION',
+    borderLeftColor: '#b45309'
   },
   MINIMAL_EDITORIAL: {
-    headerFill: [15, 23, 42], // #0f172a
-    headerSubtext: [226, 232, 240],
-    titleBoxFill: [241, 245, 249],
-    titleBoxDraw: [148, 163, 184],
-    titleText: [15, 23, 42],
-    titleRef: [71, 85, 105],
-    tableHeaderFill: [15, 23, 42],
-    totalsBoxFill: [248, 250, 252],
-    totalsBoxDraw: [203, 213, 225],
-    totalsText: [15, 23, 42],
-    badgeName: 'MINIMAL EDITORIAL EDITION'
+    headerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    headerSubtext: '#cbd5e1',
+    pageBg: '#ffffff',
+    cardBg: '#ffffff',
+    badgeBg: '#f1f5f9',
+    badgeBorder: '#0f172a',
+    badgeText: '#0f172a',
+    totalBannerBg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    totalBannerText: '#ffffff',
+    accentBtnBg: '#0f172a',
+    accentBtnText: '#ffffff',
+    badgeName: 'MINIMAL EDITORIAL EDITION',
+    borderLeftColor: '#0f172a'
   },
   ROSE_ROMANCE: {
-    headerFill: [190, 18, 60], // #be123c
-    headerSubtext: [254, 205, 211],
-    titleBoxFill: [255, 241, 242],
-    titleBoxDraw: [251, 113, 133],
-    titleText: [136, 19, 55],
-    titleRef: [190, 18, 60],
-    tableHeaderFill: [190, 18, 60],
-    totalsBoxFill: [255, 241, 242],
-    totalsBoxDraw: [251, 113, 133],
-    totalsText: [190, 18, 60],
-    badgeName: 'ROSE ROMANCE EDITION'
+    headerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+    headerSubtext: '#ffe4e6',
+    pageBg: '#fff1f2',
+    cardBg: '#ffffff',
+    badgeBg: '#fff1f2',
+    badgeBorder: '#fb7185',
+    badgeText: '#881337',
+    totalBannerBg: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+    totalBannerText: '#ffe4e6',
+    accentBtnBg: '#be123c',
+    accentBtnText: '#ffffff',
+    badgeName: 'ROSE ROMANCE EDITION',
+    borderLeftColor: '#be123c'
   }
 };
 
 /**
- * Generates an Official Tax Invoice / Bill PDF Buffer using jsPDF with Theme Styling
+ * Locate Chrome or Edge executable on host system
+ */
+function getBrowserExecutablePath(): string | null {
+  const paths = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium'
+  ];
+
+  for (const p of paths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return null;
+}
+
+/**
+ * Render complete HTML string to PDF buffer using Chrome/Edge headless
+ */
+function renderHtmlToPdfBuffer(htmlContent: string): Buffer {
+  const browserPath = getBrowserExecutablePath();
+  if (!browserPath) {
+    throw new Error('Chrome/Edge browser executable not found on host machine.');
+  }
+
+  const tmpDir = os.tmpdir();
+  const randomId = Math.floor(Math.random() * 1000000);
+  const htmlPath = path.join(tmpDir, `r2r_doc_${randomId}.html`);
+  const pdfPath = path.join(tmpDir, `r2r_doc_${randomId}.pdf`);
+
+  try {
+    fs.writeFileSync(htmlPath, htmlContent, 'utf8');
+
+    execFileSync(browserPath, [
+      '--headless=new',
+      '--disable-gpu',
+      '--no-sandbox',
+      '--no-pdf-header-footer',
+      '--print-to-pdf=' + pdfPath,
+      'file:///' + htmlPath.replace(/\\/g, '/')
+    ]);
+
+    if (fs.existsSync(pdfPath)) {
+      const pdfBuffer = fs.readFileSync(pdfPath);
+      // Clean up temporary files
+      try { fs.unlinkSync(htmlPath); } catch (e) {}
+      try { fs.unlinkSync(pdfPath); } catch (e) {}
+      return pdfBuffer;
+    } else {
+      throw new Error('Chrome did not output PDF file.');
+    }
+  } catch (err: any) {
+    // Cleanup on failure
+    try { if (fs.existsSync(htmlPath)) fs.unlinkSync(htmlPath); } catch (e) {}
+    try { if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath); } catch (e) {}
+    throw err;
+  }
+}
+
+/**
+ * Generates an Official Quotation PDF Buffer matching the exact QuotationTemplate UI Editor layout!
+ */
+export function generateQuotationPdfBuffer(params: {
+  clientName: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  clientAddress?: string;
+  bookingNumber: string;
+  quotationId?: string;
+  grandTotal: number;
+  events?: PdfEventItem[];
+  createdAt?: string;
+  theme?: QuotationTheme;
+  terms?: string[];
+  dynamicSections?: DynamicSection[];
+}): Buffer {
+  const {
+    clientName,
+    clientEmail = '',
+    clientPhone = '',
+    clientAddress = '',
+    bookingNumber,
+    quotationId = 'QT-2026',
+    grandTotal,
+    events = [],
+    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    theme = 'ROYAL_GOLD',
+    terms = DEFAULT_TERMS,
+    dynamicSections = DEFAULT_DYNAMIC_SECTIONS
+  } = params;
+
+  const quoteRef = quotationId.startsWith('R2R-QT-') ? quotationId : `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}`;
+  const tm = THEME_HTML_MAP[theme] || THEME_HTML_MAP.ROYAL_GOLD;
+
+  const eventList = events.length > 0 ? events : [
+    {
+      name: 'Pre-Wedding Shoot Session',
+      category: 'PRE_SHOOT',
+      eventDate: '2026-10-15',
+      eventTime: '06:30 AM',
+      venue: 'Ramoji Film City, Hyderabad',
+      price: 50000,
+      deliverables: ['1 Candid Photographer', '1 Cinematic Videographer', '20 Sheets Luxury Album', 'Cinematic Teaser Trailer']
+    },
+    {
+      name: 'Wedding & Reception Ceremony',
+      category: 'CINEMATIC',
+      eventDate: '2026-10-20',
+      eventTime: '09:00 AM',
+      venue: 'Novotel Convention Center, Hyderabad',
+      price: 300000,
+      deliverables: ['1 Candid Photographer', '1 Cinematic Videographer', '1 Traditional Photographer', '1 Traditional Videographer', '50 Sheets Royal Album', '4K Teaser & Film', '2 Instagram Reels']
+    }
+  ];
+
+  const eventsHtml = eventList.map((item) => {
+    const eventTitle = item.event?.name || item.name || 'Shoot Session';
+    const cat = item.category || 'EVENT';
+    const dateStr = `${item.eventDate || ''} ${item.eventTime ? `@ ${item.eventTime}` : ''}`.trim() || 'Scheduled';
+    const priceVal = item.price ? `₹${item.price.toLocaleString('en-IN')}` : '-';
+    const deliverables = item.deliverables || ['1 Candid Photographer', '1 Cinematic Videographer', 'Edited HD Album & Film'];
+
+    const delivItemsHtml = deliverables.map(d => `<li style="margin-bottom: 4px;">✔ ${d}</li>`).join('');
+
+    return `
+      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 6px solid ${tm.borderLeftColor}; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
+          <div>
+            <span style="font-size: 16px; font-weight: 800; color: #0f172a;">${eventTitle}</span>
+            <span style="margin-left: 10px; font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 8px; border-radius: 12px; text-transform: uppercase;">${cat}</span>
+          </div>
+          <div style="font-size: 18px; font-weight: 800; color: ${tm.borderLeftColor};">
+            ${priceVal}
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <div>📅 Date: <strong>${dateStr}</strong></div>
+          ${item.venue ? `<div>📍 Venue: <strong>${item.venue}</strong></div>` : ''}
+        </div>
+
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+          <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">Session Deliverables Included:</p>
+          <ul style="margin: 0; padding-left: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: #334155;">
+            ${delivItemsHtml}
+          </ul>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const dynamicSectionsHtml = dynamicSections.map((sec) => {
+    const itemsHtml = sec.items.map(item => `
+      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+        ${item.title ? `<p style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #0f172a;">• ${item.title}</p>` : ''}
+        <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.5;">${item.content}</p>
+      </div>
+    `).join('');
+
+    return `
+      <div style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${tm.badgeBorder}; padding-bottom: 6px; margin-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${sec.title}</h3>
+          ${sec.badge ? `<span style="font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 10px; border-radius: 12px;">${sec.badge}</span>` : ''}
+        </div>
+        ${itemsHtml}
+      </div>
+    `;
+  }).join('');
+
+  const termsHtml = terms.map((term, idx) => `
+    <li style="margin-bottom: 6px; font-size: 12px; color: #475569; line-height: 1.5;">${term}</li>
+  `).join('');
+
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Quotation - R2R Studio Photography</title>
+      <style>
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: ${tm.pageBg}; margin: 0; padding: 0; color: #1e293b; webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page { width: 210mm; min-height: 297mm; padding: 20mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
+      </style>
+    </head>
+    <body>
+      <div class="page">
+        <!-- Header Banner -->
+        <div style="background: ${tm.headerBg}; padding: 28px; border-radius: 12px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Creative Photography & Cinematic Films • ${tm.badgeName}</p>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: ${tm.headerSubtext}; line-height: 1.5;">
+              <p style="margin: 0;">Road No 3A, Tarnaka, Hyderabad</p>
+              <p style="margin: 2px 0 0 0;">Phone: +91 9398534380</p>
+              <p style="margin: 2px 0 0 0;">Email: contact@r2rstudio.com</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Title Box -->
+        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; border-left: 6px solid ${tm.borderLeftColor}; padding: 14px 20px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="margin: 0; font-size: 16px; font-weight: 900; color: ${tm.badgeText}; text-transform: uppercase; letter-spacing: 0.5px;">OFFICIAL PHOTOGRAPHY QUOTATION</h2>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Ref: ${quoteRef} | Booking #: ${bookingNumber}</p>
+          </div>
+          <div style="text-align: right; font-size: 12px; font-weight: bold; color: ${tm.badgeText};">
+            Date: ${createdAt}
+          </div>
+        </div>
+
+        <!-- Client & Quotation Info Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">PREPARED FOR CLIENT:</p>
+            <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">${clientName}</h3>
+            ${clientPhone ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">📞 Phone: ${clientPhone}</p>` : ''}
+            ${clientEmail ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">✉ Email: ${clientEmail}</p>` : ''}
+            ${clientAddress ? `<p style="margin: 0; font-size: 12px; color: #475569;">📍 Location: ${clientAddress}</p>` : ''}
+          </div>
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">QUOTATION DETAILS:</p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Booking Reference: <strong>${bookingNumber}</strong></p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Quotation Date: <strong>${createdAt}</strong></p>
+            <p style="margin: 0; font-size: 12px; color: ${tm.borderLeftColor}; font-weight: bold;">Validity: 30 Days Lock Period</p>
+          </div>
+        </div>
+
+        <!-- Events Breakdown & Deliverables -->
+        <h3 style="font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin: 24px 0 16px 0;">Covered Events Package Breakdown</h3>
+        ${eventsHtml}
+
+        <!-- Total Investment Banner & Payment Milestones -->
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-top: 24px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">Payment Milestone Schedule:</h4>
+            <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #475569; line-height: 1.6;">
+              <li><strong>30%</strong> Advance Deposit to Lock Booking Date</li>
+              <li><strong>50%</strong> Payable on Main Event Shoot Date</li>
+              <li><strong>20%</strong> Upon Final Album & Film Delivery</li>
+            </ul>
+          </div>
+          <div style="background: ${tm.totalBannerBg}; border-radius: 8px; padding: 20px; color: #ffffff; display: flex; flex-direction: column; justify-content: center; text-align: right; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p style="margin: 0; font-size: 11px; color: ${tm.totalBannerText}; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">TOTAL ESTIMATED INVESTMENT</p>
+            <p style="margin: 6px 0 0 0; font-size: 26px; font-weight: 900; color: ${tm.totalBannerText};">₹${grandTotal.toLocaleString('en-IN')}/-</p>
+            <p style="margin: 4px 0 0 0; font-size: 11px; color: #f1f5f9;">All Taxes & Travel Included</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Custom Sections (Album Specs & Security Safeguards) -->
+        ${dynamicSectionsHtml}
+
+        <!-- Terms & Conditions -->
+        <div style="margin-top: 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+          <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">Terms & Conditions Agreement</h3>
+          <ol style="margin: 0; padding-left: 20px;">
+            ${termsHtml}
+          </ol>
+        </div>
+
+        <!-- Footer Sign-off -->
+        <div style="margin-top: 36px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <p style="margin: 0; font-size: 11px; color: #94a3b8;">Official R2R Studio Photography quotation document.</p>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Looking forward to capturing your cherished memories!</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin: 0; font-size: 12px; font-weight: bold; color: #0f172a;">R2R Studio Photography Team</p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; color: #64748b;">Authorized Signatory</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return renderHtmlToPdfBuffer(fullHtml);
+}
+
+/**
+ * Generates an Official Tax Invoice / Bill PDF Buffer matching the exact QuotationTemplate UI Editor layout!
  */
 export function generateInvoicePdfBuffer(params: {
   clientName: string;
@@ -101,12 +444,6 @@ export function generateInvoicePdfBuffer(params: {
   createdAt?: string;
   theme?: QuotationTheme;
 }): Buffer {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
   const {
     clientName,
     clientEmail = '',
@@ -124,460 +461,137 @@ export function generateInvoicePdfBuffer(params: {
     theme = 'ROYAL_GOLD'
   } = params;
 
-  const t = THEME_RGB_MAP[theme] || THEME_RGB_MAP.ROYAL_GOLD;
+  const tm = THEME_HTML_MAP[theme] || THEME_HTML_MAP.ROYAL_GOLD;
 
-  // Header Banner
-  doc.setFillColor(...t.headerFill);
-  doc.rect(0, 0, 210, 36, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('R2R STUDIO PHOTOGRAPHY', 14, 16);
-
-  doc.setTextColor(...t.headerSubtext);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Road No 3A, Tarnaka, Hyderabad • Phone: +91 9398534380 • Email: info@r2rstudio.com', 14, 23);
-  doc.text(`GSTIN: 36ABCDE1234F1Z5 • ${t.badgeName}`, 14, 29);
-
-  // Document Title Box
-  doc.setFillColor(...t.titleBoxFill);
-  doc.rect(14, 42, 182, 14, 'F');
-  doc.setDrawColor(...t.titleBoxDraw);
-  doc.rect(14, 42, 182, 14, 'S');
-
-  doc.setTextColor(...t.titleText);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text('TAX INVOICE & BILL SUMMARY', 18, 51);
-
-  doc.setTextColor(...t.titleRef);
-  doc.setFontSize(10);
-  doc.text(`INVOICE #: ${invoiceNumber}`, 145, 51);
-
-  // Client & Invoice Metadata Box
-  let y = 62;
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(14, y, 90, 32, 'S');
-  doc.rect(106, y, 90, 32, 'S');
-
-  // Left: Billed To
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BILLED TO:', 18, y + 6);
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFontSize(11);
-  doc.text(clientName, 18, y + 13);
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  if (clientPhone) doc.text(`Phone: ${clientPhone}`, 18, y + 19);
-  if (clientEmail) doc.text(`Email: ${clientEmail}`, 18, y + 24);
-  if (clientAddress) doc.text(`Address: ${clientAddress.substring(0, 40)}`, 18, y + 29);
-
-  // Right: Invoice Details
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INVOICE METADATA:', 110, y + 6);
-
-  doc.setFontSize(9);
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Booking Ref:`, 110, y + 13);
-  doc.setFont('helvetica', 'bold');
-  doc.text(bookingNumber, 150, y + 13);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Invoice Date:`, 110, y + 19);
-  doc.setFont('helvetica', 'bold');
-  doc.text(createdAt, 150, y + 19);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Payment Status:`, 110, y + 25);
-  doc.setFont('helvetica', 'bold');
-  const statusStr = balance <= 0 ? 'FULLY PAID' : (paidAmount > 0 ? 'PARTIALLY PAID' : 'UNPAID');
-  doc.setTextColor(balance <= 0 ? 5 : 180, balance <= 0 ? 150 : 83, balance <= 0 ? 105 : 9);
-  doc.text(statusStr, 150, y + 25);
-
-  // Covered Events Table Header
-  y = 100;
-  doc.setFillColor(...t.tableHeaderFill);
-  doc.rect(14, y, 182, 8, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('EVENT SHOOT SESSION', 18, y + 5.5);
-  doc.text('CATEGORY', 90, y + 5.5);
-  doc.text('DATE & TIME', 125, y + 5.5);
-  doc.text('AMOUNT (₹)', 170, y + 5.5);
-
-  y += 8;
-
-  // Event Table Rows
-  const eventRows = events.length > 0 ? events : [
+  const eventList = events.length > 0 ? events : [
     { name: 'Photography & Cinematic Video Services', category: 'WEDDING', eventDate: 'As Agreed', price: subtotal }
   ];
 
-  eventRows.forEach((item, index) => {
-    const isEven = index % 2 === 0;
-    doc.setFillColor(isEven ? 255 : 248, isEven ? 255 : 250, isEven ? 255 : 252);
-    doc.rect(14, y, 182, 10, 'F');
-    doc.setDrawColor(241, 245, 249);
-    doc.line(14, y + 10, 196, y + 10);
-
+  const eventsHtml = eventList.map((item) => {
     const eventTitle = item.event?.name || item.name || 'Shoot Session';
     const cat = item.category || 'EVENT';
     const dateStr = `${item.eventDate || ''} ${item.eventTime ? `@ ${item.eventTime}` : ''}`.trim() || 'Scheduled';
-    const amountVal = item.price ? `₹${item.price.toLocaleString('en-IN')}` : '-';
+    const priceVal = item.price ? `₹${item.price.toLocaleString('en-IN')}` : '-';
 
-    doc.setTextColor(15, 23, 42);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.text(eventTitle.substring(0, 32), 18, y + 6.5);
+    return `
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 12px; font-weight: bold; color: #0f172a;">${eventTitle}</td>
+        <td style="padding: 12px; color: #475569;"><span style="background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">${cat}</span></td>
+        <td style="padding: 12px; color: #475569; font-size: 12px;">${dateStr}</td>
+        <td style="padding: 12px; text-align: right; font-weight: bold; color: #0f172a;">${priceVal}</td>
+      </tr>
+    `;
+  }).join('');
 
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text(cat, 90, y + 6.5);
-    doc.text(dateStr.substring(0, 24), 125, y + 6.5);
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Tax Invoice - R2R Studio Photography</title>
+      <style>
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: ${tm.pageBg}; margin: 0; padding: 0; color: #1e293b; webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page { width: 210mm; min-height: 297mm; padding: 20mm; box-sizing: border-box; background-color: ${tm.pageBg}; margin: 0 auto; position: relative; }
+      </style>
+    </head>
+    <body>
+      <div class="page">
+        <!-- Header Banner -->
+        <div style="background: ${tm.headerBg}; padding: 28px; border-radius: 12px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h1 style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: ${tm.headerSubtext}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Tax Invoice & Bill Statement • ${tm.badgeName}</p>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: ${tm.headerSubtext}; line-height: 1.5;">
+              <p style="margin: 0;">Road No 3A, Tarnaka, Hyderabad</p>
+              <p style="margin: 2px 0 0 0;">GSTIN: 36AAAAA0000A1Z5</p>
+              <p style="margin: 2px 0 0 0;">Email: contact@r2rstudio.com</p>
+            </div>
+          </div>
+        </div>
 
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(amountVal, 170, y + 6.5);
+        <!-- Document Title Box -->
+        <div style="background-color: ${tm.badgeBg}; border: 1px solid ${tm.badgeBorder}; border-left: 6px solid ${tm.borderLeftColor}; padding: 14px 20px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="margin: 0; font-size: 16px; font-weight: 900; color: ${tm.badgeText}; text-transform: uppercase; letter-spacing: 0.5px;">TAX INVOICE & BILL SUMMARY</h2>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: ${tm.badgeText};">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber}</p>
+          </div>
+          <div style="text-align: right; font-size: 12px; font-weight: bold; color: ${tm.badgeText};">
+            Invoice Date: ${createdAt}
+          </div>
+        </div>
 
-    y += 10;
-  });
+        <!-- Client & Invoice Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">BILLED TO CLIENT:</p>
+            <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #0f172a;">${clientName}</h3>
+            ${clientPhone ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">📞 Phone: ${clientPhone}</p>` : ''}
+            ${clientEmail ? `<p style="margin: 0 0 2px 0; font-size: 12px; color: #475569;">✉ Email: ${clientEmail}</p>` : ''}
+            ${clientAddress ? `<p style="margin: 0; font-size: 12px; color: #475569;">📍 Address: ${clientAddress}</p>` : ''}
+          </div>
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">INVOICE DETAILS:</p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Booking Reference: <strong>${bookingNumber}</strong></p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">HSN/SAC Code: <strong>998381 (Photography Services)</strong></p>
+            <p style="margin: 0; font-size: 12px; color: ${balance <= 0 ? '#059669' : '#b45309'}; font-weight: bold;">Status: ${balance <= 0 ? 'FULLY PAID' : (paidAmount > 0 ? 'PARTIALLY PAID' : 'UNPAID')}</p>
+          </div>
+        </div>
 
-  // Space before totals box
-  y = Math.max(y + 8, 145);
+        <!-- Events Table -->
+        <table style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; font-size: 13px;">
+          <thead>
+            <tr style="background: ${tm.headerBg}; color: #ffffff; text-align: left;">
+              <th style="padding: 12px;">Shoot Session</th>
+              <th style="padding: 12px;">Category</th>
+              <th style="padding: 12px;">Date</th>
+              <th style="padding: 12px; text-align: right;">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${eventsHtml}
+          </tbody>
+        </table>
 
-  // Summary Financial Box (Right Side)
-  const totalsX = 110;
-  const totalsWidth = 86;
+        <!-- Totals & Bank Details Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; margin-top: 24px;">
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">Payment Bank Details:</h4>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Account Name: <strong>R2R Studio Photography</strong></p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Bank: <strong>HDFC Bank (Tarnaka Branch)</strong></p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Account #: <strong>50200012345678</strong></p>
+            <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">IFSC Code: <strong>HDFC0001234</strong></p>
+            <p style="margin: 0; font-size: 12px; color: ${tm.borderLeftColor}; font-weight: bold;">UPI ID: r2rstudio@hdfcbank</p>
+          </div>
 
-  doc.setFillColor(...t.totalsBoxFill);
-  doc.setDrawColor(...t.totalsBoxDraw);
-  doc.rect(totalsX, y, totalsWidth, 42, 'F');
-  doc.rect(totalsX, y, totalsWidth, 42, 'S');
+          <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">Subtotal Amount:</td><td style="text-align: right; font-weight: bold;">₹${subtotal.toLocaleString('en-IN')}</td></tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">GST (18% Included):</td><td style="text-align: right; font-weight: bold;">₹${gstAmount.toLocaleString('en-IN')}</td></tr>
+              <tr style="border-bottom: 2px solid #0f172a;"><td style="padding: 8px 0; font-weight: 800; color: #0f172a; font-size: 14px;">Grand Total:</td><td style="text-align: right; font-weight: 900; font-size: 16px; color: ${tm.borderLeftColor};">₹${grandTotal.toLocaleString('en-IN')}</td></tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #059669; font-weight: bold;">Advance Paid:</td><td style="text-align: right; color: #059669; font-weight: bold;">₹${paidAmount.toLocaleString('en-IN')}</td></tr>
+              <tr><td style="padding: 8px 0; font-weight: 800; color: #dc2626; font-size: 14px;">Balance Due:</td><td style="text-align: right; font-weight: 900; font-size: 16px; color: #dc2626;">₹${balance.toLocaleString('en-IN')}</td></tr>
+            </table>
+          </div>
+        </div>
 
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
+        <!-- Footer Sign-off -->
+        <div style="margin-top: 36px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <p style="margin: 0; font-size: 11px; color: #94a3b8;">Computer generated tax invoice statement.</p>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Thank you for choosing R2R Studio Photography!</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="margin: 0; font-size: 12px; font-weight: bold; color: #0f172a;">For R2R Studio Photography</p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; color: #64748b;">Authorized Signatory</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 
-  // Subtotal
-  doc.text('Subtotal Amount:', totalsX + 6, y + 7);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(`₹${subtotal.toLocaleString('en-IN')}`, totalsX + 54, y + 7);
-
-  // GST
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text('GST (18% Included):', totalsX + 6, y + 14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(`₹${gstAmount.toLocaleString('en-IN')}`, totalsX + 54, y + 14);
-
-  // Divider
-  doc.setDrawColor(...t.totalsBoxDraw);
-  doc.line(totalsX + 4, y + 18, totalsX + totalsWidth - 4, y + 18);
-
-  // Grand Total
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text('Grand Total:', totalsX + 6, y + 25);
-  doc.setTextColor(...t.totalsText);
-  doc.text(`₹${grandTotal.toLocaleString('en-IN')}`, totalsX + 50, y + 25);
-
-  // Advance Paid
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(5, 150, 105);
-  doc.text('Advance Paid:', totalsX + 6, y + 32);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`₹${paidAmount.toLocaleString('en-IN')}`, totalsX + 54, y + 32);
-
-  // Balance Due
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(220, 38, 38);
-  doc.text('Balance Due:', totalsX + 6, y + 38);
-  doc.text(`₹${balance.toLocaleString('en-IN')}`, totalsX + 54, y + 38);
-
-  // Payment Terms & Bank Info (Left Side)
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(14, y, 90, 42, 'S');
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('PAYMENT DETAILS & TERMS', 18, y + 7);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('• Account Name: R2R Studio Photography', 18, y + 14);
-  doc.text('• Bank: HDFC Bank • Branch: Tarnaka', 18, y + 20);
-  doc.text('• A/C No: 50200012345678 • IFSC: HDFC0001234', 18, y + 26);
-  doc.text('• UPI ID: r2rstudio@hdfcbank', 18, y + 32);
-  doc.text('• All payments are non-refundable.', 18, y + 37);
-
-  // Footer & Authorized Signature Box
-  const footerY = 250;
-  doc.setDrawColor(226, 232, 240);
-  doc.line(14, footerY, 196, footerY);
-
-  doc.setTextColor(148, 163, 184);
-  doc.setFontSize(7.5);
-  doc.text('Computer generated invoice. No physical signature required for validation.', 14, footerY + 6);
-  doc.text('Thank you for choosing R2R Studio Photography!', 14, footerY + 11);
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('For R2R Studio Photography', 145, footerY + 6);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Authorized Signatory', 145, footerY + 12);
-
-  const arrayBuffer = doc.output('arraybuffer');
-  return Buffer.from(arrayBuffer);
-}
-
-/**
- * Generates an Official Quotation PDF Buffer using jsPDF with Theme Styling
- */
-export function generateQuotationPdfBuffer(params: {
-  clientName: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  clientAddress?: string;
-  bookingNumber: string;
-  quotationId?: string;
-  grandTotal: number;
-  events?: PdfEventItem[];
-  createdAt?: string;
-  theme?: QuotationTheme;
-}): Buffer {
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const {
-    clientName,
-    clientEmail = '',
-    clientPhone = '',
-    clientAddress = '',
-    bookingNumber,
-    quotationId = 'QT-2026',
-    grandTotal,
-    events = [],
-    createdAt = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-    theme = 'ROYAL_GOLD'
-  } = params;
-
-  const quoteRef = quotationId.startsWith('R2R-QT-') ? quotationId : `R2R-QT-${quotationId.substring(0, 6).toUpperCase()}`;
-
-  const t = THEME_RGB_MAP[theme] || THEME_RGB_MAP.ROYAL_GOLD;
-
-  // Header Banner
-  doc.setFillColor(...t.headerFill);
-  doc.rect(0, 0, 210, 36, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('R2R STUDIO PHOTOGRAPHY', 14, 16);
-
-  doc.setTextColor(...t.headerSubtext);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Road No 3A, Tarnaka, Hyderabad • Phone: +91 9398534380 • Email: info@r2rstudio.com', 14, 23);
-  doc.text(`Luxury Photography, Cinematic Wedding Films • ${t.badgeName}`, 14, 29);
-
-  // Document Title Box
-  doc.setFillColor(...t.titleBoxFill);
-  doc.rect(14, 42, 182, 14, 'F');
-  doc.setDrawColor(...t.titleBoxDraw);
-  doc.rect(14, 42, 182, 14, 'S');
-
-  doc.setTextColor(...t.titleText);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text('OFFICIAL PHOTOGRAPHY QUOTATION', 18, 51);
-
-  doc.setTextColor(...t.titleRef);
-  doc.setFontSize(10);
-  doc.text(`REF: ${quoteRef}`, 145, 51);
-
-  // Client & Quote Metadata Box
-  let y = 62;
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(14, y, 90, 32, 'S');
-  doc.rect(106, y, 90, 32, 'S');
-
-  // Left: Prepared For
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PREPARED FOR:', 18, y + 6);
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFontSize(11);
-  doc.text(clientName, 18, y + 13);
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  if (clientPhone) doc.text(`Phone: ${clientPhone}`, 18, y + 19);
-  if (clientEmail) doc.text(`Email: ${clientEmail}`, 18, y + 24);
-  if (clientAddress) doc.text(`Location: ${clientAddress.substring(0, 40)}`, 18, y + 29);
-
-  // Right: Quote Metadata
-  doc.setTextColor(100, 116, 139);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('QUOTATION DETAILS:', 110, y + 6);
-
-  doc.setFontSize(9);
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Booking Ref:`, 110, y + 13);
-  doc.setFont('helvetica', 'bold');
-  doc.text(bookingNumber, 150, y + 13);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Quotation Date:`, 110, y + 19);
-  doc.setFont('helvetica', 'bold');
-  doc.text(createdAt, 150, y + 19);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Valid Until:`, 110, y + 25);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...t.titleRef);
-  doc.text('30 Days From Issue', 150, y + 25);
-
-  // Covered Events Table Header
-  y = 100;
-  doc.setFillColor(...t.tableHeaderFill);
-  doc.rect(14, y, 182, 8, 'F');
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('EVENT SHOOT SESSION', 18, y + 5.5);
-  doc.text('CATEGORY', 90, y + 5.5);
-  doc.text('DATE & SCHEDULE', 125, y + 5.5);
-  doc.text('ESTIMATE (₹)', 170, y + 5.5);
-
-  y += 8;
-
-  // Event Table Rows
-  const eventRows = events.length > 0 ? events : [
-    { name: 'Photography & Cinematic Video Services', category: 'WEDDING', eventDate: 'As Agreed', price: grandTotal }
-  ];
-
-  eventRows.forEach((item, index) => {
-    const isEven = index % 2 === 0;
-    doc.setFillColor(isEven ? 255 : 254, isEven ? 255 : 252, isEven ? 255 : 243);
-    doc.rect(14, y, 182, 10, 'F');
-    doc.setDrawColor(241, 245, 249);
-    doc.line(14, y + 10, 196, y + 10);
-
-    const eventTitle = item.event?.name || item.name || 'Shoot Session';
-    const cat = item.category || 'EVENT';
-    const dateStr = `${item.eventDate || ''} ${item.eventTime ? `@ ${item.eventTime}` : ''}`.trim() || 'Scheduled';
-    const amountVal = item.price ? `₹${item.price.toLocaleString('en-IN')}` : '-';
-
-    doc.setTextColor(15, 23, 42);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.text(eventTitle.substring(0, 32), 18, y + 6.5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text(cat, 90, y + 6.5);
-    doc.text(dateStr.substring(0, 24), 125, y + 6.5);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(amountVal, 170, y + 6.5);
-
-    y += 10;
-  });
-
-  y = Math.max(y + 8, 145);
-
-  // Total Investment Box (Right Side)
-  const totalsX = 110;
-  const totalsWidth = 86;
-
-  doc.setFillColor(...t.totalsBoxFill);
-  doc.setDrawColor(...t.totalsBoxDraw);
-  doc.rect(totalsX, y, totalsWidth, 42, 'F');
-  doc.rect(totalsX, y, totalsWidth, 42, 'S');
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...t.titleText);
-  doc.text('ESTIMATED INVESTMENT', totalsX + 6, y + 10);
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...t.totalsText);
-  doc.text(`₹${grandTotal.toLocaleString('en-IN')}/-`, totalsX + 6, y + 22);
-
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(146, 64, 14);
-  doc.text('• Taxes & travel included as per agreement.', totalsX + 6, y + 30);
-  doc.text('• High-Res edited photos + 4K Teasers included.', totalsX + 6, y + 36);
-
-  // Deliverables & Milestones (Left Side)
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(14, y, 90, 42, 'S');
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('DELIVERABLES & PAYMENT MILESTONES', 18, y + 7);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('• 30% Advance for Date Lock & Booking', 18, y + 14);
-  doc.text('• 50% On Main Event Shoot Date', 18, y + 20);
-  doc.text('• 20% On Final Album & Video Delivery', 18, y + 26);
-  doc.text('• Standard Delivery: 3-4 weeks post selection.', 18, y + 32);
-  doc.text('• Raw photos delivered within 48 hours.', 18, y + 37);
-
-  // Footer & Signature
-  const footerY = 250;
-  doc.setDrawColor(226, 232, 240);
-  doc.line(14, footerY, 196, footerY);
-
-  doc.setTextColor(148, 163, 184);
-  doc.setFontSize(7.5);
-  doc.text('Official R2R Studio Photography quotation estimate. Subject to terms & conditions.', 14, footerY + 6);
-  doc.text('Looking forward to creating unforgettable memories with you!', 14, footerY + 11);
-
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('R2R Studio Photography Team', 145, footerY + 6);
-
-  const arrayBuffer = doc.output('arraybuffer');
-  return Buffer.from(arrayBuffer);
+  return renderHtmlToPdfBuffer(fullHtml);
 }
