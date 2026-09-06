@@ -81,7 +81,16 @@ export default function BillingPage() {
         const { jsPDF } = await import('jspdf');
 
         // Capture DOM as high-quality PNG
-        const dataUrl = await toPng(element, { quality: 1, pixelRatio: 2 });
+        const dataUrl = await toPng(element, { 
+          quality: 1, 
+          pixelRatio: 2,
+          filter: (node: any) => {
+            if (node?.classList?.contains('print:hidden') || node?.tagName === 'BUTTON') {
+              return false;
+            }
+            return true;
+          }
+        });
         
         const pdf = new jsPDF({
           orientation: 'portrait',

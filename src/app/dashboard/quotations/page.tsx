@@ -74,14 +74,23 @@ function QuotationStudioContent() {
   const handleDownloadPDF = async () => {
     const element = document.getElementById('pdf-document');
     if (!element) {
-      alert('Document not ready');
+      alert('Document not ready for export');
       return;
     }
     try {
       const { toPng } = await import('html-to-image');
       const { jsPDF } = await import('jspdf');
 
-      const dataUrl = await toPng(element, { quality: 1, pixelRatio: 2 });
+      const dataUrl = await toPng(element, { 
+        quality: 1, 
+        pixelRatio: 2,
+        filter: (node: any) => {
+          if (node?.classList?.contains('print:hidden') || node?.tagName === 'BUTTON') {
+            return false;
+          }
+          return true;
+        }
+      });
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
@@ -92,11 +101,12 @@ function QuotationStudioContent() {
       const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-      const fileName = `Quotation_${selectedQuote?.booking?.client?.name || 'R2R'}.pdf`;
+      const clientNameStr = selectedQuote?.booking?.client?.name || selectedQuote?.booking?.name || 'R2R_Studio';
+      const fileName = `Quotation_${clientNameStr.replace(/\s+/g, '_')}.pdf`;
       pdf.save(fileName);
     } catch (err) {
       console.error('PDF Generation error:', err);
-      alert('Failed to generate PDF. Check browser console.');
+      alert('Failed to generate PDF download: ' + err);
     }
   };
 
