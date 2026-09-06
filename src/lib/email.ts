@@ -2,10 +2,10 @@ import nodemailer from 'nodemailer';
 
 // Resolve SMTP Transport options from env vars or defaults
 export function getSmtpTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = parseInt(process.env.SMTP_PORT || '587');
-  const user = process.env.SMTP_USER || '';
-  const pass = process.env.SMTP_PASS || '';
+  const user = (process.env.SMTP_USER || '').replace(/["']/g, '').trim();
+  const pass = (process.env.SMTP_PASS || '').replace(/["'\s]/g, '').trim();
   
   // IMPORTANT FIX:
   // Port 465 requires secure: true (SSL).

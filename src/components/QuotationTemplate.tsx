@@ -300,26 +300,31 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     try {
       // 1. Temporarily lock editing mode to capture pristine document canvas
       setIsEditing(false);
-      await new Promise((res) => setTimeout(res, 200));
+      await new Promise((res) => setTimeout(res, 250));
 
       const element = document.getElementById('pdf-document');
       let pdfBase64 = '';
 
       if (element) {
-        const { toPng } = await import('html-to-image');
+        const { toCanvas } = await import('html-to-image');
         const { jsPDF } = await import('jspdf');
 
-        const dataUrl = await toPng(element, { 
-          quality: 1, 
+        // Render DOM to Canvas with solid white background
+        const canvas = await toCanvas(element, { 
+          quality: 0.98, 
           pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
           filter: (node: any) => node?.classList?.contains('print:hidden') ? false : true
         });
 
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const imgWidth = 210; // A4 width in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, imgWidth, imgHeight);
         pdfBase64 = pdf.output('datauristring');
       }
 
@@ -359,25 +364,30 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
 
   const handleDownloadPDFDocument = async () => {
     setIsEditing(false);
-    await new Promise((res) => setTimeout(res, 200));
+    await new Promise((res) => setTimeout(res, 250));
 
     const element = document.getElementById('pdf-document');
     if (!element) return;
 
     try {
-      const { toPng } = await import('html-to-image');
+      const { toCanvas } = await import('html-to-image');
       const { jsPDF } = await import('jspdf');
 
-      const dataUrl = await toPng(element, { 
-        quality: 1, 
+      const canvas = await toCanvas(element, { 
+        quality: 0.98, 
         pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        cacheBust: true,
         filter: (node: any) => node?.classList?.contains('print:hidden') ? false : true
       });
 
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, imgWidth, imgHeight);
 
       const fileName = `Quotation_${clientName.replace(/\s+/g, '_')}_${quoteRef}.pdf`;
       pdf.save(fileName);
