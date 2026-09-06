@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { createAuditLog } from '@/lib/audit';
-import { sendQuotationEmail, sendInvoiceEmail } from '@/lib/email';
+import { sendQuotationEmail, sendInvoiceEmail, sendBookingConfirmationEmail } from '@/lib/email';
 
 async function triggerAutomatedSmtpEmails(modelName: string, record: any, action: 'CREATE' | 'UPDATE') {
   try {
@@ -10,40 +10,65 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
       const bookingId = record.bookingId || record.id;
       if (!bookingId) return;
 
-      const fullBooking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-        include: {
-          client: true,
-          bookingEvents: { include: { event: true } }
+      // Allow 1.2s delay for child bookingEvents to be created by frontend POSTs
+      setTimeout(async () => {
+        try {
+          const fullBooking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: {
+              client: true,
+              bookingEvents: { include: { event: true } }
+            }
+          });
+
+          if (!fullBooking || !fullBooking.client || !fullBooking.client.email) return;
+
+          const status = record.status || fullBooking.status;
+
+          // 1. Dispatch Booking Confirmation Email on ANY booking creation or update!
+          if (modelName === 'booking') {
+            sendBookingConfirmationEmail({
+              to: fullBooking.client.email,
+              clientName: fullBooking.client.name,
+              bookingNumber: fullBooking.bookingNumber,
+              grandTotal: fullBooking.grandTotal,
+              paidAmount: fullBooking.paidAmount || 0,
+              balance: fullBooking.balance || 0,
+              status: status,
+              events: fullBooking.bookingEvents
+            }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
+          }
+
+          // 2. Dispatch Quotation Email if status is QUOTATION or model is quotation
+          if (status === 'QUOTATION' || modelName === 'quotation') {
+            sendQuotationEmail({
+              to: fullBooking.client.email,
+              clientName: fullBooking.client.name,
+              bookingNumber: fullBooking.bookingNumber,
+              grandTotal: fullBooking.grandTotal,
+              events: fullBooking.bookingEvents,
+              quotationId: record.id
+            }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
+          }
+
+          // 3. Dispatch Invoice Email if status is CONFIRMED / INVOICE or model is invoice
+          if (modelName === 'invoice' || status === 'CONFIRMED' || status === 'INVOICE') {
+            sendInvoiceEmail({
+              to: fullBooking.client.email,
+              clientName: fullBooking.client.name,
+              invoiceNumber: record.invoiceNumber || `INV-${fullBooking.bookingNumber}`,
+              bookingNumber: fullBooking.bookingNumber,
+              subtotal: fullBooking.subtotal || 0,
+              gstAmount: fullBooking.gstAmount || 0,
+              grandTotal: fullBooking.grandTotal || 0,
+              paidAmount: fullBooking.paidAmount || 0,
+              balance: fullBooking.balance || 0
+            }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
+          }
+        } catch (innerErr) {
+          console.error('[SMTP Background Fetch Error]', innerErr);
         }
-      });
-
-      if (!fullBooking || !fullBooking.client || !fullBooking.client.email) return;
-
-      const status = record.status || fullBooking.status;
-
-      if (status === 'QUOTATION' || modelName === 'quotation') {
-        sendQuotationEmail({
-          to: fullBooking.client.email,
-          clientName: fullBooking.client.name,
-          bookingNumber: fullBooking.bookingNumber,
-          grandTotal: fullBooking.grandTotal,
-          events: fullBooking.bookingEvents,
-          quotationId: record.id
-        }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
-      } else if (modelName === 'invoice' || status === 'CONFIRMED' || status === 'INVOICE') {
-        sendInvoiceEmail({
-          to: fullBooking.client.email,
-          clientName: fullBooking.client.name,
-          invoiceNumber: record.invoiceNumber || `INV-${fullBooking.bookingNumber}`,
-          bookingNumber: fullBooking.bookingNumber,
-          subtotal: fullBooking.subtotal || 0,
-          gstAmount: fullBooking.gstAmount || 0,
-          grandTotal: fullBooking.grandTotal || 0,
-          paidAmount: fullBooking.paidAmount || 0,
-          balance: fullBooking.balance || 0
-        }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
-      }
+      }, 1200);
     }
   } catch (err) {
     console.error(`[SMTP Dispatch Error] Failed to process automated email:`, err);

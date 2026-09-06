@@ -10,7 +10,6 @@ export function getSmtpTransporter() {
   // IMPORTANT FIX:
   // Port 465 requires secure: true (SSL).
   // Port 587 / 25 requires secure: false (STARTTLS upgrade).
-  // Setting secure: true on Port 587 causes ERR_SSL_WRONG_VERSION_NUMBER!
   const secure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : port === 465;
 
   if (!user || !pass) {
@@ -39,7 +38,120 @@ export function getFromEmail() {
 }
 
 /**
- * 1. Send Official Quotation Email to Client
+ * 1. Send Official Booking Confirmation Email to Client
+ */
+export async function sendBookingConfirmationEmail({
+  to,
+  clientName,
+  bookingNumber,
+  grandTotal,
+  paidAmount = 0,
+  balance = 0,
+  status = 'CONFIRMED',
+  events = []
+}: {
+  to: string;
+  clientName: string;
+  bookingNumber: string;
+  grandTotal: number;
+  paidAmount?: number;
+  balance?: number;
+  status?: string;
+  events?: any[];
+}) {
+  if (!to || !to.includes('@')) {
+    console.log(`[SMTP Mailer] Skipped sending booking confirmation email - invalid recipient: ${to}`);
+    return { success: false, reason: 'Invalid email address' };
+  }
+
+  try {
+    const transporter = getSmtpTransporter();
+    const from = getFromEmail();
+
+    const formattedTotal = (grandTotal || 0).toLocaleString('en-IN');
+    const formattedPaid = (paidAmount || 0).toLocaleString('en-IN');
+    const formattedBalance = (balance || (grandTotal - paidAmount)).toLocaleString('en-IN');
+
+    const eventsHtml = events.length > 0 ? events.map((be: any) => `
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
+          <strong style="color: #0f172a; font-size: 13px;">${be.event?.name || 'Shoot Session'}</strong>
+          <span style="font-weight: bold; color: #b45309; font-size: 12px;">${be.category || 'EVENT'}</span>
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #475569;">📅 Date: <strong>${be.eventDate}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
+        ${be.venue ? `<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">📍 Venue: ${be.venue}</p>` : ''}
+      </div>
+    `).join('') : '<p style="font-size: 12px; color: #64748b;">Shoot dates & sessions as per studio agreement schedule.</p>';
+
+    const htmlBody = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><title>Booking Confirmation - R2R Studio</title></head>
+      <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          
+          <div style="background: linear-gradient(135deg, #b45309 0%, #78350f 100%); padding: 24px; text-align: center; color: #ffffff;">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px;">R2R STUDIO PHOTOGRAPHY</h1>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #fde68a; font-weight: 600; text-transform: uppercase;">Official Booking Confirmation</p>
+          </div>
+
+          <div style="padding: 24px;">
+            <div style="background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 13px; font-weight: bold; color: #065f46;">BOOKING CONFIRMED & RESERVED!</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: #047857;">Booking #: ${bookingNumber} | Status: ${status}</p>
+            </div>
+
+            <p style="font-size: 15px; margin-top: 0;">Dear <strong>${clientName}</strong>,</p>
+            <p style="font-size: 13px; color: #475569; line-height: 1.5;">We are delighted to confirm your photography & cinematic video booking with <strong>R2R Studio Photography</strong>! Our creative crew is locked in for your upcoming events.</p>
+
+            <h3 style="font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Your Event Shoot Schedule</h3>
+            ${eventsHtml}
+
+            <div style="background-color: #0f172a; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-top: 20px; display: flex; justify-space-between; align-items: center;">
+              <div>
+                <p style="margin: 0; font-size: 11px; color: #f59e0b; font-weight: bold; text-transform: uppercase;">Total Booking Package Value</p>
+                <p style="margin: 2px 0 0 0; font-size: 12px; color: #94a3b8;">Advance Paid: ₹${formattedPaid} | Due: ₹${formattedBalance}</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 22px; font-weight: 800; color: #fde68a;">₹${formattedTotal}/-</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="http://localhost:3000/dashboard/quotations?bookingId=${bookingNumber}" style="display: inline-block; background-color: #f59e0b; color: #0f172a; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-right: 8px;">
+                View Quotation PDF
+              </a>
+              <a href="http://localhost:3000/dashboard/billing" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                View Tax Invoice
+              </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+              R2R Studio Photography • Office: Road No 3A, Tarnaka, Hyderabad • Phone: +91 9398534380
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject: `Booking Confirmed! R2R Studio Photography [Ref: #${bookingNumber}]`,
+      html: htmlBody,
+    });
+    console.log(`[SMTP Mailer] Booking confirmation email sent to ${to}. MessageId: ${info.messageId || 'OK'}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error: any) {
+    console.error(`[SMTP Mailer] Error sending booking confirmation email to ${to}:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * 2. Send Official Quotation Email to Client
  */
 export async function sendQuotationEmail({
   to,
@@ -156,7 +268,7 @@ export async function sendQuotationEmail({
 }
 
 /**
- * 2. Send Official Invoice / Tax Bill Email to Client
+ * 3. Send Official Invoice / Tax Bill Email to Client
  */
 export async function sendInvoiceEmail({
   to,
@@ -243,7 +355,7 @@ export async function sendInvoiceEmail({
 }
 
 /**
- * 3. Send 1-Day Pre-Shoot Reminder to Client (With Assigned Crew List)
+ * 4. Send 1-Day Pre-Shoot Reminder to Client (With Assigned Crew List)
  */
 export async function sendClientPreShootReminder({
   to,
@@ -331,7 +443,7 @@ export async function sendClientPreShootReminder({
 }
 
 /**
- * 4. Send 1-Day Pre-Shoot Call Sheet Reminder to Crew Member
+ * 5. Send 1-Day Pre-Shoot Call Sheet Reminder to Crew Member
  */
 export async function sendCrewPreShootReminder({
   to,
