@@ -12,6 +12,14 @@ const ALL_MODULES = [
   '/dashboard/users', '/dashboard/roles', '/dashboard/settings'
 ];
 
+const buildPerms = (paths: string[], write = true, del = false, hideFinancials = false) => {
+  const map: Record<string, any> = {};
+  paths.forEach(p => {
+    map[p] = { read: true, write, delete: del, hideFinancials };
+  });
+  return map;
+};
+
 async function main() {
   console.log('🌱 Starting Production Database Seeding for Neon PostgreSQL...');
 
@@ -49,74 +57,89 @@ async function main() {
   });
   console.log('✅ Studio Admin created/updated:', adminUser.email);
 
-  // 3. Seed Built-in System Roles
+  // 3. Seed Built-in System Roles with Upgraded Granular & Financial Masking Rules
   const rolesToSeed = [
     {
       roleName: 'SUPER_ADMIN',
       displayName: 'Super Administrator',
       description: 'Unrestricted top-level access to all system modules, security, financial data, and configuration.',
       isSystem: true,
-      permissions: ALL_MODULES,
+      permissions: buildPerms(ALL_MODULES, true, true, false),
     },
     {
       roleName: 'ADMIN',
       displayName: 'Studio Administrator',
       description: 'Full operational access to manage studio bookings, staff, billing, shoot schedules, and workflows.',
       isSystem: true,
-      permissions: ALL_MODULES,
+      permissions: buildPerms(ALL_MODULES, true, true, false),
     },
     {
       roleName: 'MANAGER',
       displayName: 'Studio Manager',
       description: 'Operational manager for bookings, client communications, shoot assignments, and staff workflow.',
       isSystem: false,
-      permissions: [
-        '/dashboard', '/dashboard/leads', '/dashboard/marketing', '/dashboard/clients',
-        '/dashboard/bookings', '/dashboard/bookings/status', '/dashboard/billing',
-        '/dashboard/quotations', '/dashboard/work-updates', '/dashboard/assignments',
-        '/dashboard/workflows', '/dashboard/packages', '/dashboard/events',
-        '/dashboard/inventory', '/dashboard/photographers', '/dashboard/employees', '/dashboard/attendance'
-      ],
+      permissions: buildPerms(
+        [
+          '/dashboard', '/dashboard/leads', '/dashboard/marketing', '/dashboard/clients',
+          '/dashboard/bookings', '/dashboard/bookings/status', '/dashboard/billing',
+          '/dashboard/quotations', '/dashboard/work-updates', '/dashboard/assignments',
+          '/dashboard/workflows', '/dashboard/packages', '/dashboard/events',
+          '/dashboard/inventory', '/dashboard/photographers', '/dashboard/employees', '/dashboard/attendance'
+        ],
+        true, false, false
+      ),
     },
     {
       roleName: 'RECEPTIONIST',
       displayName: 'Front Desk Receptionist',
       description: 'Handles client inquiries, booking contracts, basic invoicing, quotation studio, and packages.',
       isSystem: false,
-      permissions: [
-        '/dashboard', '/dashboard/leads', '/dashboard/marketing', '/dashboard/clients',
-        '/dashboard/bookings', '/dashboard/bookings/status', '/dashboard/billing',
-        '/dashboard/quotations', '/dashboard/packages', '/dashboard/events', '/dashboard/work-updates'
-      ],
+      permissions: buildPerms(
+        [
+          '/dashboard', '/dashboard/leads', '/dashboard/marketing', '/dashboard/clients',
+          '/dashboard/bookings', '/dashboard/bookings/status', '/dashboard/billing',
+          '/dashboard/quotations', '/dashboard/packages', '/dashboard/events', '/dashboard/work-updates'
+        ],
+        true, false, false
+      ),
     },
     {
       roleName: 'PHOTOGRAPHER',
       displayName: 'Lead Photographer & Crew',
-      description: 'Access to shoot schedules, daily work logs, assigned bookings, and equipment checklist.',
+      description: 'Access to shoot schedules, daily work logs, assigned bookings, and equipment. Financial totals are masked.',
       isSystem: false,
-      permissions: [
-        '/dashboard', '/dashboard/assignments', '/dashboard/work-updates',
-        '/dashboard/inventory', '/dashboard/photographers', '/dashboard/bookings/status'
-      ],
+      permissions: buildPerms(
+        [
+          '/dashboard', '/dashboard/assignments', '/dashboard/work-updates',
+          '/dashboard/inventory', '/dashboard/photographers', '/dashboard/bookings/status'
+        ],
+        true, false, true // hideFinancials = true
+      ),
     },
     {
       roleName: 'EDITOR',
       displayName: 'Post-Production Editor',
-      description: 'Access to post-production editing tasks, album reviewing, raw backups, and work updates.',
+      description: 'Access to post-production editing tasks, album reviewing, raw backups, and work updates with financial privacy.',
       isSystem: false,
-      permissions: [
-        '/dashboard', '/dashboard/workflows', '/dashboard/work-updates', '/dashboard/bookings/status'
-      ],
+      permissions: buildPerms(
+        [
+          '/dashboard', '/dashboard/workflows', '/dashboard/work-updates', '/dashboard/bookings/status'
+        ],
+        true, false, true // hideFinancials = true
+      ),
     },
     {
       roleName: 'ACCOUNTANT',
       displayName: 'Finance & Accountant',
       description: 'Access to billing, invoices, quotes, cash ledger, expenses, and payroll reports.',
       isSystem: false,
-      permissions: [
-        '/dashboard', '/dashboard/reports', '/dashboard/billing', '/dashboard/quotations',
-        '/dashboard/expenses', '/dashboard/attendance'
-      ],
+      permissions: buildPerms(
+        [
+          '/dashboard', '/dashboard/reports', '/dashboard/billing', '/dashboard/quotations',
+          '/dashboard/expenses', '/dashboard/attendance'
+        ],
+        true, true, false
+      ),
     },
   ];
 
@@ -138,7 +161,7 @@ async function main() {
       },
     });
   }
-  console.log('✅ System & dynamic roles seeded successfully.');
+  console.log('✅ System & dynamic roles with granular permissions seeded successfully.');
 
   // 4. Seed Marketing Content default row
   await (prisma as any).marketingContent.upsert({

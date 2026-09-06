@@ -13,6 +13,7 @@ import {
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '@/theme/muiTheme';
+import { hasModuleAccess } from '@/lib/permissions';
 import {
   Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
   Typography, Avatar, Chip, IconButton, Stack, Button, Menu as MuiMenu, MenuItem
@@ -126,26 +127,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // Check dynamic role permissions for current user's role
-  const currentRolePerm = rolePermissions?.find((r: any) => r.roleName === user?.role);
-  let allowedPaths: string[] | null = null;
-  if (currentRolePerm) {
-    try {
-      allowedPaths = typeof currentRolePerm.permissions === 'string' ? JSON.parse(currentRolePerm.permissions) : currentRolePerm.permissions;
-    } catch (e) {
-      allowedPaths = null;
-    }
-  }
-
-  // Filter menu items by user role and dynamic permissions
+  // Filter menu items by user role and dynamic permissions using hasModuleAccess
   const filteredGroups = MENU_GROUPS.map((group) => {
     const allowedItems = group.items.filter((item) => {
       if (!user) return false;
       if (['SUPER_ADMIN', 'ADMIN'].includes(user.role)) return true;
-      if (allowedPaths && Array.isArray(allowedPaths)) {
-        return allowedPaths.includes(item.path);
-      }
-      return item.roles.includes(user.role);
+      return hasModuleAccess(user.role, item.path, rolePermissions);
     });
     return {
       ...group,
