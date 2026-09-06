@@ -279,7 +279,8 @@ export async function sendInvoiceEmail({
   gstAmount,
   grandTotal,
   paidAmount,
-  balance
+  balance,
+  events = []
 }: {
   to: string;
   clientName: string;
@@ -290,6 +291,7 @@ export async function sendInvoiceEmail({
   grandTotal: number;
   paidAmount: number;
   balance: number;
+  events?: any[];
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending invoice email - invalid recipient: ${to}`);
@@ -300,22 +302,39 @@ export async function sendInvoiceEmail({
     const transporter = getSmtpTransporter();
     const from = getFromEmail();
 
+    const eventsHtml = events.length > 0 ? events.map((be: any) => `
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #0f172a; font-size: 13px;">${be.event?.name || 'Shoot Session'}</strong>
+          <span style="font-size: 11px; font-weight: bold; color: #b45309;">${be.category || 'EVENT'}</span>
+        </div>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">📅 Date: <strong>${be.eventDate}</strong> ${be.eventTime ? `at ${be.eventTime}` : ''}</p>
+        ${be.venue ? `<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">📍 Venue: ${be.venue}</p>` : ''}
+      </div>
+    `).join('') : '';
+
     const htmlBody = `
       <!DOCTYPE html>
       <html>
-      <head><meta charset="utf-8"><title>Tax Invoice - R2R Studio</title></head>
+      <head><meta charset="utf-8"><title>Tax Invoice & Bill Summary - R2R Studio</title></head>
       <body style="font-family: Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
           
           <div style="background-color: #0f172a; padding: 24px; text-align: center; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; color: #f59e0b;">R2R STUDIO TAX INVOICE</h1>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; color: #f59e0b;">R2R STUDIO BILL & INVOICE SUMMARY</h1>
             <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Invoice #: ${invoiceNumber} | Booking #: ${bookingNumber}</p>
           </div>
 
           <div style="padding: 24px;">
             <p style="font-size: 15px; margin-top: 0;">Dear <strong>${clientName}</strong>,</p>
-            <p style="font-size: 13px; color: #475569;">Please find your official tax invoice details from R2R Studio Photography below:</p>
+            <p style="font-size: 13px; color: #475569;">Please find your official tax invoice, bill summary, and covered event shoot schedule from R2R Studio Photography below:</p>
 
+            ${eventsHtml ? `
+              <h3 style="font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Covered Event Shoot Schedule</h3>
+              ${eventsHtml}
+            ` : ''}
+
+            <h3 style="font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Financial Bill Breakdown</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 16px 0;">
               <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 0; color: #64748b;">Subtotal:</td><td style="text-align: right; font-weight: bold;">₹${(subtotal || 0).toLocaleString('en-IN')}</td></tr>
               <tr style="border-bottom: 1px solid #e2e8f0;"><td style="padding: 8px 0; color: #64748b;">GST Amount (18%):</td><td style="text-align: right; font-weight: bold;">₹${(gstAmount || 0).toLocaleString('en-IN')}</td></tr>
@@ -326,7 +345,7 @@ export async function sendInvoiceEmail({
 
             <div style="margin-top: 24px; text-align: center;">
               <a href="http://localhost:3000/dashboard/billing" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: bold; font-size: 13px; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-                View Full Billing Statement
+                View & Print Official Bill PDF
               </a>
             </div>
 
