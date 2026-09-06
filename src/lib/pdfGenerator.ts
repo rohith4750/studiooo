@@ -239,13 +239,13 @@ export function generateQuotationPdfBuffer(params: {
     const delivItemsHtml = deliverables.map(d => `<li style="margin-bottom: 4px;">✔ ${d}</li>`).join('');
 
     return `
-      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid ${tm.borderLeftColor}; border-radius: 5px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
           <div>
             <span style="font-size: 16px; font-weight: 800; color: #0f172a;">${eventTitle}</span>
             <span style="margin-left: 10px; font-size: 11px; font-weight: bold; background-color: ${tm.badgeBg}; color: ${tm.badgeText}; border: 1px solid ${tm.badgeBorder}; padding: 3px 8px; border-radius: 5px; text-transform: uppercase;">${cat}</span>
           </div>
-          <div style="font-size: 18px; font-weight: 800; color: ${tm.borderLeftColor};">
+          <div style="font-size: 18px; font-weight: 800; color: #b45309;">
             ${priceVal}
           </div>
         </div>
@@ -342,7 +342,7 @@ export function generateQuotationPdfBuffer(params: {
             <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">QUOTATION DETAILS:</p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Booking Reference: <strong>${bookingNumber}</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Quotation Date: <strong>${createdAt}</strong></p>
-            <p style="margin: 0; font-size: 12px; color: ${tm.borderLeftColor}; font-weight: bold;">Validity: 30 Days Lock Period</p>
+            <p style="margin: 0; font-size: 12px; color: #b45309; font-weight: bold;">Validity: 30 Days Lock Period</p>
           </div>
         </div>
 
@@ -537,14 +537,14 @@ export function generateInvoicePdfBuffer(params: {
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Bank: <strong>HDFC Bank (Tarnaka Branch)</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">Account #: <strong>50200012345678</strong></p>
             <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569;">IFSC Code: <strong>HDFC0001234</strong></p>
-            <p style="margin: 0; font-size: 12px; color: ${tm.borderLeftColor}; font-weight: bold;">UPI ID: r2rstudio@hdfcbank</p>
+            <p style="margin: 0; font-size: 12px; color: #b45309; font-weight: bold;">UPI ID: r2rstudio@hdfcbank</p>
           </div>
 
           <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 16px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
               <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">Subtotal Amount:</td><td style="text-align: right; font-weight: bold;">₹${subtotal.toLocaleString('en-IN')}</td></tr>
               <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #64748b;">GST (18% Included):</td><td style="text-align: right; font-weight: bold;">₹${gstAmount.toLocaleString('en-IN')}</td></tr>
-              <tr style="border-bottom: 2px solid #0f172a;"><td style="padding: 8px 0; font-weight: 800; color: #0f172a; font-size: 14px;">Grand Total:</td><td style="text-align: right; font-weight: 900; font-size: 16px; color: ${tm.borderLeftColor};">₹${grandTotal.toLocaleString('en-IN')}</td></tr>
+              <tr style="border-bottom: 2px solid #0f172a;"><td style="padding: 8px 0; font-weight: 800; color: #0f172a; font-size: 14px;">Grand Total:</td><td style="text-align: right; font-weight: 900; font-size: 16px; color: #b45309;">₹${grandTotal.toLocaleString('en-IN')}</td></tr>
               <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px 0; color: #059669; font-weight: bold;">Advance Paid:</td><td style="text-align: right; color: #059669; font-weight: bold;">₹${paidAmount.toLocaleString('en-IN')}</td></tr>
               <tr><td style="padding: 8px 0; font-weight: 800; color: #dc2626; font-size: 14px;">Balance Due:</td><td style="text-align: right; font-weight: 900; font-size: 16px; color: #dc2626;">₹${balance.toLocaleString('en-IN')}</td></tr>
             </table>
