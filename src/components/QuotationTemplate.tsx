@@ -293,11 +293,36 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
     }));
   };
 
-  // Dispatch Email Handler
+  // Dispatch Email Handler (Generates exact PDF and attaches to email)
   const handleSendEmailToClient = async () => {
     setSendingEmail(true);
-    setEmailStatus('Sending quotation email to client...');
+    setEmailStatus('Rendering PDF attachment and dispatching email to client...');
     try {
+      // 1. Temporarily lock editing mode to capture pristine document canvas
+      setIsEditing(false);
+      await new Promise((res) => setTimeout(res, 200));
+
+      const element = document.getElementById('pdf-document');
+      let pdfBase64 = '';
+
+      if (element) {
+        const { toPng } = await import('html-to-image');
+        const { jsPDF } = await import('jspdf');
+
+        const dataUrl = await toPng(element, { 
+          quality: 1, 
+          pixelRatio: 2,
+          filter: (node: any) => node?.classList?.contains('print:hidden') ? false : true
+        });
+
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+        pdfBase64 = pdf.output('datauristring');
+      }
+
       if (onSendEmail) {
         await onSendEmail();
       } else {
@@ -310,16 +335,17 @@ export default function QuotationTemplate({ doc, showControls = true, onSendEmai
             clientName: clientName,
             quoteRef: quoteRef,
             grandTotal: calculatedGrandTotal,
-            status: 'SENT'
+            status: 'QUOTATION',
+            pdfBase64: pdfBase64
           })
         });
         if (!res.ok) throw new Error('Failed to dispatch email');
       }
-      setEmailStatus('✅ Quotation Email sent successfully to client!');
-      setTimeout(() => setEmailStatus(''), 4000);
+      setEmailStatus('✅ Quotation Email with PDF attachment sent successfully to client!');
+      setTimeout(() => setEmailStatus(''), 4500);
     } catch (e: any) {
       setEmailStatus('❌ Sending failed: ' + e.message);
-      setTimeout(() => setEmailStatus(''), 4000);
+      setTimeout(() => setEmailStatus(''), 4500);
     } finally {
       setSendingEmail(false);
     }

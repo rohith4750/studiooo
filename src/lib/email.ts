@@ -159,7 +159,8 @@ export async function sendQuotationEmail({
   bookingNumber,
   grandTotal,
   events = [],
-  quotationId
+  quotationId,
+  pdfBase64
 }: {
   to: string;
   clientName: string;
@@ -167,6 +168,7 @@ export async function sendQuotationEmail({
   grandTotal: number;
   events?: any[];
   quotationId?: string;
+  pdfBase64?: string;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending quotation email - invalid recipient: ${to}`);
@@ -253,13 +255,24 @@ export async function sendQuotationEmail({
       </html>
     `;
 
+    const attachments: any[] = [];
+    if (pdfBase64) {
+      const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '').replace(/^data:image\/\w+;base64,/, '');
+      attachments.push({
+        filename: `Official_Quotation_${(clientName || 'Client').replace(/\s+/g, '_')}_${quoteRef}.pdf`,
+        content: Buffer.from(cleanBase64, 'base64'),
+        contentType: 'application/pdf'
+      });
+    }
+
     const info = await transporter.sendMail({
       from,
       to,
       subject: `Official Quotation - R2R Studio Photography [Ref: #${quoteRef}]`,
       html: htmlBody,
+      attachments
     });
-    console.log(`[SMTP Mailer] Quotation email sent to ${to}. MessageId: ${info.messageId || 'OK'}`);
+    console.log(`[SMTP Mailer] Quotation email sent to ${to} (Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error(`[SMTP Mailer] Error sending quotation email to ${to}:`, error.message);
@@ -280,7 +293,8 @@ export async function sendInvoiceEmail({
   grandTotal,
   paidAmount,
   balance,
-  events = []
+  events = [],
+  pdfBase64
 }: {
   to: string;
   clientName: string;
@@ -292,6 +306,7 @@ export async function sendInvoiceEmail({
   paidAmount: number;
   balance: number;
   events?: any[];
+  pdfBase64?: string;
 }) {
   if (!to || !to.includes('@')) {
     console.log(`[SMTP Mailer] Skipped sending invoice email - invalid recipient: ${to}`);
@@ -359,13 +374,24 @@ export async function sendInvoiceEmail({
       </html>
     `;
 
+    const attachments: any[] = [];
+    if (pdfBase64) {
+      const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '').replace(/^data:image\/\w+;base64,/, '');
+      attachments.push({
+        filename: `Official_Bill_${(clientName || 'Client').replace(/\s+/g, '_')}_${invoiceNumber}.pdf`,
+        content: Buffer.from(cleanBase64, 'base64'),
+        contentType: 'application/pdf'
+      });
+    }
+
     const info = await transporter.sendMail({
       from,
       to,
       subject: `Official Tax Invoice & Bill - R2R Studio [#${invoiceNumber}]`,
       html: htmlBody,
+      attachments
     });
-    console.log(`[SMTP Mailer] Invoice email sent to ${to}. MessageId: ${info.messageId || 'OK'}`);
+    console.log(`[SMTP Mailer] Invoice email sent to ${to} (Attachment: ${attachments.length > 0 ? 'YES' : 'NO'}). MessageId: ${info.messageId || 'OK'}`);
     return { success: true, messageId: info.messageId };
   } catch (error: any) {
     console.error(`[SMTP Mailer] Error sending invoice email to ${to}:`, error.message);

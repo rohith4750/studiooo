@@ -47,7 +47,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
               bookingNumber: fullBooking.bookingNumber,
               grandTotal: fullBooking.grandTotal,
               events: fullBooking.bookingEvents,
-              quotationId: record.id
+              quotationId: record.id,
+              pdfBase64: record.pdfBase64
             }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
           }
 
@@ -62,7 +63,8 @@ async function triggerAutomatedSmtpEmails(modelName: string, record: any, action
               gstAmount: fullBooking.gstAmount || 0,
               grandTotal: fullBooking.grandTotal || 0,
               paidAmount: fullBooking.paidAmount || 0,
-              balance: fullBooking.balance || 0
+              balance: fullBooking.balance || 0,
+              pdfBase64: record.pdfBase64
             }).catch(err => console.error('[SMTP Background Dispatch Error]', err));
           }
         } catch (innerErr) {
